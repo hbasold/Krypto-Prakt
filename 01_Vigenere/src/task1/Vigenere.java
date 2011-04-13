@@ -35,6 +35,10 @@ public class Vigenere extends Cipher {
   private int numberOfShifts;
   private int[] shifts;
   
+  /**
+   * @param unigrams Tabelle mit Häufigkeiten im Alphabet.
+   * @return Summe über alle Quadrate der Buchstabenhäufigkeiten im Alphabet.
+   */
   private double getNu(ArrayList<NGram> unigrams) {
     Iterator<NGram> it = unigrams.iterator();
     double nu = 0;
@@ -45,6 +49,18 @@ public class Vigenere extends Cipher {
     return nu;
   }
 
+  /**
+   * @param quantities
+   * @param numberOfCharsInChiffreText
+   * @return Variable IC
+   */
+  private double getIC(HashMap<Integer, Integer> quantities, int numberOfCharsInChiffreText) {
+    double IC_numerator = 0;
+    for (Integer i: quantities.values()) {
+      IC_numerator += i*(i-1);
+    }
+    return IC_numerator / (numberOfCharsInChiffreText * (numberOfCharsInChiffreText-1));
+  }
   /**
    * Analysiert den durch den Reader <code>ciphertext</code> gegebenen
    * Chiffretext, bricht die Chiffre bzw. unterstützt das Brechen der Chiffre
