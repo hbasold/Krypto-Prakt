@@ -14,10 +14,15 @@ package task1;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.StringTokenizer;
 
 import de.tubs.cs.iti.jcrypt.chiffre.CharacterMapping;
 import de.tubs.cs.iti.jcrypt.chiffre.Cipher;
+import de.tubs.cs.iti.jcrypt.chiffre.FrequencyTables;
+import de.tubs.cs.iti.jcrypt.chiffre.NGram;
 
 /**
  * Dummy-Klasse für die Vigenère-Chiffre.
@@ -29,6 +34,17 @@ public class Vigenere extends Cipher {
 
   private int numberOfShifts;
   private int[] shifts;
+  
+  private double getNu(ArrayList<NGram> unigrams) {
+    Iterator<NGram> it = unigrams.iterator();
+    double nu = 0;
+    while (it.hasNext()) {
+      double pi = it.next().getFrequency() / 100.0;
+      nu += pi*pi;
+    }
+    return nu;
+  }
+
   /**
    * Analysiert den durch den Reader <code>ciphertext</code> gegebenen
    * Chiffretext, bricht die Chiffre bzw. unterstützt das Brechen der Chiffre
@@ -41,6 +57,83 @@ public class Vigenere extends Cipher {
    * Der Writer, der den Klartext schreiben soll.
    */
   public void breakCipher(BufferedReader ciphertext, BufferedWriter cleartext) {
+    try {
+        // Einlesen der Daten der Häufigkeitstabelle. Je nachdem, ob der benutzte
+        // Zeichensatz durch Angabe eines Modulus oder durch Angabe eines
+        // Alphabets definiert wurde, wird auf unterschiedliche Tabellen
+        // zugegriffen.
+        // 'nGrams' nimmt die Daten der Häufigkeitstabelle auf.
+        ArrayList<NGram> nGrams = FrequencyTables.getNGramsAsList(1, charMap);
+        double nu = getNu(nGrams);
+        System.out.println("Nu="+nu);
+        // Bestimme das häufigste Zeichen aus der zugehörigen Unigramm-Tabelle.
+        System.out.println("Häufigstes Zeichen in der Unigramm-Tabelle: "
+            + nGrams.get(0).getCharacters());
+        // Bestimme das häufigste Zeichen des Chiffretextes.
+        // 'character' ist die Integer-Repräsentation eines Zeichens.
+        int character;
+        // 'number' zählt alle Zeichen im Chiffretext.
+        int number = 0;
+        // 'quantities' enthält zu allen aufgetretenen Zeichen (keys der Hashmap)
+        // deren zugehörige Anzahlen (values der Hashmap).
+        HashMap<Integer, Integer> quantities = new HashMap<Integer, Integer>();
+        // Lese zeichenweise aus der Chiffretextdatei, bis das Dateiende erreicht
+        // ist.
+        while ((character = ciphertext.read()) != -1) {
+          number++;
+          // Bilde 'character' auf dessen interne Darstellung ab.
+          character = charMap.mapChar(character);
+          // Erhöhe die Anzahl für dieses Zeichen bzw. lege einen neuen Eintrag
+          // für dieses Zeichen an.
+          if (quantities.containsKey(character)) {
+            quantities.put(character, quantities.get(character) + 1);
+          } else {
+            quantities.put(character, 1);
+          }
+        }
+        ciphertext.close();
+        // Suche das häufigste Zeichen in 'quantities'.
+        // 'currKey' ist der aktuell betrachtete Schlüssel der Hashmap (ein
+        // Zeichen des Chiffretextalphabets).
+        int currKey = -1;
+        // Der Wert zum aktuellen Schlüssel (die Anzahl, mit der 'currKey' im
+        // Chiffretext auftrat).
+        int currValue = -1;
+        // Die bisher größte Anzahl.
+        int greatest = -1;
+        // Das bisher häufigste Zeichen.
+        int mostFrequented = -1;
+        Iterator<Integer> it = quantities.keySet().iterator();
+        while (it.hasNext()) {
+          currKey = it.next();
+          currValue = quantities.get(currKey);
+          if (currValue > greatest) {
+            greatest = currValue;
+            mostFrequented = currKey;
+          }
+        }
+        // Das häufigste Zeichen 'mostFrequented' des Chiffretextes muß vor der
+        // Ausgabe noch in Dateikodierung konvertiert werden.
+        System.out.println("Häufigstes Zeichen im Chiffretext: "
+            + (char) charMap.remapChar(mostFrequented));
+
+        // Berechne die im Chiffretext verwendete Verschiebung.
+        int computedShift = mostFrequented
+            - charMap.mapChar(Integer.parseInt(nGrams.get(0).getIntegers()));
+        if (computedShift < 0) {
+          computedShift += modulus;
+        }
+//        shift = computedShift;
+//        System.out.println("Schlüssel ermittelt.");
+//        System.out.println("Modulus: " + modulus);
+//        System.out.println("Verschiebung: " + shift);
+
+      } catch (IOException e) {
+        System.err.println("Abbruch: Fehler beim Lesen aus der "
+            + "Chiffretextdatei.");
+        e.printStackTrace();
+        System.exit(1);
+      }
 
   }
 
