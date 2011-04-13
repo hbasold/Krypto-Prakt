@@ -14,6 +14,7 @@ package task1;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.StringTokenizer;
 
 import de.tubs.cs.iti.jcrypt.chiffre.CharacterMapping;
 import de.tubs.cs.iti.jcrypt.chiffre.Cipher;
@@ -26,6 +27,8 @@ import de.tubs.cs.iti.jcrypt.chiffre.Cipher;
  */
 public class Vigenere extends Cipher {
 
+  private int numberOfShifts;
+  private int[] shifts;
   /**
    * Analysiert den durch den Reader <code>ciphertext</code> gegebenen
    * Chiffretext, bricht die Chiffre bzw. unterstützt das Brechen der Chiffre
@@ -52,7 +55,33 @@ public class Vigenere extends Cipher {
    * Der Writer, der den Klartext schreiben soll.
    */
   public void decipher(BufferedReader ciphertext, BufferedWriter cleartext) {
-
+    // Kommentierung analog 'encipher(cleartext, ciphertext)'.
+    try {
+      int character;
+      int vigenereState = 0;
+      while ((character = ciphertext.read()) != -1) {
+        character = charMap.mapChar(character);
+        
+        if (character != -1) {
+          character = (character + modulus - shifts[vigenereState]) % modulus;
+          character = charMap.remapChar(character);
+          cleartext.write(character);
+          vigenereState = (vigenereState+1) % numberOfShifts;
+        } else {
+          // Ein überlesenes Zeichen sollte bei korrekter Chiffretext-Datei
+          // eigentlich nicht auftreten können.
+          System.err.println("Fehler: Unbekanntes Zeichen im Chiffretext!");
+        }
+        
+      }
+      cleartext.close();
+      ciphertext.close();
+    } catch (IOException e) {
+      System.err.println("Abbruch: Fehler beim Zugriff auf Klar- oder "
+          + "Chiffretextdatei.");
+      e.printStackTrace();
+      System.exit(1);
+    }
   }
 
   /**
@@ -67,6 +96,49 @@ public class Vigenere extends Cipher {
    */
   public void encipher(BufferedReader cleartext, BufferedWriter ciphertext) {
 
+    // An dieser Stelle könnte man alle Zeichen, die aus der Klartextdatei
+    // gelesen werden, in Klein- bzw. Großbuchstaben umwandeln lassen:
+     charMap.setConvertToLowerCase();
+    // charMap.setConvertToUpperCase();
+
+    try {
+      // 'character' ist die Integer-Repräsentation eines Zeichens.
+      int character;
+      // 'characterSkipped' zeigt an, daß ein aus der Klartextdatei gelesenes
+      // Zeichen mit dem gewählten Alphabet nicht abgebildet werden konnte.
+      boolean characterSkipped = false;
+      // Lese zeichenweise aus der Klartextdatei, bis das Dateiende erreicht
+      // ist. Der Buchstabe a wird z.B. als ein Wert von 97 gelesen.
+      int vigenereState = 0;
+      while ((character = cleartext.read()) != -1) {
+        // Bilde 'character' auf dessen interne Darstellung ab, d.h. auf einen
+        // Wert der Menge {0, 1, ..., Modulus - 1}. Ist z.B. a der erste
+        // Buchstabe des Alphabets, wird die gelesene 97 auf 0 abgebildet:
+        // mapChar(97) = 0.
+        character = charMap.mapChar(character);
+        if (character != -1) {
+          character = (character + shifts[vigenereState]) % modulus;
+          character = charMap.remapChar(character);
+          ciphertext.write(character);
+          vigenereState = (vigenereState+1) % numberOfShifts;
+        } else {
+          // Das gelesene Zeichen ist im benutzten Alphabet nicht enthalten.
+          characterSkipped = true;
+        }
+      }
+      if (characterSkipped) {
+        System.out.println("Warnung: Mindestens ein Zeichen aus der "
+            + "Klartextdatei ist im Alphabet nicht\nenthalten und wurde "
+            + "überlesen.");
+      }
+      cleartext.close();
+      ciphertext.close();
+    } catch (IOException e) {
+      System.err.println("Abbruch: Fehler beim Zugriff auf Klar- oder "
+          + "Chiffretextdatei.");
+      e.printStackTrace();
+      System.exit(1);
+    }
   }
 
   /**
@@ -122,12 +194,34 @@ public class Vigenere extends Cipher {
         System.exit(1);
       }
     } while (!accepted);
+    // Anzahl abfragen
     accepted = false;
     do {
       try {
-        System.out.print("Geben Sie die Verschiebung ein: ");
-        shift = Integer.parseInt(standardInput.readLine());
-        if (shift >= 0 && shift < modulus) {
+        System.out.print("Geben Sie die Anzahl der Verschiebungen ein: ");
+        numberOfShifts = Integer.parseInt(standardInput.readLine());
+        if (numberOfShifts > 0) {
+          accepted = true;
+        } else {
+          System.out.println("Geben Sie eine korrekte Anzahl ein!");
+        }
+      } catch (NumberFormatException e) {
+        System.out.println("Fehler beim Parsen der Anzahl.");
+      } catch (IOException e) {
+        System.err.println("Abbruch: Fehler beim Lesen von der Standardeingabe.");
+        e.printStackTrace();
+        System.exit(1);
+      }
+    } while (!accepted);
+    // shifts einlesen
+    shifts = new int[numberOfShifts];
+    for (int i=0; i<numberOfShifts; i++) {
+      accepted = false;
+    do {
+      try {
+        System.out.print("Geben Sie die "+i+". Verschiebung ein: ");
+        shifts[i] = Integer.parseInt(standardInput.readLine());
+        if (shifts[i] >= 0 && shifts[i] < modulus) {
           accepted = true;
         } else {
           System.out.println("Diese Verschiebung ist nicht geeignet. Bitte "
@@ -143,6 +237,7 @@ public class Vigenere extends Cipher {
         System.exit(1);
       }
     } while (!accepted);
+    }
   }
 
   /**
@@ -154,11 +249,39 @@ public class Vigenere extends Cipher {
    * @see #writeKey writeKey
    */
   public void readKey(BufferedReader key) {
-
+    try {
+      StringTokenizer st = new StringTokenizer(key.readLine(), " ");
+      modulus = Integer.parseInt(st.nextToken());
+      System.out.println("Modulus: " + modulus);
+      numberOfShifts = Integer.parseInt(st.nextToken());
+      System.out.println(numberOfShifts +" Verschiebungen: ");
+      shifts = new int[numberOfShifts];
+      for (int i=0; i<numberOfShifts; i++) {
+        shifts[i] = Integer.parseInt(st.nextToken());
+        System.out.println(" " + shifts[i]);
+      }
+      key.close();
+    } catch (IOException e) {
+      System.err.println("Abbruch: Fehler beim Lesen oder Schließen der "
+          + "Schlüsseldatei.");
+      e.printStackTrace();
+      System.exit(1);
+    } catch (NumberFormatException e) {
+      System.err.println("Abbruch: Fehler beim Parsen eines Wertes aus der "
+          + "Schlüsseldatei.");
+      e.printStackTrace();
+      System.exit(1);
+    }
   }
 
   /**
    * Schreibt den Schlüssel mit dem Writer <code>key</code>.
+   * <p>Der Modulus und die Verschiebung werden durch ein Leerzeichen getrennt
+   * in die Schlüsseldatei geschrieben. Eine solche Schlüsseldatei hat also das
+   * folgende Format:
+   * <pre style="background-color:#f0f0f0; border:1pt silver solid;
+   * padding:3px">
+   * modulus numberOfShifts shift0 shift1 ...</pre></p>
    * 
    * @param key
    * Der Writer, der in die Schlüsseldatei schreibt.
@@ -167,5 +290,18 @@ public class Vigenere extends Cipher {
    */
   public void writeKey(BufferedWriter key) {
 
+    try {
+      key.write(modulus + " " + numberOfShifts);
+      for (int i=0; i<numberOfShifts; i++) {
+        key.write(" " + shifts[i]);
+      }
+      key.newLine();
+      key.close();
+    } catch (IOException e) {
+      System.out.println("Abbruch: Fehler beim Schreiben oder Schließen der "
+          + "Schlüsseldatei.");
+      e.printStackTrace();
+      System.exit(1);
+    }
   }
 }
