@@ -98,7 +98,7 @@ public class Vigenere extends Cipher {
 
     // An dieser Stelle könnte man alle Zeichen, die aus der Klartextdatei
     // gelesen werden, in Klein- bzw. Großbuchstaben umwandeln lassen:
-     charMap.setConvertToLowerCase();
+    // charMap.setConvertToLowerCase();
     // charMap.setConvertToUpperCase();
 
     try {
