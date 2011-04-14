@@ -15,9 +15,14 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
 import java.util.StringTokenizer;
+import java.util.Vector;
 
 import de.tubs.cs.iti.jcrypt.chiffre.CharacterMapping;
 import de.tubs.cs.iti.jcrypt.chiffre.Cipher;
@@ -35,6 +40,236 @@ public class Vigenere extends Cipher {
   private int numberOfShifts;
   private int[] shifts;
   
+  private String remapped(List<Integer> str){
+    String r = new String();
+    for(Integer c : str){
+      r += (char)charMap.remapChar(c.intValue());
+    }
+    return r;
+  }
+
+  // Kasiski-Methode
+
+  /**
+   * Prüft, ob prefix in text an Position start vorhanden ist.
+   */
+  private boolean isPrefixAt(List<Integer> prefix, ArrayList<Integer> text, int start){
+    ListIterator<Integer> textIter = text.listIterator(start);
+    for(Integer c : prefix){
+      if(textIter.hasNext()){
+        if(textIter.next() != c){
+          return false;
+        }
+      }
+      else{
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
+   * Versucht prefix in text zu finden und gibt die Startposition zurück.
+   * Dies ist die Position des ersten Auftretens.
+   *
+   * @param prefix
+   * @param text
+   * @param start
+   * @return
+   */
+  private int findPrefix(List<Integer> prefix, ArrayList<Integer> text, int start){
+    ListIterator<Integer> textIter = text.listIterator(start);
+    int pos = start;
+    boolean found = false;
+    while(textIter.hasNext() && !found){
+      Integer character = textIter.next();
+      if(character == prefix.get(0)
+          && isPrefixAt(prefix, text, pos)){
+        found = true;
+      }
+      pos++;
+    }
+
+    // Schritt am Ende der Schleife rückgängig machen.
+    return found ? (pos - 1) : -1;
+  }
+
+  /**
+   * Finde in text das längste Textstück t mit |t| = l,
+   * so dass text[first, l) == t == text[second, l).
+   *
+   * @param text
+   * @param first
+   * @param second
+   * @return
+   */
+  private List<Integer> matchLongestPrefix(ArrayList<Integer> text, int first, int second){
+    int pf1 = first;
+    int pf2 = second;
+    while(pf2 < text.size()
+        && text.get(pf1) == text.get(pf2)){
+      pf1++;
+      pf2++;
+    }
+    return text.subList(first, pf1);
+  }
+
+  /**
+   * Misst die Äbstände zwischen den Vorkommen von prefix in text.
+   *
+   * @param prefix
+   * @param text
+   * @return
+   */
+  private Vector<Integer> distances(List<Integer> prefix, ArrayList<Integer> text){
+    Vector<Integer> dist = new Vector<Integer>();
+    int pos = 0;
+    int last = 0;
+    boolean notFirst = false;
+    while(pos < text.size()){
+      int whereNext = findPrefix(prefix, text, pos);
+      if(whereNext != -1){
+        if(notFirst){
+          int distance = whereNext - last;
+          dist.add(distance);
+        }
+        else {
+          notFirst = true;
+        }
+        pos = whereNext + prefix.size();
+        last = whereNext;
+      }
+      else {
+        break;
+      }
+    }
+
+    return dist;
+  }
+
+  /**
+   * Findet Wiederholungen und Abstände zwischen diesen im Text.
+   *
+   * @param text
+   * @return
+   */
+  private HashMap<List<Integer>, Vector<Integer> > getRepetitions(ArrayList<Integer> text){
+    HashMap<List<Integer>, Vector<Integer> > reps = new HashMap<List<Integer>, Vector<Integer> >();
+
+    List<Integer> prefix;
+    for(int i = 0; i < text.size() - 3; i++){
+      prefix = text.subList(i, i + 3);
+      int where = findPrefix(prefix, text, i + 3);
+      // Wiederholung gefunden
+      if(where != -1){
+        //System.out.println("Wiederholung von \"" + remapped(prefix) + "\" an Position " + i + " gefunden bei " + where );
+        prefix = matchLongestPrefix(text, i, where);
+        if(!reps.containsKey(prefix)){
+          Vector<Integer> dist = distances(prefix, text);
+          reps.put(prefix, dist);
+          // System.out.println("Wiederholung von \"" + remapped(prefix) + "\" " + (dist.size() + 1) + " Mal gefunden.");
+        }
+        // gefundene Wiederholung überspringen
+        i += prefix.size();
+      }
+    }
+
+    return reps;
+  }
+
+  /**
+   * Berechnet den größten gemeinsamen Teiler
+   */
+  private int gcd(int a, int b) {
+    if (b == 0)
+      return a;
+    else
+      return gcd(b, a % b);
+  }
+
+  /**
+   * Berechnet den ggT aller Werte aus vals.
+   *
+   * @param vals
+   * @return
+   */
+  private int gcd(Vector<Integer> vals){
+    assert(vals.size() >= 2);
+    int g = gcd(vals.get(0), vals.get(1));
+    for(Integer v : vals){
+      g = gcd(g, v);
+    }
+    return g;
+  }
+
+  /**
+   * Berechnet den ggT aller Werte aus vals mit
+   * Ausnahme der Werte, die zum den restlichen
+   * teilerfremd sind.
+   *
+   * @param vals
+   * @return
+   */
+  private int mostCommonGcd(Vector<Integer> vals){
+    assert(vals.size() >= 2);
+    int g = 0;
+    for(Integer v : vals){
+      int g_ = gcd(g, v);
+      // nur übernehmen, wenn echter Teiler von allen
+      if(g_ != 1){
+        g = g_;
+      }
+    }
+    return g;
+  }
+
+  /**
+   * Vergleicht Vectoren nach ihrer Größe.
+   *
+   */
+  public class SizeComparator implements Comparator<Vector<Integer> >{
+    public int compare( Vector<Integer> a, Vector<Integer> b ) {
+        return Integer.signum(a.size() - b.size());
+    }
+  }
+
+  /**
+   * Gibt die Menge der Abstände der /count/ am häufigsten
+   * vorkommenden Wiederholungen zurück.
+   *
+   * @param repetitions
+   * @param count
+   * @return
+   */
+  private Vector<Integer> distancesMostFrequentRepetitions(HashMap<List<Integer>, Vector<Integer> > repetitions, int count){
+    List<Vector<Integer>> vals = new ArrayList<Vector<Integer>>();
+    vals.addAll(repetitions.values());
+    Comparator<Vector<Integer>> comparator = new SizeComparator();
+    java.util.Collections.sort( vals, comparator );
+
+    Vector<Integer> dist = new Vector<Integer>();
+    for(int i = 0; i < count; i++){
+      dist.addAll(vals.get(i));
+    }
+
+    return dist;
+  }
+
+  /**
+   * Berechnet der ggT der /count/ am häufigsten vorkommenden
+   * Wiederholungen.
+   *
+   * @param repetitions
+   * @param count
+   * @return
+   */
+  private int mostCommonGcdDistances(HashMap<List<Integer>, Vector<Integer> > repetitions, int count){
+    //return mostCommonGcd(distancesMostFrequentRepetitions(repetitions, count));
+    return gcd(distancesMostFrequentRepetitions(repetitions, count));
+  }
+
+  // Implementierung von Friedman-Test
+
   /**
    * @param unigrams Tabelle mit Häufigkeiten im Alphabet.
    * @return Summe über alle Quadrate der Buchstabenhäufigkeiten im Alphabet.
@@ -105,12 +340,15 @@ public class Vigenere extends Cipher {
       // deren zugehörige Anzahlen (values der Hashmap).
       HashMap<Integer, Integer> quantities = new HashMap<Integer, Integer>();
 
+      ArrayList<Integer> text = new ArrayList<Integer>();
       // Lese zeichenweise aus der Chiffretextdatei, bis das Dateiende erreicht
       // ist.
       while ((character = ciphertext.read()) != -1) {
         number++;
         // Bilde 'character' auf dessen interne Darstellung ab.
         character = charMap.mapChar(character);
+        // Zeichen speichern
+        text.add(character);
         // Erhöhe die Anzahl für dieses Zeichen bzw. lege einen neuen Eintrag
         // für dieses Zeichen an.
         if (quantities.containsKey(character)) {
@@ -120,6 +358,17 @@ public class Vigenere extends Cipher {
         }
       }
       ciphertext.close();
+
+      // Schätze Periode
+      double d = guessPeriod(nGrams.size(), nu, number,
+          getIC(quantities, number));
+      System.out.println("d=" + d);
+
+      // Finde Wiederholungen
+      HashMap<List<Integer>, Vector<Integer> > repetitions = getRepetitions(text);
+      int gcdDists = mostCommonGcdDistances(repetitions, 5); //gcdDistances(repetitions);
+      System.out.println("ggT der Abstände der am 5 häufigsten aufgetretenen Wiederholungen (mit mehr als 3 Zeichen): " + gcdDists);
+
       // Suche das häufigste Zeichen in 'quantities'.
       // 'currKey' ist der aktuell betrachtete Schlüssel der Hashmap (ein
       // Zeichen des Chiffretextalphabets).
