@@ -323,6 +323,7 @@ public class Vigenere extends Cipher {
         fs.add(f);
         fs.add(k / f);
       }
+      ++f;
     }
     return fs;
   }
