@@ -325,6 +325,8 @@ public class Vigenere extends Cipher {
   }
 
   /**
+   * Berechnet den Koinzidenzindex eines Textes.
+   *
    * @param quantities
    * @param numberOfCharsInChiffreText
    * @return Variable IC
@@ -339,6 +341,32 @@ public class Vigenere extends Cipher {
         / (numberOfCharsInChiffreText * (numberOfCharsInChiffreText - 1));
   }
 
+  /**
+   * Berechnet den Erwartungswert des Koninzidenzindex E(IC) zu einer gegebenen Periode und
+   * einer Verteilung in einem Alphabet.
+   *
+   * @param quantities
+   * @param numberOfCharsInChiffreText
+   * @return Variable IC
+   */
+  @SuppressWarnings("unused")
+  private double getExpectedIC(ArrayList<NGram> unigrams, int numberOfCharsInChiffreText, int period) {
+    double nu = getNu(unigrams);
+    int N = numberOfCharsInChiffreText;
+    double textPart = (1.0 / period) * ((N - period) / (N - 1.0)) * nu;
+    double alphabetPart = ((period - 1.0) / period) * (N / (N - 1.0)) * (1.0 / unigrams.size());
+    return textPart + alphabetPart;
+  }
+
+  /**
+   * Schätzt die Periode der Vigenere-Chiffre anhand eines Chiffretextes.
+   *
+   * @param alphabetSize
+   * @param nu
+   * @param numberOfCharsInChiffreText
+   * @param IC
+   * @return
+   */
   private double guessPeriod(int alphabetSize, double nu,
       int numberOfCharsInChiffreText, double IC) {
     int N = numberOfCharsInChiffreText;
@@ -399,10 +427,19 @@ public class Vigenere extends Cipher {
       }
       ciphertext.close();
 
+
+      // Explizites ausrechnen des Koinzidenzindex und seinem Erwartungswert
+      //System.out.println("IC = " + getIC(quantities, number));
+      //System.out.println("d=4 ⇒ E(IC) = " + getExpectedIC(nGrams, number, 4));
+      //System.out.println("d=5 ⇒ E(IC) = " + getExpectedIC(nGrams, number, 5));
+      //System.out.println("d=6 ⇒ E(IC) = " + getExpectedIC(nGrams, number, 6));
+      //System.out.println("d=7 ⇒ E(IC) = " + getExpectedIC(nGrams, number, 7));
+      //System.out.println("d=8 ⇒ E(IC) = " + getExpectedIC(nGrams, number, 8));
+
       // Schätze Periode
       double d = guessPeriod(nGrams.size(), nu, number,
           getIC(quantities, number));
-      System.out.println("d=" + d);
+      System.out.println("Geschätzte Periode: " + d);
 
       // Kasiski-Methode
       int gcdDists = gcdKasiski(text, 5, false);
