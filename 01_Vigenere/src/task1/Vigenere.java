@@ -15,7 +15,6 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -40,6 +39,13 @@ public class Vigenere extends Cipher {
   private int numberOfShifts;
   private int[] shifts;
   
+  /**
+   * Macht aus einer Liste von Zeichen einen lesbaren String.
+   *
+   * @param str
+   * @return
+   */
+  @SuppressWarnings("unused")
   private String remapped(List<Integer> str){
     String r = new String();
     for(Integer c : str){
@@ -210,6 +216,7 @@ public class Vigenere extends Cipher {
    * @param vals
    * @return
    */
+  @SuppressWarnings("unused")
   private int mostCommonGcd(Vector<Integer> vals){
     assert(vals.size() >= 2);
     int g = 0;
