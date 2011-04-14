@@ -216,7 +216,6 @@ public class Vigenere extends Cipher {
    * @param vals
    * @return
    */
-  @SuppressWarnings("unused")
   private int mostCommonGcd(Vector<Integer> vals){
     assert(vals.size() >= 2);
     int g = 0;
@@ -270,9 +269,43 @@ public class Vigenere extends Cipher {
    * @param count
    * @return
    */
-  private int mostCommonGcdDistances(HashMap<List<Integer>, Vector<Integer> > repetitions, int count){
-    //return mostCommonGcd(distancesMostFrequentRepetitions(repetitions, count));
+  private int gcdDistances(HashMap<List<Integer>, Vector<Integer> > repetitions, int count){
     return gcd(distancesMostFrequentRepetitions(repetitions, count));
+  }
+
+  /**
+   * Berechnet der ggT der /count/ am häufigsten vorkommenden
+   * Wiederholungen. Ignoriert dabei ungewöhnliche Abstände, die
+   * teilerfremd zu allen anderen sind.
+   *
+   * @param repetitions
+   * @param count
+   * @return
+   */
+  private int mostCommonGcdDistances(HashMap<List<Integer>, Vector<Integer> > repetitions, int count){
+    return mostCommonGcd(distancesMostFrequentRepetitions(repetitions, count));
+  }
+
+  /**
+   * Implementierung der Kasiski-Methode.
+   *
+   * Zuerst werden Wiederholungen im Text gesucht und die Abstände
+   * zwischen den Auftreten bestimmt. Danach wird der ggT der
+   * häufigsten Abstände bestimmt.
+   *
+   * @param text Text, der untersucht werden soll.
+   * @param top Zahl der am häufigsten vorkommenden Wiederholungen, die untersucht werden soll.
+   * @param ignoreUncommon Gibt an, ob Abstände, die teilerfremd zu anderen sind, ignoriert werden sollen.
+   * @return ggT der Abstände der häufigsten Wiederholungen
+   */
+  private int gcdKasiski(ArrayList<Integer> text, int top, boolean ignoreUncommon){
+    HashMap<List<Integer>, Vector<Integer> > repetitions = getRepetitions(text);
+    if(ignoreUncommon){
+      return mostCommonGcdDistances(repetitions, top);
+    }
+    else{
+      return gcdDistances(repetitions, top);
+    }
   }
 
   // Implementierung von Friedman-Test
@@ -371,10 +404,11 @@ public class Vigenere extends Cipher {
           getIC(quantities, number));
       System.out.println("d=" + d);
 
-      // Finde Wiederholungen
-      HashMap<List<Integer>, Vector<Integer> > repetitions = getRepetitions(text);
-      int gcdDists = mostCommonGcdDistances(repetitions, 5); //gcdDistances(repetitions);
+      // Kasiski-Methode
+      int gcdDists = gcdKasiski(text, 5, false);
       System.out.println("ggT der Abstände der am 5 häufigsten aufgetretenen Wiederholungen (mit mehr als 3 Zeichen): " + gcdDists);
+      //int gcdDistsNoUncommon = gcdKasiski(text, 5, true);
+      //System.out.println("ggT der Abstände der am 5 häufigsten aufgetretenen Wiederholungen (mit mehr als 3 Zeichen), die nicht teilerfremd zu den anderen sind: " + gcdDistsNoUncommon);
 
       // Suche das häufigste Zeichen in 'quantities'.
       // 'currKey' ist der aktuell betrachtete Schlüssel der Hashmap (ein
