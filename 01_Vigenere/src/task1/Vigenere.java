@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
@@ -307,6 +308,24 @@ public class Vigenere extends Cipher {
       return gcdDistances(repetitions, top);
     }
   }
+  
+  /**
+   * Berechnet alle Teiler von k.
+   *
+   * @param k
+   * @return
+   */
+  private HashSet<Integer> factors(int k){
+    HashSet<Integer> fs = new HashSet<Integer>();
+    int f = 1;
+    while(!fs.contains(f)){
+      if(k % f == 0){
+        fs.add(f);
+        fs.add(k / f);
+      }
+    }
+    return fs;
+  }
 
   // Implementierung von Friedman-Test
 
@@ -444,6 +463,7 @@ public class Vigenere extends Cipher {
       // Kasiski-Methode
       int gcdDists = gcdKasiski(text, 5, false);
       System.out.println("ggT der Abstände der am 5 häufigsten aufgetretenen Wiederholungen (mit mehr als 3 Zeichen): " + gcdDists);
+      System.out.println(" ⇒ mögliche Perioden: " + factors(gcdDists));
       //int gcdDistsNoUncommon = gcdKasiski(text, 5, true);
       //System.out.println("ggT der Abstände der am 5 häufigsten aufgetretenen Wiederholungen (mit mehr als 3 Zeichen), die nicht teilerfremd zu den anderen sind: " + gcdDistsNoUncommon);
 
