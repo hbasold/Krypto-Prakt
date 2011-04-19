@@ -12,6 +12,11 @@ public class VigenereBreak {
     this.text = text;
   }
   
+  /**
+   * @param numberOfShifts The number of shifts.
+   * @return Vector of a hash-map defining the integer of a char as the key
+   *    and the quantity of this char as the value.
+   */
   private Vector<HashMap<Integer, Integer> > getVectorOfQuantities(int numberOfShifts) {
     // create vector of quantities
     Vector<HashMap<Integer, Integer> > vQuantities = new Vector<HashMap<Integer, Integer> >(numberOfShifts);
@@ -33,6 +38,13 @@ public class VigenereBreak {
     return vQuantities;
   }
 
+  /**
+   * Use the text with a given length of period to calculate the
+   * quantities of the chars separately for each shift.
+   * @param numberOfShifts The number of shifts.
+   * @return Sorted list of quantities. Order is specified by
+   * {@link CharQuantity#compareTo(CharQuantity)}.
+   */
   public Vector<Quantities > getVectorOfSortedQuantities(int numberOfShifts) {
     Vector<HashMap<Integer, Integer> > vQuantities = getVectorOfQuantities(numberOfShifts);
     // create vector of NGrams
@@ -42,7 +54,7 @@ public class VigenereBreak {
       for (Integer key: quantities.keySet()) {
         sortedQuantities.add(new CharQuantity(key, quantities.get(key)));
       }
-      java.util.Collections.sort(sortedQuantities);
+      java.util.Collections.sort(sortedQuantities); // implicit call of compareTo
       vSortedQuantities.add(sortedQuantities);
     }
     return vSortedQuantities;
