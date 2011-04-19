@@ -30,9 +30,9 @@ import de.tubs.cs.iti.jcrypt.chiffre.FrequencyTables;
 import de.tubs.cs.iti.jcrypt.chiffre.NGram;
 
 /**
- * Dummy-Klasse für die Vigenère-Chiffre.
+ * Klasse für die Vigenère-Chiffre.
  * 
- * @author Martin Klußmann
+ * @author Henning Basold, Raimar Bühmann (Vorlage von Martin Klußmann)
  * @version 1.0 - Tue Mar 30 15:53:38 CEST 2010
  */
 public class Vigenere extends Cipher {
@@ -48,11 +48,11 @@ public class Vigenere extends Cipher {
    */
   @SuppressWarnings("unused")
   private String remapped(List<Integer> str){
-    String r = new String();
+    StringBuffer r = new StringBuffer();
     for(Integer c : str){
-      r += (char)charMap.remapChar(c.intValue());
+      r.append((char)charMap.remapChar(c.intValue()));
     }
-    return r;
+    return r.toString();
   }
 
   // Kasiski-Methode
@@ -187,7 +187,7 @@ public class Vigenere extends Cipher {
   /**
    * Berechnet den größten gemeinsamen Teiler
    */
-  private int gcd(int a, int b) {
+  private static int gcd(int a, int b) {
     if (b == 0)
       return a;
     else
@@ -200,7 +200,7 @@ public class Vigenere extends Cipher {
    * @param vals
    * @return
    */
-  private int gcd(Vector<Integer> vals){
+  private static int gcd(Vector<Integer> vals){
     assert(vals.size() >= 2);
     int g = gcd(vals.get(0), vals.get(1));
     for(Integer v : vals){
@@ -236,7 +236,7 @@ public class Vigenere extends Cipher {
    */
   public class SizeComparator implements Comparator<Vector<Integer> >{
     public int compare( Vector<Integer> a, Vector<Integer> b ) {
-        return Integer.signum(a.size() - b.size());
+        return a.size() - b.size();
     }
   }
 
@@ -328,13 +328,13 @@ public class Vigenere extends Cipher {
     return fs;
   }
 
-  // Implementierung von Friedman-Test
+  // Implementierung des Friedman-Test
 
   /**
    * @param unigrams Tabelle mit Häufigkeiten im Alphabet.
    * @return Summe über alle Quadrate der Buchstabenhäufigkeiten im Alphabet.
    */
-  private double getNu(ArrayList<NGram> unigrams) {
+  private static double getNu(ArrayList<NGram> unigrams) {
     Iterator<NGram> it = unigrams.iterator();
     double nu = 0;
     while (it.hasNext()) {
@@ -347,11 +347,11 @@ public class Vigenere extends Cipher {
   /**
    * Berechnet den Koinzidenzindex eines Textes.
    *
-   * @param quantities
-   * @param numberOfCharsInChiffreText
+   * @param quantities Map mit Häufigkeiten der Buchstaben
+   * @param numberOfCharsInChiffreText N
    * @return Variable IC
    */
-  private double getIC(HashMap<Integer, Integer> quantities,
+  private static double getIC(HashMap<Integer, Integer> quantities,
       int numberOfCharsInChiffreText) {
     double IC_numerator = 0;
     for (Integer i : quantities.values()) {
@@ -359,6 +359,27 @@ public class Vigenere extends Cipher {
     }
     return IC_numerator
         / (numberOfCharsInChiffreText * (numberOfCharsInChiffreText - 1));
+  }
+
+  /**
+   * Schätzt die Periode der Vigenere-Chiffre anhand eines Chiffretextes.
+   * @param nGrams Liste mit N-Gramen
+   * @param numberOfCharsInChiffreText N
+   * @param quantities Map mit Häufigkeiten der Buchstaben
+   * @return Geschätze Periodenlänge.
+   */
+  private static double guessPeriod(
+        ArrayList<NGram> nGrams,
+        int numberOfCharsInChiffreText,
+        HashMap<Integer, Integer> quantities)
+  {
+    double nu = getNu(nGrams);
+    int alphabetSize = nGrams.size();
+    int N = numberOfCharsInChiffreText;
+    double IC = getIC(quantities, N);
+    double numerator = (nu - (1.0 / alphabetSize)) * N;
+    double denominator = (N - 1) * IC - (1.0 / alphabetSize) * N + nu;
+    return numerator / denominator;
   }
 
   /**
@@ -370,29 +391,12 @@ public class Vigenere extends Cipher {
    * @return Variable IC
    */
   @SuppressWarnings("unused")
-  private double getExpectedIC(ArrayList<NGram> unigrams, int numberOfCharsInChiffreText, int period) {
+  private static double getExpectedIC(ArrayList<NGram> unigrams, int numberOfCharsInChiffreText, int period) {
     double nu = getNu(unigrams);
     int N = numberOfCharsInChiffreText;
     double textPart = (1.0 / period) * ((N - period) / (N - 1.0)) * nu;
     double alphabetPart = ((period - 1.0) / period) * (N / (N - 1.0)) * (1.0 / unigrams.size());
     return textPart + alphabetPart;
-  }
-
-  /**
-   * Schätzt die Periode der Vigenere-Chiffre anhand eines Chiffretextes.
-   *
-   * @param alphabetSize
-   * @param nu
-   * @param numberOfCharsInChiffreText
-   * @param IC
-   * @return
-   */
-  private double guessPeriod(int alphabetSize, double nu,
-      int numberOfCharsInChiffreText, double IC) {
-    int N = numberOfCharsInChiffreText;
-    double numerator = (nu - (1.0 / alphabetSize)) * N;
-    double denominator = (N - 1) * IC - (1.0 / alphabetSize) * N + nu;
-    return numerator / denominator;
   }
 
   /**
@@ -413,12 +417,9 @@ public class Vigenere extends Cipher {
       // Alphabets definiert wurde, wird auf unterschiedliche Tabellen
       // zugegriffen.
       // 'nGrams' nimmt die Daten der Häufigkeitstabelle auf.
+      System.out.println("Unigramm-Tabelle beginnend mit den häufigsten:");
       ArrayList<NGram> nGrams = FrequencyTables.getNGramsAsList(1, charMap);
-      double nu = getNu(nGrams);
-      System.out.println("Nu=" + nu);
-      // Bestimme das häufigste Zeichen aus der zugehörigen Unigramm-Tabelle.
-      System.out.println("Häufigstes Zeichen in der Unigramm-Tabelle: \""
-          + nGrams.get(0).getCharacters() + "\"");
+
       // Bestimme das häufigste Zeichen des Chiffretextes.
       // 'character' ist die Integer-Repräsentation eines Zeichens.
       int character;
@@ -429,8 +430,7 @@ public class Vigenere extends Cipher {
       HashMap<Integer, Integer> quantities = new HashMap<Integer, Integer>();
 
       ArrayList<Integer> text = new ArrayList<Integer>();
-      // Lese zeichenweise aus der Chiffretextdatei, bis das Dateiende erreicht
-      // ist.
+      // Lese zeichenweise aus der Chiffretextdatei, bis das Dateiende erreicht ist.
       while ((character = ciphertext.read()) != -1) {
         number++;
         // Bilde 'character' auf dessen interne Darstellung ab.
@@ -457,17 +457,60 @@ public class Vigenere extends Cipher {
       //System.out.println("d=8 ⇒ E(IC) = " + getExpectedIC(nGrams, number, 8));
 
       // Schätze Periode
-      double d = guessPeriod(nGrams.size(), nu, number,
-          getIC(quantities, number));
-      System.out.println("Geschätzte Periode: " + d);
+      double d = guessPeriod(nGrams, number, quantities);
 
       // Kasiski-Methode
       int gcdDists = gcdKasiski(text, 5, false);
-      System.out.println("ggT der Abstände der am 5 häufigsten aufgetretenen Wiederholungen (mit mehr als 3 Zeichen): " + gcdDists);
-      System.out.println(" ⇒ mögliche Perioden: " + factors(gcdDists));
+      HashSet<Integer> factorSet = factors(gcdDists);
+
+//// begin dummy
+//      int gcdDists = 5;
+//      HashSet<Integer> factorSet = new HashSet<Integer>();
+//      factorSet.add(5);
+//// end dummy
+
       //int gcdDistsNoUncommon = gcdKasiski(text, 5, true);
       //System.out.println("ggT der Abstände der am 5 häufigsten aufgetretenen Wiederholungen (mit mehr als 3 Zeichen), die nicht teilerfremd zu den anderen sind: " + gcdDistsNoUncommon);
+      
+      BufferedReader standardInput = launcher.openStandardInput();
+      boolean accepted = false;
 
+      // Anzahl abfragen
+      accepted = false;
+      do {
+        try {
+          System.out.printf("Geschätzte Periode: %.2f\n", d);
+          System.out.println("ggT der Abstände der am 5 häufigsten aufgetretenen Wiederholungen (mit mehr als 3 Zeichen): " + gcdDists);
+          System.out.println(" ⇒ mögliche Perioden: " + factorSet);
+          System.out.print("Geben Sie die Periodenlänge ein: ");
+          numberOfShifts = Integer.parseInt(standardInput.readLine());
+          if (numberOfShifts > 0) {
+            accepted = true;
+          } else {
+            System.out.println("Geben Sie eine korrekte Periodenlänge ein!");
+          }
+        } catch (NumberFormatException e) {
+          System.out.println("Fehler beim Parsen der Anzahl.");
+        } catch (IOException e) {
+          System.err
+              .println("Abbruch: Fehler beim Lesen von der Standardeingabe.");
+          e.printStackTrace();
+          System.exit(1);
+        }
+      } while (!accepted);
+
+      VigenereBreak vb = new VigenereBreak(text);
+      Vector<Quantities> vQuantities = vb.getVectorOfSortedQuantities(numberOfShifts);
+      
+      int i = 0;
+      for (Quantities q: vQuantities) {
+        System.out.printf("i =%2d", i);
+        for (int n=0; n<4; n++) {
+          System.out.printf(" | %3d: %3.1f%% ", q.get(n).getCharInt(), q.getQuantityInPercent(n));
+        }
+        System.out.println();
+        i++;
+      }
       // Suche das häufigste Zeichen in 'quantities'.
       // 'currKey' ist der aktuell betrachtete Schlüssel der Hashmap (ein
       // Zeichen des Chiffretextalphabets).
