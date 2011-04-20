@@ -22,13 +22,6 @@ public class VigenereBreak {
     this.modulus = modulus;
   }
   
-  public String remapToString(int charInt) {
-    return CharacterMapping.convertToString(charMap.remapChar(charInt));
-  }
-  public int remap(int charInt) {
-    return charMap.remapChar(charInt);
-  }
-  
   /**
    * @param numberOfShifts The number of shifts.
    * @return Vector of a hash-map defining the integer of a char as the key
@@ -57,7 +50,7 @@ public class VigenereBreak {
 
   /**
    * Use the text with a given length of period to calculate the
-   * quantities of the chars separately for each shift.
+   * quantities of the chars separately for each list of quantities.
    * @param numberOfShifts The number of shifts.
    * @return Sorted list of quantities. Order is specified by
    * {@link Quantity#compareTo(Quantity)}.
@@ -73,26 +66,37 @@ public class VigenereBreak {
       }
       java.util.Collections.sort(sortedQuantities); // implicit call of compareTo
       vSortedQuantities.add(sortedQuantities);
-      sortedQuantities.calculateShift();
+      sortedQuantities.calculateShifts();
     }
   }
 
+  /**
+   * Calls {@link Quantities#sortByChangingNeighbours()} for each list
+   * of quantities.
+   */
   public void sortByChangingNeighbours() {
     for (Quantities qs: vSortedQuantities) {
       qs.sortByChangingNeighbours();
     }
   }
-  
-  private Vector<Vector<Pair<Integer, Quantity>>> getGuessedShifts() {
+
+  /**
+   * @return List of all shift frequencies.
+   */
+  private Vector<Vector<Pair<Integer, Quantity>>> getListOfShiftFrequencies() {
     Vector<Vector<Pair<Integer, Quantity>>> shifts = new Vector<Vector<Pair<Integer, Quantity>>>(vSortedQuantities.size());
     for (Quantities qs: vSortedQuantities) {
-      shifts.add(qs.getGuessedShift());
+      shifts.add(qs.getShiftFrequencies());
     }
     return shifts;
   }
 
+  /**
+   * Selects the first shift in each list of quantities to get a default result.
+   * @return Array of the best shifts.
+   */
   public int[] getBestShifts() {
-    Vector<Vector<Pair<Integer, Quantity>>> vShifts = getGuessedShifts();
+    Vector<Vector<Pair<Integer, Quantity>>> vShifts = getListOfShiftFrequencies();
     int[] shifts = new int[vSortedQuantities.size()];
     for (int i=0; i<vSortedQuantities.size(); i++) {
       shifts[i] = vShifts.get(i).get(0).second.getShift();
@@ -100,12 +104,17 @@ public class VigenereBreak {
     return shifts;
   }
 
+  /**
+   * Prints a table with the relative frequencies of each letter
+   * in descending order to console window.
+   */
   public void printQuantities() {
     final int nMax = modulus/2;
     System.out.printf("     ");
     for (int n=0; n<nMax; n++) {
       Quantity q = languageQuantities.get(n);
-      System.out.printf(" | %1s=%3s       : %3.1f%% ", remapToString(q.getInt()), q.getInt(), q.getRelativeFrequency());
+      System.out.printf(" | %1s=%3s       : %3.1f%% ",
+          remapToString(q.getInt()), q.getInt(), q.getRelativeFrequency());
     }
     System.out.println();
     for (int i=0; i<vSortedQuantities.size(); i++) {
@@ -119,10 +128,16 @@ public class VigenereBreak {
       System.out.println();
     }
   }
+  private String remapToString(int charInt) {
+    return CharacterMapping.convertToString(charMap.remapChar(charInt));
+  }
 
+  /**
+   * Prints a table with the shifts and their frequencies to console window.
+   */
   public void printShifts() {
     System.out.println("Mögliche Shifts sortiert nach Häufigkeit pro Teiltext:");
-    Vector<Vector<Pair<Integer, Quantity>>> vShifts = getGuessedShifts();
+    Vector<Vector<Pair<Integer, Quantity>>> vShifts = getListOfShiftFrequencies();
     int i = 0;
     for (Vector<Pair<Integer, Quantity>> vPair: vShifts) {
       System.out.printf("i = %2d", i);
