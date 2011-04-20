@@ -1,5 +1,7 @@
 package task1;
 
+import java.util.Collections;
+
 /**
  * Generic helper class for a pair object containing two objects named
  * first and second. The types of first and second are defined by the
@@ -25,6 +27,7 @@ public class Pair<FIRST, SECOND> implements Comparable<Pair<FIRST, SECOND>> {
   /**
    * Implementation for sorting with collections.
    * The default sorting order is descending on first followed by second.
+   * @see Collections#sort(java.util.List)
    */
   @Override
   public int compareTo(Pair<FIRST, SECOND> o) {
