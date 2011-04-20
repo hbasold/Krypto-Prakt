@@ -427,7 +427,7 @@ public class Vigenere extends Cipher {
       accepted = false;
       do {
         try {
-          System.out.print("Geben Sie die " + i + ". Verschiebung ein: ");
+          System.out.print("Geben Sie die " + i + ". Verschiebung ein ([ENTER] = "+shifts[i]+"): ");
           String line = standardInput.readLine();
           if (line.trim().length()==0) {
             break;
