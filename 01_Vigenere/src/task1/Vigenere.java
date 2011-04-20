@@ -497,53 +497,27 @@ public class Vigenere extends Cipher {
 //      }
 //    } while (!accepted);
 
-    VigenereBreak vb = new VigenereBreak(charMap, text, modulus);
-    Vector<Quantities> vQuantities = vb.getVectorOfSortedQuantities(numberOfShifts);
 
-    System.out.println("Sortierte Häufigkeit der Zeichen pro Shift:");
-    final int nMax = modulus/2;
-    Quantities lq = vb.getLanguageQuantities();
-    System.out.printf("     ");
-    for (int n=0; n<nMax; n++) {
-      Quantity q = lq.get(n);
-      System.out.printf(" | %1s=%3s       : %3.1f%% ", vb.remapToString(q.getInt()), q.getInt(), q.getRelativeFrequency());
-    }
-    System.out.println();
-    for (int i=0; i<vQuantities.size(); i++) {
-      Quantities qs = vQuantities.get(0);
-      System.out.printf("i =%2d", i);
-      for (int n=0; n<nMax; n++) {
-        Quantity q = qs.get(n); 
-        System.out.printf(" | %1s=%3d (+%3d): %3.1f%% ",
-            vb.remapToString(q.getInt()), q.getInt(), q.getShift(), q.getRelativeFrequency());
-      }
-      System.out.println();
-    }
-    Vector<Vector<Pair<Integer, Integer>>> vShifts = vb.getGuessedShifts();
-    System.out.println("Sortierte Häufigkeit der Shifts pro Shift:");
-    int n = 0;
-    for (Vector<Pair<Integer, Integer>> vPair: vShifts) {
-      System.out.printf("i = %2d", n);
-      for (Pair<Integer, Integer> p: vPair) {
-        System.out.printf(" | %2dx %3d", p.first, p.second);
-      }
-      System.out.println();
-      n++;
-    }
-    shifts = new int[numberOfShifts];
-    for (int i=0; i<numberOfShifts; i++) {
-      shifts[i] = vShifts.get(i).get(0).second;
-    }
+    System.out.println("1. Zeichen sortiert nach Häufigkeit pro Teiltext:");
+    VigenereBreak vb = new VigenereBreak(charMap, text, modulus);
+    vb.sortByQuantities(numberOfShifts);
+    vb.printQuantities();
+    vb.printShifts();
+
+    System.out.println("2. Zeichen sortiert nach Häufigkeit und Vertauschung der Nachbarn pro Teiltext:");
+    vb.sortByChangingNeighbours();
+    vb.printQuantities();
+    vb.printShifts();
+
+    shifts = vb.getBestShifts();
     // shifts einlesen
     for (int i = 0; i < shifts.length; i++) {
       accepted = false;
-      boolean hasEmptyInput = false;
       do {
         try {
           System.out.print("Geben Sie die " + i + ". Verschiebung ein: ");
           String line = standardInput.readLine();
           if (line.trim().length()==0) {
-            hasEmptyInput = true;
             break;
           }
           shifts[i] = Integer.parseInt(line);
@@ -563,9 +537,6 @@ public class Vigenere extends Cipher {
           System.exit(1);
         }
       } while (!accepted);
-      if (hasEmptyInput) {
-        break;
-      }
     }
   }
 

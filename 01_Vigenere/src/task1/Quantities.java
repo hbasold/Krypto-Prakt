@@ -2,19 +2,14 @@ package task1;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Iterator;
-import java.util.Map;
-import java.util.TreeMap;
 import java.util.Vector;
 
 import de.tubs.cs.iti.jcrypt.chiffre.CharacterMapping;
 import de.tubs.cs.iti.jcrypt.chiffre.FrequencyTables;
 import de.tubs.cs.iti.jcrypt.chiffre.NGram;
 
-public class Quantities extends Vector<Quantity>
-    implements Comparator<Quantity>
-{
+public class Quantities extends Vector<Quantity> {
 
   private static final long serialVersionUID = 7918874849850308089L;
 
@@ -22,15 +17,8 @@ public class Quantities extends Vector<Quantity>
   private final int modulus;
   
   private int countAllChars;
-  private Vector<Pair<Integer, Integer>> guessedShifts;
+  private Vector<Pair<Integer, Quantity>> guessedShifts;
 
-  private Quantities(Quantities qs) {
-    languageQuantities = qs.languageQuantities;
-    this.modulus = qs.modulus;
-    for (Quantity q: qs) {
-      add(q);
-    }
-  }
   private Quantities(int size, int modulus) {
     super(size);
     languageQuantities = null;
@@ -83,55 +71,62 @@ public class Quantities extends Vector<Quantity>
    * of all letters in this vector of quantity.
    * @see Quantity#getRelativeFrequency()
    */
-  public void calculateAll() {
+  public void calculateShift() {
     Iterator<Quantity> it = languageQuantities.iterator();
     for (Quantity q: this) {
       q.calculateRelativeFrequency(countAllChars);
-      q.calculateAll(it.next(), modulus);
+      q.calculateShift(it.next(), modulus);
     }
-    // guess shift
-//    Quantities qBestFit = new Quantities(languageQuantities, modulus);
-//    Collections.sort(qBestFit, this);
+    calculateGuessedShifts();
+  }
+
+  private void calculateGuessedShifts() {
+    // count shifts in an array with length of modulus
     int[] shiftCounts = new int[modulus];
     int relevantShifts = Math.min(size(), modulus); //10;
     for (int i=0; i<relevantShifts; i++) {
       shiftCounts[get(i).getShift()]++;
     }
-    guessedShifts = getIndexOfMaxElement(shiftCounts, 3);
-    Collections.sort(guessedShifts);
-//    guessedShift = qBestFit.get(0).getShift();
+    // create a sorted vector of pairs with counter of shift and shift-length
+    guessedShifts = new Vector<Pair<Integer, Quantity>>();
+    for(int i = 0; i < shiftCounts.length; i++) {
+      if (shiftCounts[i]>0) {
+        guessedShifts.add(Pair.of(shiftCounts[i], getFirstQuantityWithShift(i)));
+      }
+    }
+    Collections.sort(guessedShifts); // implicit call of Pair.compareTo (descending)
   }
-  
-  private Vector<Pair<Integer, Integer>> getIndexOfMaxElement(int[] shiftCounts, int count) {
-    int max[] = new int[count];
-    int indexMax[] = new int[count];
-    for (int i=0 ; i<shiftCounts.length; i++) {
-      for(int j = 0; j < count; ++j){
-        if (shiftCounts[i] > max[j]) {
-          max[j] = shiftCounts[i];
-          indexMax[j] = i;
-          break;
+
+  private Quantity getFirstQuantityWithShift(int shift) {
+    for (Quantity q: this) {
+      if (q.getShift()==shift)
+        return q;
+    }
+    return null;
+  }
+
+  public void sortByChangingNeighbours() {
+    for (int i=0; i<size()-1; i++) {
+      if (get(i).getShift()!=get(i+1).getShift()) { // shifts are different
+        Collections.swap(this, i, i+1); // probe switching...
+        get(i).calculateShift(languageQuantities.get(i), modulus);
+        get(i+1).calculateShift(languageQuantities.get(i+1), modulus);
+        if (get(i).getShift()!=get(i+1).getShift()) { // switching not successful
+          Collections.swap(this, i, i+1); // switch back
+          get(i).calculateShift(languageQuantities.get(i), modulus);
+          get(i+1).calculateShift(languageQuantities.get(i+1), modulus);
         }
       }
     }
-    Vector<Pair<Integer, Integer>> maxIndices = new Vector<Pair<Integer, Integer>>();
-    for(int j = 0; j < count; ++j) {
-      maxIndices.add(Pair.of(max[j], indexMax[j]));
-    }
-    return maxIndices;
+    calculateShift();
   }
-
+  
   public int decrypt(int index) {
     return (get(index).getInt()-get(index).getShift()+modulus) % modulus;
   }
 
-  public Vector<Pair<Integer, Integer>> getGuessedShift() {
+  public Vector<Pair<Integer, Quantity>> getGuessedShift() {
     return guessedShifts;
-  }
-
-  @Override
-  public int compare(Quantity o1, Quantity o2) {
-    return (int)(1000*(o2.getDeltaRelativeFrequency() - o1.getDeltaRelativeFrequency()));
   }
 
 }

@@ -1,10 +1,7 @@
 package task1;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
-import java.util.TreeMap;
 import java.util.Vector;
 
 import de.tubs.cs.iti.jcrypt.chiffre.CharacterMapping;
@@ -65,7 +62,7 @@ public class VigenereBreak {
    * @return Sorted list of quantities. Order is specified by
    * {@link Quantity#compareTo(Quantity)}.
    */
-  public Vector<Quantities > getVectorOfSortedQuantities(int numberOfShifts) {
+  public void sortByQuantities(int numberOfShifts) {
     Vector<HashMap<Integer, Integer> > vQuantities = getVectorOfQuantities(numberOfShifts);
     // create vector of NGrams
     vSortedQuantities = new Vector<Quantities>(numberOfShifts);
@@ -75,22 +72,66 @@ public class VigenereBreak {
         sortedQuantities.add(new Quantity(key, quantities.get(key)));
       }
       java.util.Collections.sort(sortedQuantities); // implicit call of compareTo
-      sortedQuantities.calculateAll();
       vSortedQuantities.add(sortedQuantities);
+      sortedQuantities.calculateShift();
     }
-    return vSortedQuantities;
   }
 
-  public Quantities getLanguageQuantities() {
-    return languageQuantities;
+  public void sortByChangingNeighbours() {
+    for (Quantities qs: vSortedQuantities) {
+      qs.sortByChangingNeighbours();
+    }
   }
-
-  public Vector<Vector<Pair<Integer, Integer>>> getGuessedShifts() {
-    Vector<Vector<Pair<Integer, Integer>>> shifts = new Vector<Vector<Pair<Integer, Integer>>>(vSortedQuantities.size());
+  
+  private Vector<Vector<Pair<Integer, Quantity>>> getGuessedShifts() {
+    Vector<Vector<Pair<Integer, Quantity>>> shifts = new Vector<Vector<Pair<Integer, Quantity>>>(vSortedQuantities.size());
     for (Quantities qs: vSortedQuantities) {
       shifts.add(qs.getGuessedShift());
     }
     return shifts;
+  }
+
+  public int[] getBestShifts() {
+    Vector<Vector<Pair<Integer, Quantity>>> vShifts = getGuessedShifts();
+    int[] shifts = new int[vSortedQuantities.size()];
+    for (int i=0; i<vSortedQuantities.size(); i++) {
+      shifts[i] = vShifts.get(i).get(0).second.getShift();
+    }
+    return shifts;
+  }
+
+  public void printQuantities() {
+    final int nMax = modulus/2;
+    System.out.printf("     ");
+    for (int n=0; n<nMax; n++) {
+      Quantity q = languageQuantities.get(n);
+      System.out.printf(" | %1s=%3s       : %3.1f%% ", remapToString(q.getInt()), q.getInt(), q.getRelativeFrequency());
+    }
+    System.out.println();
+    for (int i=0; i<vSortedQuantities.size(); i++) {
+      Quantities qs = vSortedQuantities.get(i);
+      System.out.printf("i =%2d", i);
+      for (int n=0; n<nMax; n++) {
+        Quantity q = qs.get(n); 
+        System.out.printf(" | %1s=%3d (+%3d): %3.1f%% ",
+            remapToString(q.getInt()), q.getInt(), q.getShift(), q.getRelativeFrequency());
+      }
+      System.out.println();
+    }
+  }
+
+  public void printShifts() {
+    System.out.println("Mögliche Shifts sortiert nach Häufigkeit pro Teiltext:");
+    Vector<Vector<Pair<Integer, Quantity>>> vShifts = getGuessedShifts();
+    int i = 0;
+    for (Vector<Pair<Integer, Quantity>> vPair: vShifts) {
+      System.out.printf("i = %2d", i);
+      for (Pair<Integer, Quantity> p: vPair) {
+        System.out.printf(" | %3d: %3dx", p.second.getShift(), p.first);
+      }
+      System.out.println();
+      i++;
+    }
   }
 
 }

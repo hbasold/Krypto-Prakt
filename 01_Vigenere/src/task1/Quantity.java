@@ -10,7 +10,7 @@ public class Quantity implements Comparable<Quantity> {
   private int integer;
   private int count;
   private double frequency;
-  private double deltaFrequency;
+
   private int shift;
   
   /**
@@ -65,9 +65,8 @@ public class Quantity implements Comparable<Quantity> {
   /**
    * @param shift The shift of this letter in an encrypted text.
    */
-  public void calculateAll(Quantity languageQuantity, int modulus) {
+  public void calculateShift(Quantity languageQuantity, int modulus) {
     shift = (integer - languageQuantity.integer + modulus) % modulus;
-    deltaFrequency = Math.abs(frequency - languageQuantity.frequency);
   }
   /**
    * @return The shift of this letter used for the encryption.
@@ -76,13 +75,6 @@ public class Quantity implements Comparable<Quantity> {
     return shift;
   }
   /**
-   * @return The shift of this letter used for the encryption.
-   */
-  public double getDeltaRelativeFrequency() {
-    return deltaFrequency;
-  }
-  
-  /**
    * Sort quantity in descending order by counter.
    * @return 0 if quantity of this object and the quantity of the given object are equal.
    * A positive integer if the quantity of this object is less
@@ -90,7 +82,7 @@ public class Quantity implements Comparable<Quantity> {
    */
   @Override
   public int compareTo(Quantity o) {
-    return o.count - count; // descreasing
+    return o.count - count; // descending order
   }
 
 }
