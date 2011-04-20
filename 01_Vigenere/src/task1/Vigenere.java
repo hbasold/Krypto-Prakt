@@ -460,14 +460,15 @@ public class Vigenere extends Cipher {
       double d = guessPeriod(nGrams, number, quantities);
 
       // Kasiski-Methode
-      int gcdDists = gcdKasiski(text, 5, false);
-      HashSet<Integer> factorSet = factors(gcdDists);
+//      int gcdDists = gcdKasiski(text, 5, false);
+//      HashSet<Integer> factorSet = factors(gcdDists);
 
-//// begin dummy
-//      int gcdDists = 5;
-//      HashSet<Integer> factorSet = new HashSet<Integer>();
-//      factorSet.add(5);
-//// end dummy
+// begin dummy
+      int gcdDists = 5;
+      HashSet<Integer> factorSet = new HashSet<Integer>();
+      factorSet.add(5);
+      numberOfShifts = 5;
+// end dummy
 
       //int gcdDistsNoUncommon = gcdKasiski(text, 5, true);
       //System.out.println("ggT der Abstände der am 5 häufigsten aufgetretenen Wiederholungen (mit mehr als 3 Zeichen), die nicht teilerfremd zu den anderen sind: " + gcdDistsNoUncommon);
@@ -476,76 +477,56 @@ public class Vigenere extends Cipher {
       boolean accepted = false;
 
       // Anzahl abfragen
-      accepted = false;
-      do {
-        try {
-          System.out.printf("Geschätzte Periode: %.2f\n", d);
-          System.out.println("ggT der Abstände der am 5 häufigsten aufgetretenen Wiederholungen (mit mehr als 3 Zeichen): " + gcdDists);
-          System.out.println(" ⇒ mögliche Perioden: " + factorSet);
-          System.out.print("Geben Sie die Periodenlänge ein: ");
-          numberOfShifts = Integer.parseInt(standardInput.readLine());
-          if (numberOfShifts > 0) {
-            accepted = true;
-          } else {
-            System.out.println("Geben Sie eine korrekte Periodenlänge ein!");
-          }
-        } catch (NumberFormatException e) {
-          System.out.println("Fehler beim Parsen der Anzahl.");
-        } catch (IOException e) {
-          System.err
-              .println("Abbruch: Fehler beim Lesen von der Standardeingabe.");
-          e.printStackTrace();
-          System.exit(1);
-        }
-      } while (!accepted);
+//      accepted = false;
+//      do {
+//        try {
+//          System.out.printf("Geschätzte Periode: %.2f\n", d);
+//          System.out.println("ggT der Abstände der am 5 häufigsten aufgetretenen Wiederholungen (mit mehr als 3 Zeichen): " + gcdDists);
+//          System.out.println(" ⇒ mögliche Perioden: " + factorSet);
+//          System.out.print("Geben Sie die Periodenlänge ein: ");
+//          numberOfShifts = Integer.parseInt(standardInput.readLine());
+//          if (numberOfShifts > 0) {
+//            accepted = true;
+//          } else {
+//            System.out.println("Geben Sie eine korrekte Periodenlänge ein!");
+//          }
+//        } catch (NumberFormatException e) {
+//          System.out.println("Fehler beim Parsen der Anzahl.");
+//        } catch (IOException e) {
+//          System.err
+//              .println("Abbruch: Fehler beim Lesen von der Standardeingabe.");
+//          e.printStackTrace();
+//          System.exit(1);
+//        }
+//      } while (!accepted);
 
-      VigenereBreak vb = new VigenereBreak(text);
+      VigenereBreak vb = new VigenereBreak(charMap, text, modulus);
       Vector<Quantities> vQuantities = vb.getVectorOfSortedQuantities(numberOfShifts);
-      
+
+      final int nMax = modulus/2;
+      Quantities lq = vb.getLanguageQuantities();
+      System.out.printf("     ");
+      for (int n=0; n<nMax; n++) {
+        Quantity q = lq.get(n);
+        System.out.printf(" | %1s=%3s       : %3.1f%% ", vb.remapToString(q.getInt()), q.getInt(), q.getRelativeFrequency());
+      }
+      System.out.println();
       int i = 0;
-      for (Quantities q: vQuantities) {
+      for (Quantities qs: vQuantities) {
         System.out.printf("i =%2d", i);
-        for (int n=0; n<4; n++) {
-          System.out.printf(" | %3d: %3.1f%% ", q.get(n).getCharInt(), q.getQuantityInPercent(n));
+        for (int n=0; n<nMax; n++) {
+          Quantity q = qs.get(n); 
+          System.out.printf(" | %1s=%3d (+%3d): %3.1f%% ",
+              vb.remapToString(q.getInt()), q.getInt(), q.getShift(), q.getRelativeFrequency());
         }
         System.out.println();
         i++;
       }
-      // Suche das häufigste Zeichen in 'quantities'.
-      // 'currKey' ist der aktuell betrachtete Schlüssel der Hashmap (ein
-      // Zeichen des Chiffretextalphabets).
-      int currKey = -1;
-      // Der Wert zum aktuellen Schlüssel (die Anzahl, mit der 'currKey' im
-      // Chiffretext auftrat).
-      int currValue = -1;
-      // Die bisher größte Anzahl.
-      int greatest = -1;
-      // Das bisher häufigste Zeichen.
-      int mostFrequented = -1;
-      Iterator<Integer> it = quantities.keySet().iterator();
-      while (it.hasNext()) {
-        currKey = it.next();
-        currValue = quantities.get(currKey);
-        if (currValue > greatest) {
-          greatest = currValue;
-          mostFrequented = currKey;
-        }
+      shifts = vb.getGuessedShifts();
+      System.out.print("Geratene shifts:");
+      for (int shift: shifts) {
+        System.out.print(" "+ shift);
       }
-      // Das häufigste Zeichen 'mostFrequented' des Chiffretextes muß vor der
-      // Ausgabe noch in Dateikodierung konvertiert werden.
-      System.out.println("Häufigstes Zeichen im Chiffretext: "
-          + (char) charMap.remapChar(mostFrequented));
-
-      // Berechne die im Chiffretext verwendete Verschiebung.
-      int computedShift = mostFrequented
-          - charMap.mapChar(Integer.parseInt(nGrams.get(0).getIntegers()));
-      if (computedShift < 0) {
-        computedShift += modulus;
-      }
-      // shift = computedShift;
-      // System.out.println("Schlüssel ermittelt.");
-      // System.out.println("Modulus: " + modulus);
-      // System.out.println("Verschiebung: " + shift);
 
     } catch (IOException e) {
       System.err.println("Abbruch: Fehler beim Lesen aus der "

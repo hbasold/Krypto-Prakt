@@ -1,15 +1,33 @@
 package task1;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Vector;
 
+import de.tubs.cs.iti.jcrypt.chiffre.CharacterMapping;
+
 public class VigenereBreak {
 
-  ArrayList<Integer> text;
+  private final CharacterMapping charMap;
+  private final Quantities languageQuantities;
+  private final ArrayList<Integer> text;
+  private final int modulus;
   
-  public VigenereBreak(ArrayList<Integer> text) {
+  private Vector<Quantities> vSortedQuantities;
+
+  public VigenereBreak(CharacterMapping charMap, ArrayList<Integer> text, int modulus) {
+    this.charMap = charMap;
+    languageQuantities = Quantities.createLanguageQuantities(charMap, modulus);
     this.text = text;
+    this.modulus = modulus;
+  }
+  
+  public String remapToString(int charInt) {
+    return CharacterMapping.convertToString(charMap.remapChar(charInt));
+  }
+  public int remap(int charInt) {
+    return charMap.remapChar(charInt);
   }
   
   /**
@@ -43,21 +61,36 @@ public class VigenereBreak {
    * quantities of the chars separately for each shift.
    * @param numberOfShifts The number of shifts.
    * @return Sorted list of quantities. Order is specified by
-   * {@link CharQuantity#compareTo(CharQuantity)}.
+   * {@link Quantity#compareTo(Quantity)}.
    */
   public Vector<Quantities > getVectorOfSortedQuantities(int numberOfShifts) {
     Vector<HashMap<Integer, Integer> > vQuantities = getVectorOfQuantities(numberOfShifts);
     // create vector of NGrams
-    Vector<Quantities> vSortedQuantities = new Vector<Quantities>(numberOfShifts);
+    vSortedQuantities = new Vector<Quantities>(numberOfShifts);
     for (HashMap<Integer, Integer> quantities: vQuantities) {
-      Quantities sortedQuantities = new Quantities(quantities.size());
+      Quantities sortedQuantities = new Quantities(languageQuantities, modulus);
       for (Integer key: quantities.keySet()) {
-        sortedQuantities.add(new CharQuantity(key, quantities.get(key)));
+        sortedQuantities.add(new Quantity(key, quantities.get(key)));
       }
       java.util.Collections.sort(sortedQuantities); // implicit call of compareTo
+      sortedQuantities.calculateAll();
       vSortedQuantities.add(sortedQuantities);
     }
     return vSortedQuantities;
   }
-  
+
+  public Quantities getLanguageQuantities() {
+    return languageQuantities;
+  }
+
+  public int[] getGuessedShifts() {
+    int[] shifts = new int[vSortedQuantities.size()];
+    int i = 0;
+    for (Quantities qs: vSortedQuantities) {
+      shifts[i] = qs.getGuessedShift();
+      i++;
+    }
+    return shifts;
+  }
+
 }
