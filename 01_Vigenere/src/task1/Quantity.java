@@ -47,7 +47,7 @@ public class Quantity implements Comparable<Quantity> {
     return count;
   }
   /**
-   * Calculate a new relative frequency.
+   * Calculate a new relative frequency in percent.
    * @param countAllChars
    *    The number of chars in the text this letter is associated with.
    * @see #getRelativeFrequency()
@@ -90,7 +90,7 @@ public class Quantity implements Comparable<Quantity> {
    */
   @Override
   public int compareTo(Quantity o) {
-    return o.count - count;
+    return o.count - count; // descreasing
   }
 
 }

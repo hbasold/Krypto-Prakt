@@ -1,8 +1,10 @@
 package task1;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.TreeMap;
 import java.util.Vector;
 
 import de.tubs.cs.iti.jcrypt.chiffre.CharacterMapping;
@@ -83,12 +85,10 @@ public class VigenereBreak {
     return languageQuantities;
   }
 
-  public int[] getGuessedShifts() {
-    int[] shifts = new int[vSortedQuantities.size()];
-    int i = 0;
+  public Vector<Vector<Pair<Integer, Integer>>> getGuessedShifts() {
+    Vector<Vector<Pair<Integer, Integer>>> shifts = new Vector<Vector<Pair<Integer, Integer>>>(vSortedQuantities.size());
     for (Quantities qs: vSortedQuantities) {
-      shifts[i] = qs.getGuessedShift();
-      i++;
+      shifts.add(qs.getGuessedShift());
     }
     return shifts;
   }

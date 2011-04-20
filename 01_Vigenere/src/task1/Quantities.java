@@ -1,8 +1,11 @@
 package task1;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.Vector;
 
 import de.tubs.cs.iti.jcrypt.chiffre.CharacterMapping;
@@ -19,8 +22,15 @@ public class Quantities extends Vector<Quantity>
   private final int modulus;
   
   private int countAllChars;
-  private int guessedShift;
+  private Vector<Pair<Integer, Integer>> guessedShifts;
 
+  private Quantities(Quantities qs) {
+    languageQuantities = qs.languageQuantities;
+    this.modulus = qs.modulus;
+    for (Quantity q: qs) {
+      add(q);
+    }
+  }
   private Quantities(int size, int modulus) {
     super(size);
     languageQuantities = null;
@@ -40,7 +50,7 @@ public class Quantities extends Vector<Quantity>
 //      System.out.println("cs="+n.getCharacters()+" is="+n.getIntegers()+" f="+n.getFrequency()+" mapto="+charMap.mapChar(Integer.parseInt(n.getIntegers())));
       Quantity q = new Quantity(
           charMap.mapChar(Integer.parseInt(n.getIntegers())),
-          (int) n.getFrequency()*10000,
+          (int) n.getFrequency()*10, //dummy with one precision after point
           n.getFrequency());
       quantities.add(q);
     }
@@ -80,35 +90,48 @@ public class Quantities extends Vector<Quantity>
       q.calculateAll(it.next(), modulus);
     }
     // guess shift
+//    Quantities qBestFit = new Quantities(languageQuantities, modulus);
+//    Collections.sort(qBestFit, this);
     int[] shiftCounts = new int[modulus];
-    int relevantShifts = 10;
+    int relevantShifts = Math.min(size(), modulus); //10;
     for (int i=0; i<relevantShifts; i++) {
       shiftCounts[get(i).getShift()]++;
     }
-    guessedShift = getMaxOfIntegerArray(shiftCounts);
+    guessedShifts = getIndexOfMaxElement(shiftCounts, 3);
+    Collections.sort(guessedShifts);
+//    guessedShift = qBestFit.get(0).getShift();
   }
   
-  private int getMaxOfIntegerArray(int[] shiftCounts) {
-    int max = 0;
-    for (int count: shiftCounts) {
-      if (count>max) {
-        max = count;
+  private Vector<Pair<Integer, Integer>> getIndexOfMaxElement(int[] shiftCounts, int count) {
+    int max[] = new int[count];
+    int indexMax[] = new int[count];
+    for (int i=0 ; i<shiftCounts.length; i++) {
+      for(int j = 0; j < count; ++j){
+        if (shiftCounts[i] > max[j]) {
+          max[j] = shiftCounts[i];
+          indexMax[j] = i;
+          break;
+        }
       }
     }
-    return max;
+    Vector<Pair<Integer, Integer>> maxIndices = new Vector<Pair<Integer, Integer>>();
+    for(int j = 0; j < count; ++j) {
+      maxIndices.add(Pair.of(max[j], indexMax[j]));
+    }
+    return maxIndices;
   }
 
   public int decrypt(int index) {
     return (get(index).getInt()-get(index).getShift()+modulus) % modulus;
   }
 
-  public int getGuessedShift() {
-    return guessedShift;
+  public Vector<Pair<Integer, Integer>> getGuessedShift() {
+    return guessedShifts;
   }
 
   @Override
   public int compare(Quantity o1, Quantity o2) {
-    return (int)(1000*(o1.getDeltaRelativeFrequency() - o2.getDeltaRelativeFrequency()));
+    return (int)(1000*(o2.getDeltaRelativeFrequency() - o1.getDeltaRelativeFrequency()));
   }
 
 }

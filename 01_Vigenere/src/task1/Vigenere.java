@@ -37,7 +37,6 @@ import de.tubs.cs.iti.jcrypt.chiffre.NGram;
  */
 public class Vigenere extends Cipher {
 
-  private int numberOfShifts;
   private int[] shifts;
   
   /**
@@ -411,28 +410,24 @@ public class Vigenere extends Cipher {
    *          Der Writer, der den Klartext schreiben soll.
    */
   public void breakCipher(BufferedReader ciphertext, BufferedWriter cleartext) {
-    try {
-      // Einlesen der Daten der Häufigkeitstabelle. Je nachdem, ob der benutzte
-      // Zeichensatz durch Angabe eines Modulus oder durch Angabe eines
-      // Alphabets definiert wurde, wird auf unterschiedliche Tabellen
-      // zugegriffen.
-      // 'nGrams' nimmt die Daten der Häufigkeitstabelle auf.
-      System.out.println("Unigramm-Tabelle beginnend mit den häufigsten:");
-      ArrayList<NGram> nGrams = FrequencyTables.getNGramsAsList(1, charMap);
+    // Einlesen der Daten der Häufigkeitstabelle. Je nachdem, ob der benutzte
+    // Zeichensatz durch Angabe eines Modulus oder durch Angabe eines
+    // Alphabets definiert wurde, wird auf unterschiedliche Tabellen
+    // zugegriffen.
+    // 'nGrams' nimmt die Daten der Häufigkeitstabelle auf.
+    System.out.println("Unigramm-Tabelle beginnend mit den häufigsten:");
+    ArrayList<NGram> nGrams = FrequencyTables.getNGramsAsList(1, charMap);
 
-      // Bestimme das häufigste Zeichen des Chiffretextes.
+    // 'quantities' enthält zu allen aufgetretenen Zeichen (keys der Hashmap)
+    // deren zugehörige Anzahlen (values der Hashmap).
+    HashMap<Integer, Integer> quantities = new HashMap<Integer, Integer>();
+    ArrayList<Integer> text = new ArrayList<Integer>();
+
+    try {
       // 'character' ist die Integer-Repräsentation eines Zeichens.
       int character;
-      // 'number' zählt alle Zeichen im Chiffretext.
-      int number = 0;
-      // 'quantities' enthält zu allen aufgetretenen Zeichen (keys der Hashmap)
-      // deren zugehörige Anzahlen (values der Hashmap).
-      HashMap<Integer, Integer> quantities = new HashMap<Integer, Integer>();
-
-      ArrayList<Integer> text = new ArrayList<Integer>();
       // Lese zeichenweise aus der Chiffretextdatei, bis das Dateiende erreicht ist.
       while ((character = ciphertext.read()) != -1) {
-        number++;
         // Bilde 'character' auf dessen interne Darstellung ab.
         character = charMap.mapChar(character);
         // Zeichen speichern
@@ -445,96 +440,133 @@ public class Vigenere extends Cipher {
           quantities.put(character, 1);
         }
       }
-      ciphertext.close();
+    } catch (IOException e) {
+      System.err.println("Abbruch: Fehler beim Lesen aus der Chiffretextdatei.");
+      e.printStackTrace();
+      System.exit(1);
+    }
 
+    // Explizites ausrechnen des Koinzidenzindex und seinem Erwartungswert
+    //System.out.println("IC = " + getIC(quantities, number));
+    //System.out.println("d=4 ⇒ E(IC) = " + getExpectedIC(nGrams, number, 4));
+    //System.out.println("d=5 ⇒ E(IC) = " + getExpectedIC(nGrams, number, 5));
+    //System.out.println("d=6 ⇒ E(IC) = " + getExpectedIC(nGrams, number, 6));
+    //System.out.println("d=7 ⇒ E(IC) = " + getExpectedIC(nGrams, number, 7));
+    //System.out.println("d=8 ⇒ E(IC) = " + getExpectedIC(nGrams, number, 8));
 
-      // Explizites ausrechnen des Koinzidenzindex und seinem Erwartungswert
-      //System.out.println("IC = " + getIC(quantities, number));
-      //System.out.println("d=4 ⇒ E(IC) = " + getExpectedIC(nGrams, number, 4));
-      //System.out.println("d=5 ⇒ E(IC) = " + getExpectedIC(nGrams, number, 5));
-      //System.out.println("d=6 ⇒ E(IC) = " + getExpectedIC(nGrams, number, 6));
-      //System.out.println("d=7 ⇒ E(IC) = " + getExpectedIC(nGrams, number, 7));
-      //System.out.println("d=8 ⇒ E(IC) = " + getExpectedIC(nGrams, number, 8));
-
-      // Schätze Periode
-      double d = guessPeriod(nGrams, number, quantities);
+    // Schätze Periode
+    double guessedPeriod = guessPeriod(nGrams, text.size(), quantities);
 
       // Kasiski-Methode
 //      int gcdDists = gcdKasiski(text, 5, false);
 //      HashSet<Integer> factorSet = factors(gcdDists);
 
 // begin dummy
-      int gcdDists = 5;
-      HashSet<Integer> factorSet = new HashSet<Integer>();
-      factorSet.add(5);
-      numberOfShifts = 5;
+    int gcdDists = 5;
+    HashSet<Integer> factorSet = new HashSet<Integer>();
+    factorSet.add(5);
+    int numberOfShifts = 5;
 // end dummy
 
-      //int gcdDistsNoUncommon = gcdKasiski(text, 5, true);
-      //System.out.println("ggT der Abstände der am 5 häufigsten aufgetretenen Wiederholungen (mit mehr als 3 Zeichen), die nicht teilerfremd zu den anderen sind: " + gcdDistsNoUncommon);
-      
-      BufferedReader standardInput = launcher.openStandardInput();
-      boolean accepted = false;
+    //int gcdDistsNoUncommon = gcdKasiski(text, 5, true);
+    //System.out.println("ggT der Abstände der am 5 häufigsten aufgetretenen Wiederholungen (mit mehr als 3 Zeichen), die nicht teilerfremd zu den anderen sind: " + gcdDistsNoUncommon);
+    
+    BufferedReader standardInput = launcher.openStandardInput();
+    boolean accepted = false;
 
-      // Anzahl abfragen
-//      accepted = false;
-//      do {
-//        try {
-//          System.out.printf("Geschätzte Periode: %.2f\n", d);
-//          System.out.println("ggT der Abstände der am 5 häufigsten aufgetretenen Wiederholungen (mit mehr als 3 Zeichen): " + gcdDists);
-//          System.out.println(" ⇒ mögliche Perioden: " + factorSet);
-//          System.out.print("Geben Sie die Periodenlänge ein: ");
-//          numberOfShifts = Integer.parseInt(standardInput.readLine());
-//          if (numberOfShifts > 0) {
-//            accepted = true;
-//          } else {
-//            System.out.println("Geben Sie eine korrekte Periodenlänge ein!");
-//          }
-//        } catch (NumberFormatException e) {
-//          System.out.println("Fehler beim Parsen der Anzahl.");
-//        } catch (IOException e) {
-//          System.err
-//              .println("Abbruch: Fehler beim Lesen von der Standardeingabe.");
-//          e.printStackTrace();
-//          System.exit(1);
+    // Anzahl abfragen
+//    do {
+//      try {
+//        System.out.printf("Geschätzte Periode: %.2f\n", guessedPeriodLength);
+//        System.out.println("ggT der Abstände der am 5 häufigsten aufgetretenen Wiederholungen (mit mehr als 3 Zeichen): " + gcdDists);
+//        System.out.println(" ⇒ mögliche Perioden: " + factorSet);
+//        System.out.print("Geben Sie die Periodenlänge ein: ");
+//        numberOfShifts = Integer.parseInt(standardInput.readLine());
+//        if (numberOfShifts > 0) {
+//          accepted = true;
+//        } else {
+//          System.out.println("Geben Sie eine korrekte Periodenlänge ein!");
 //        }
-//      } while (!accepted);
+//      } catch (NumberFormatException e) {
+//        System.out.println("Fehler beim Parsen der Anzahl.");
+//      } catch (IOException e) {
+//        System.err
+//            .println("Abbruch: Fehler beim Lesen von der Standardeingabe.");
+//        e.printStackTrace();
+//        System.exit(1);
+//      }
+//    } while (!accepted);
 
-      VigenereBreak vb = new VigenereBreak(charMap, text, modulus);
-      Vector<Quantities> vQuantities = vb.getVectorOfSortedQuantities(numberOfShifts);
+    VigenereBreak vb = new VigenereBreak(charMap, text, modulus);
+    Vector<Quantities> vQuantities = vb.getVectorOfSortedQuantities(numberOfShifts);
 
-      final int nMax = modulus/2;
-      Quantities lq = vb.getLanguageQuantities();
-      System.out.printf("     ");
+    System.out.println("Sortierte Häufigkeit der Zeichen pro Shift:");
+    final int nMax = modulus/2;
+    Quantities lq = vb.getLanguageQuantities();
+    System.out.printf("     ");
+    for (int n=0; n<nMax; n++) {
+      Quantity q = lq.get(n);
+      System.out.printf(" | %1s=%3s       : %3.1f%% ", vb.remapToString(q.getInt()), q.getInt(), q.getRelativeFrequency());
+    }
+    System.out.println();
+    for (int i=0; i<vQuantities.size(); i++) {
+      Quantities qs = vQuantities.get(0);
+      System.out.printf("i =%2d", i);
       for (int n=0; n<nMax; n++) {
-        Quantity q = lq.get(n);
-        System.out.printf(" | %1s=%3s       : %3.1f%% ", vb.remapToString(q.getInt()), q.getInt(), q.getRelativeFrequency());
+        Quantity q = qs.get(n); 
+        System.out.printf(" | %1s=%3d (+%3d): %3.1f%% ",
+            vb.remapToString(q.getInt()), q.getInt(), q.getShift(), q.getRelativeFrequency());
       }
       System.out.println();
-      int i = 0;
-      for (Quantities qs: vQuantities) {
-        System.out.printf("i =%2d", i);
-        for (int n=0; n<nMax; n++) {
-          Quantity q = qs.get(n); 
-          System.out.printf(" | %1s=%3d (+%3d): %3.1f%% ",
-              vb.remapToString(q.getInt()), q.getInt(), q.getShift(), q.getRelativeFrequency());
-        }
-        System.out.println();
-        i++;
-      }
-      shifts = vb.getGuessedShifts();
-      System.out.print("Geratene shifts:");
-      for (int shift: shifts) {
-        System.out.print(" "+ shift);
-      }
-
-    } catch (IOException e) {
-      System.err.println("Abbruch: Fehler beim Lesen aus der "
-          + "Chiffretextdatei.");
-      e.printStackTrace();
-      System.exit(1);
     }
-
+    Vector<Vector<Pair<Integer, Integer>>> vShifts = vb.getGuessedShifts();
+    System.out.println("Sortierte Häufigkeit der Shifts pro Shift:");
+    int n = 0;
+    for (Vector<Pair<Integer, Integer>> vPair: vShifts) {
+      System.out.printf("i = %2d", n);
+      for (Pair<Integer, Integer> p: vPair) {
+        System.out.printf(" | %2dx %3d", p.first, p.second);
+      }
+      System.out.println();
+      n++;
+    }
+    shifts = new int[numberOfShifts];
+    for (int i=0; i<numberOfShifts; i++) {
+      shifts[i] = vShifts.get(i).get(0).second;
+    }
+    // shifts einlesen
+    for (int i = 0; i < shifts.length; i++) {
+      accepted = false;
+      boolean hasEmptyInput = false;
+      do {
+        try {
+          System.out.print("Geben Sie die " + i + ". Verschiebung ein: ");
+          String line = standardInput.readLine();
+          if (line.trim().length()==0) {
+            hasEmptyInput = true;
+            break;
+          }
+          shifts[i] = Integer.parseInt(line);
+          if (shifts[i] >= 0 && shifts[i] < modulus) {
+            accepted = true;
+          } else {
+            System.out.println("Diese Verschiebung ist nicht geeignet. Bitte "
+                + "korrigieren Sie Ihre Eingabe.");
+          }
+        } catch (NumberFormatException e) {
+          System.out.println("Fehler beim Parsen der Verschiebung. Bitte "
+              + "korrigieren Sie Ihre Eingabe.");
+        } catch (IOException e) {
+          System.err
+              .println("Abbruch: Fehler beim Lesen von der Standardeingabe.");
+          e.printStackTrace();
+          System.exit(1);
+        }
+      } while (!accepted);
+      if (hasEmptyInput) {
+        break;
+      }
+    }
   }
 
   /**
@@ -550,22 +582,20 @@ public class Vigenere extends Cipher {
   public void decipher(BufferedReader ciphertext, BufferedWriter cleartext) {
     // Kommentierung analog 'encipher(cleartext, ciphertext)'.
     try {
-      int character;
-      int vigenereState = 0;
+      int character = 0;
+      int index = 0;
       while ((character = ciphertext.read()) != -1) {
         character = charMap.mapChar(character);
-
         if (character != -1) {
-          character = (character + modulus - shifts[vigenereState]) % modulus;
+          character = (character + modulus - shifts[index]) % modulus;
           character = charMap.remapChar(character);
           cleartext.write(character);
-          vigenereState = (vigenereState + 1) % numberOfShifts;
+          index = (index + 1) % shifts.length;
         } else {
           // Ein überlesenes Zeichen sollte bei korrekter Chiffretext-Datei
           // eigentlich nicht auftreten können.
           System.err.println("Fehler: Unbekanntes Zeichen im Chiffretext!");
         }
-
       }
       cleartext.close();
       ciphertext.close();
@@ -613,7 +643,7 @@ public class Vigenere extends Cipher {
           character = (character + shifts[vigenereState]) % modulus;
           character = charMap.remapChar(character);
           ciphertext.write(character);
-          vigenereState = (vigenereState + 1) % numberOfShifts;
+          vigenereState = (vigenereState + 1) % shifts.length;
         } else {
           // Das gelesene Zeichen ist im benutzten Alphabet nicht enthalten.
           characterSkipped = true;
@@ -692,12 +722,13 @@ public class Vigenere extends Cipher {
     do {
       try {
         System.out.print("Geben Sie die Anzahl der Verschiebungen ein: ");
-        numberOfShifts = Integer.parseInt(standardInput.readLine());
+        int numberOfShifts = Integer.parseInt(standardInput.readLine());
         if (numberOfShifts > 0) {
           accepted = true;
         } else {
           System.out.println("Geben Sie eine korrekte Anzahl ein!");
         }
+        shifts = new int[numberOfShifts];
       } catch (NumberFormatException e) {
         System.out.println("Fehler beim Parsen der Anzahl.");
       } catch (IOException e) {
@@ -708,8 +739,7 @@ public class Vigenere extends Cipher {
       }
     } while (!accepted);
     // shifts einlesen
-    shifts = new int[numberOfShifts];
-    for (int i = 0; i < numberOfShifts; i++) {
+    for (int i = 0; i < shifts.length; i++) {
       accepted = false;
       do {
         try {
@@ -747,7 +777,7 @@ public class Vigenere extends Cipher {
       StringTokenizer st = new StringTokenizer(key.readLine(), " ");
       modulus = Integer.parseInt(st.nextToken());
       System.out.println("Modulus: " + modulus);
-      numberOfShifts = Integer.parseInt(st.nextToken());
+      int numberOfShifts = Integer.parseInt(st.nextToken());
       System.out.println(numberOfShifts + " Verschiebungen: ");
       shifts = new int[numberOfShifts];
       for (int i = 0; i < numberOfShifts; i++) {
@@ -787,17 +817,15 @@ public class Vigenere extends Cipher {
    * @see #readKey readKey
    */
   public void writeKey(BufferedWriter key) {
-
     try {
-      key.write(modulus + " " + numberOfShifts);
-      for (int i = 0; i < numberOfShifts; i++) {
+      key.write(modulus + " " + shifts.length);
+      for (int i = 0; i < shifts.length; i++) {
         key.write(" " + shifts[i]);
       }
       key.newLine();
       key.close();
     } catch (IOException e) {
-      System.out.println("Abbruch: Fehler beim Schreiben oder Schließen der "
-          + "Schlüsseldatei.");
+      System.out.println("Abbruch: Fehler beim Schreiben der Schlüsseldatei.");
       e.printStackTrace();
       System.exit(1);
     }
