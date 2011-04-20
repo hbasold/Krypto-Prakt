@@ -68,19 +68,28 @@ public class Quantities extends Vector<Quantity> {
 
   /**
    * Calculate the relative frequency and the shift
-   * of all letters in this vector of quantity.
-   * @see Quantity#getRelativeFrequency()
+   * of all letters in this list of quantities.
+   * The methods
+   * {@link Quantity#calculateRelativeFrequency(int)} and
+   * {@link Quantity#calculateShift(Quantity, int)} where called
+   * for each Quantity and at the end
+   * {@link #calculateShiftFrequencies()} is called.
    */
-  public void calculateShift() {
+  public void calculateShifts() {
     Iterator<Quantity> it = languageQuantities.iterator();
     for (Quantity q: this) {
       q.calculateRelativeFrequency(countAllChars);
       q.calculateShift(it.next(), modulus);
     }
-    calculateGuessedShifts();
+    calculateShiftFrequencies();
   }
 
-  private void calculateGuessedShifts() {
+  /**
+   * Calculate the frequency of equal shifts in all quantities
+   * and sort the shifts by descending frequency.
+   * Use {@link #getShiftFrequencies()} to get the result.
+   */
+  private void calculateShiftFrequencies() {
     // count shifts in an array with length of modulus
     int[] shiftCounts = new int[modulus];
     int relevantShifts = Math.min(size(), modulus); //10;
@@ -97,6 +106,19 @@ public class Quantities extends Vector<Quantity> {
     Collections.sort(guessedShifts); // implicit call of Pair.compareTo (descending)
   }
 
+  /**
+   * @return The frequencies of all shifts.
+   * @see #calculateShiftFrequencies()
+   */
+  public Vector<Pair<Integer, Quantity>> getShiftFrequencies() {
+    return guessedShifts;
+  }
+
+  /**
+   * Search for a Quantity with a specific shift.
+   * @param shift The shift value searching for.
+   * @return The first Quantity with the given shift value.
+   */
   private Quantity getFirstQuantityWithShift(int shift) {
     for (Quantity q: this) {
       if (q.getShift()==shift)
@@ -105,6 +127,12 @@ public class Quantities extends Vector<Quantity> {
     return null;
   }
 
+  /**
+   * Swap the position of each pair in the list of quantities,
+   * if they will have the same shift afterwards.
+   * Automatically recalculate the frequency table of all shifts.
+   * @see #calculateShiftFrequencies()
+   */
   public void sortByChangingNeighbours() {
     for (int i=0; i<size()-1; i++) {
       if (get(i).getShift()!=get(i+1).getShift()) { // shifts are different
@@ -118,15 +146,7 @@ public class Quantities extends Vector<Quantity> {
         }
       }
     }
-    calculateShift();
+    calculateShiftFrequencies();
   }
   
-  public int decrypt(int index) {
-    return (get(index).getInt()-get(index).getShift()+modulus) % modulus;
-  }
-
-  public Vector<Pair<Integer, Quantity>> getGuessedShift() {
-    return guessedShifts;
-  }
-
 }
