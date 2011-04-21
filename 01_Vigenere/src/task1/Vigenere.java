@@ -370,13 +370,6 @@ public class Vigenere extends Cipher {
     }
 
     
-//// begin dummy
-//    int gcdDists = 5;
-//    HashSet<Integer> factorSet = new HashSet<Integer>();
-//    factorSet.add(5);
-//    int numberOfShifts = 5;
-//// end dummy
-
     //int gcdDistsNoUncommon = gcdKasiski(text, 5, true);
     //System.out.println("ggT der Abstände der am 5 häufigsten aufgetretenen Wiederholungen (mit mehr als 3 Zeichen), die nicht teilerfremd zu den anderen sind: " + gcdDistsNoUncommon);
     
@@ -388,12 +381,11 @@ public class Vigenere extends Cipher {
     do {
       try {
         System.out.println("ggT der Abstände der am 5 häufigsten aufgetretenen Wiederholungen (mit mehr als 3 Zeichen): " + gcdDists);
-        System.out.print(" ⇒  [Periodenlänge (approx)]:");
+        System.out.println(" ⇒  [Periodenlänge (approx)]:");
         for (Pair<Integer, Double> periodApprox: periodApproxes) {
-          System.out.printf(" [%3d (%3.1f)]",
+          System.out.printf("   [ %d (%.1f) ]\n",
               periodApprox.first, periodApprox.second);
         }
-        System.out.println();
         System.out.print("Geben Sie die Periodenlänge ein: ");
         numberOfShifts = Integer.parseInt(standardInput.readLine());
         if (numberOfShifts > 0) {
