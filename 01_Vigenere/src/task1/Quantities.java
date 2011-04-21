@@ -26,10 +26,10 @@ public class Quantities extends Vector<Quantity> {
   }
 
   /**
-   * Static method to create a language specific alphabet quantities.
+   * Static method to create quantities for a language specific alphabet.
    * @param charMap The used character mapping which is associated
    *    with the specific language. 
-   * @return The language specific alphabet quantities.
+   * @return List of {@link Quantity} for the language specified by the given charMap.
    */
   public static Quantities createLanguageQuantities(CharacterMapping charMap, int modulus) {
     // Einlesen der Daten der Häufigkeitstabelle. Je nachdem, ob der benutzte
@@ -91,10 +91,12 @@ public class Quantities extends Vector<Quantity> {
    * {@link #calculateShiftFrequencies()} is called.
    */
   public void calculateShiftsAndShiftFrequencies() {
-    Iterator<Quantity> it = languageQuantities.iterator();
-    for (Quantity q: this) {
+    Iterator<Quantity> it = this.iterator();
+    Iterator<Quantity> itLang = languageQuantities.iterator();
+    while (it.hasNext() && itLang.hasNext()) {
+      Quantity q = it.next();
       q.calculateRelativeFrequency(countAllChars);
-      q.calculateShift(it.next(), modulus);
+      q.calculateShift(itLang.next(), modulus);
     }
     calculateShiftFrequencies();
   }
@@ -149,7 +151,8 @@ public class Quantities extends Vector<Quantity> {
    * @see #calculateShiftFrequencies()
    */
   public void sortByChangingNeighbours() {
-    for (int i=0; i<size()-1; i++) {
+    int minSize = Math.min(size(), languageQuantities.size());
+    for (int i=0; i<minSize-1; i++) {
       if (get(i).getShift()!=get(i+1).getShift()) { // shifts are different
         Collections.swap(this, i, i+1); // probe switching...
         get(i).calculateShift(languageQuantities.get(i), modulus);
