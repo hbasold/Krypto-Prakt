@@ -24,8 +24,6 @@ import java.util.Vector;
 
 import de.tubs.cs.iti.jcrypt.chiffre.CharacterMapping;
 import de.tubs.cs.iti.jcrypt.chiffre.Cipher;
-import de.tubs.cs.iti.jcrypt.chiffre.FrequencyTables;
-import de.tubs.cs.iti.jcrypt.chiffre.NGram;
 
 /**
  * Klasse für die Vigenère-Chiffre.
@@ -322,13 +320,6 @@ public class Vigenere extends Cipher {
    *          Der Writer, der den Klartext schreiben soll.
    */
   public void breakCipher(BufferedReader ciphertext, BufferedWriter cleartext) {
-    // Einlesen der Daten der Häufigkeitstabelle. Je nachdem, ob der benutzte
-    // Zeichensatz durch Angabe eines Modulus oder durch Angabe eines
-    // Alphabets definiert wurde, wird auf unterschiedliche Tabellen
-    // zugegriffen.
-    // 'nGrams' nimmt die Daten der Häufigkeitstabelle auf.
-    System.out.println("Unigramm-Tabelle beginnend mit den häufigsten:");
-    ArrayList<NGram> nGrams = FrequencyTables.getNGramsAsList(1, charMap);
 
     // 'quantities' enthält zu allen aufgetretenen Zeichen (keys der Hashmap)
     // deren zugehörige Anzahlen (values der Hashmap).
@@ -366,13 +357,19 @@ public class Vigenere extends Cipher {
     //System.out.println("d=7 ⇒ E(IC) = " + getExpectedIC(nGrams, number, 7));
     //System.out.println("d=8 ⇒ E(IC) = " + getExpectedIC(nGrams, number, 8));
 
-    // Schätze Periode
-    double guessedPeriod = FriedmannTest.guessPeriod(nGrams, text.size(), quantities);
+    VigenereBreak vb = new VigenereBreak(charMap, modulus, text);
 
-      // Kasiski-Methode
-      int gcdDists = gcdKasiski(text, 5, false);
-      HashSet<Integer> factorSet = factors(gcdDists);
+    // Kasiski-Methode
+    int gcdDists = gcdKasiski(text, 5, false);
+    HashSet<Integer> factorSet = factors(gcdDists);
+    Vector<Pair<Integer, Double>> periodApproxes = new Vector<Pair<Integer, Double>>(factorSet.size());
+    for (Integer periodLength: factorSet) {
+      periodApproxes.add(Pair.of(periodLength, ApproxPeriodLength.guessPeriod(
+          vb.getLanguageQuantities(),
+          vb.createVectorOfQuantities(periodLength))));
+    }
 
+    
 //// begin dummy
 //    int gcdDists = 5;
 //    HashSet<Integer> factorSet = new HashSet<Integer>();
@@ -390,9 +387,13 @@ public class Vigenere extends Cipher {
     int numberOfShifts = 0;
     do {
       try {
-        System.out.printf("Geschätzte Periode: %.2f\n", guessedPeriod);
         System.out.println("ggT der Abstände der am 5 häufigsten aufgetretenen Wiederholungen (mit mehr als 3 Zeichen): " + gcdDists);
-        System.out.println(" ⇒ mögliche Perioden: " + factorSet);
+        System.out.print(" ⇒  [Periodenlänge (approx)]:");
+        for (Pair<Integer, Double> periodApprox: periodApproxes) {
+          System.out.printf(" [%3d (%3.1f)]",
+              periodApprox.first, periodApprox.second);
+        }
+        System.out.println();
         System.out.print("Geben Sie die Periodenlänge ein: ");
         numberOfShifts = Integer.parseInt(standardInput.readLine());
         if (numberOfShifts > 0) {
@@ -410,9 +411,10 @@ public class Vigenere extends Cipher {
       }
     } while (!accepted);
 
+    vb.createVectorOfQuantities(numberOfShifts);
+    
     System.out.println("1. Zeichen sortiert nach Häufigkeit pro Teiltext:");
-    VigenereBreak vb = new VigenereBreak(charMap, text, modulus);
-    vb.sortByQuantities(numberOfShifts);
+    vb.sortByQuantities();
     vb.printQuantities();
     vb.printShifts();
 

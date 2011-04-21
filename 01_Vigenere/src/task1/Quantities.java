@@ -32,6 +32,12 @@ public class Quantities extends Vector<Quantity> {
    * @return The language specific alphabet quantities.
    */
   public static Quantities createLanguageQuantities(CharacterMapping charMap, int modulus) {
+    // Einlesen der Daten der Häufigkeitstabelle. Je nachdem, ob der benutzte
+    // Zeichensatz durch Angabe eines Modulus oder durch Angabe eines
+    // Alphabets definiert wurde, wird auf unterschiedliche Tabellen
+    // zugegriffen.
+    // 'nGrams' nimmt die Daten der Häufigkeitstabelle auf.
+    System.out.println("Unigramm-Tabelle beginnend mit den häufigsten:");
     ArrayList<NGram> nGrams = FrequencyTables.getNGramsAsList(1, charMap);
     Quantities quantities = new Quantities(nGrams.size(), modulus);
     for (NGram n: nGrams) {
@@ -67,6 +73,15 @@ public class Quantities extends Vector<Quantity> {
   }
 
   /**
+   * @return The number of all letters in the associated text. It is the sum
+   *         of all counters from each quantity given by
+   *         {@link Quantity#getCount()}.
+   * @see #add(Quantity)
+   */
+  public int getCountAllChars() {
+    return countAllChars;
+  }
+  /**
    * Calculate the relative frequency and the shift
    * of all letters in this list of quantities.
    * The methods
@@ -75,7 +90,7 @@ public class Quantities extends Vector<Quantity> {
    * for each Quantity and at the end
    * {@link #calculateShiftFrequencies()} is called.
    */
-  public void calculateShifts() {
+  public void calculateShiftsAndShiftFrequencies() {
     Iterator<Quantity> it = languageQuantities.iterator();
     for (Quantity q: this) {
       q.calculateRelativeFrequency(countAllChars);
@@ -107,8 +122,8 @@ public class Quantities extends Vector<Quantity> {
   }
 
   /**
-   * @return The frequencies of all shifts.
-   * @see #calculateShiftFrequencies()
+   * @return The frequencies of all shifts calculated by
+   * {@link #calculateShiftFrequencies()}.
    */
   public Vector<Pair<Integer, Quantity>> getShiftFrequencies() {
     return guessedShifts;

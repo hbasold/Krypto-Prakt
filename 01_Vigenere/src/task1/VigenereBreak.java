@@ -15,7 +15,13 @@ public class VigenereBreak {
   
   private Vector<Quantities> vSortedQuantities;
 
-  public VigenereBreak(CharacterMapping charMap, ArrayList<Integer> text, int modulus) {
+  /**
+   * Constructor generates the language quantities specified by {@link #charMap}.
+   * @param charMap The character map.
+   * @param modulus The modulus used for encryption.
+   * @param text The text to break.
+S   */
+  public VigenereBreak(CharacterMapping charMap, int modulus, ArrayList<Integer> text) {
     this.charMap = charMap;
     languageQuantities = Quantities.createLanguageQuantities(charMap, modulus);
     this.text = text;
@@ -23,11 +29,18 @@ public class VigenereBreak {
   }
   
   /**
+   * @return The quantities of the language given in the constructor.
+   */
+  public Quantities getLanguageQuantities() {
+    return languageQuantities;
+  }
+  
+  /**
    * @param numberOfShifts The number of shifts.
    * @return Vector of a hash-map defining the integer of a char as the key
    *    and the quantity of this char as the value.
    */
-  private Vector<HashMap<Integer, Integer> > getVectorOfQuantities(int numberOfShifts) {
+  public Vector<Quantities> createVectorOfQuantities(int numberOfShifts) {
     // create vector of quantities
     Vector<HashMap<Integer, Integer> > vQuantities = new Vector<HashMap<Integer, Integer> >(numberOfShifts);
     for (int i=0; i<numberOfShifts; i++) {
@@ -45,7 +58,16 @@ public class VigenereBreak {
       }
       iShift = (iShift + 1) % numberOfShifts;
     }
-    return vQuantities;
+    // create vector of quantities
+    vSortedQuantities = new Vector<Quantities>(numberOfShifts);
+    for (HashMap<Integer, Integer> quantities: vQuantities) {
+      Quantities sortedQuantities = new Quantities(languageQuantities, modulus);
+      for (Integer key: quantities.keySet()) {
+        sortedQuantities.add(new Quantity(key, quantities.get(key)));
+      }
+      vSortedQuantities.add(sortedQuantities);
+    }
+    return vSortedQuantities;
   }
 
   /**
@@ -55,18 +77,10 @@ public class VigenereBreak {
    * @return Sorted list of quantities. Order is specified by
    * {@link Quantity#compareTo(Quantity)}.
    */
-  public void sortByQuantities(int numberOfShifts) {
-    Vector<HashMap<Integer, Integer> > vQuantities = getVectorOfQuantities(numberOfShifts);
-    // create vector of NGrams
-    vSortedQuantities = new Vector<Quantities>(numberOfShifts);
-    for (HashMap<Integer, Integer> quantities: vQuantities) {
-      Quantities sortedQuantities = new Quantities(languageQuantities, modulus);
-      for (Integer key: quantities.keySet()) {
-        sortedQuantities.add(new Quantity(key, quantities.get(key)));
-      }
-      java.util.Collections.sort(sortedQuantities); // implicit call of compareTo
-      vSortedQuantities.add(sortedQuantities);
-      sortedQuantities.calculateShifts();
+  public void sortByQuantities() {
+    for (Quantities qs: vSortedQuantities) {
+      java.util.Collections.sort(qs); // implicit call of compareTo
+      qs.calculateShiftsAndShiftFrequencies();
     }
   }
 
