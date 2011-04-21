@@ -37,8 +37,7 @@ S   */
   
   /**
    * @param numberOfShifts The number of shifts.
-   * @return Vector of a hash-map defining the integer of a char as the key
-   *    and the quantity of this char as the value.
+   * @return Vector of quantities.
    */
   public Vector<Quantities> createVectorOfQuantities(int numberOfShifts) {
     // create vector of quantities
@@ -127,7 +126,7 @@ S   */
     System.out.printf("     ");
     for (int n=0; n<nMax; n++) {
       Quantity q = languageQuantities.get(n);
-      System.out.printf(" | %1s=%3s       : %3.1f%% ",
+      System.out.printf(" | %1s=%3s       :%4.1f%% ",
           remapToString(q.getInt()), q.getInt(), q.getRelativeFrequency());
     }
     System.out.println();
@@ -136,7 +135,7 @@ S   */
       System.out.printf("i =%2d", i);
       for (int n=0; n<nMax; n++) {
         Quantity q = qs.get(n); 
-        System.out.printf(" | %1s=%3d (+%3d): %3.1f%% ",
+        System.out.printf(" | %1s=%3d (+%3d):%4.1f%% ",
             remapToString(q.getInt()), q.getInt(), q.getShift(), q.getRelativeFrequency());
       }
       System.out.println();
