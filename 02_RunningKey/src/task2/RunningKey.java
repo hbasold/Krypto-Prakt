@@ -16,10 +16,17 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Scanner;
 import java.util.StringTokenizer;
+import java.util.Vector;
 
 import de.tubs.cs.iti.jcrypt.chiffre.CharacterMapping;
 import de.tubs.cs.iti.jcrypt.chiffre.Cipher;
+import de.tubs.cs.iti.jcrypt.chiffre.FrequencyTables;
+import de.tubs.cs.iti.jcrypt.chiffre.NGram;
 
 /**
  * Klasse für die Chiffre mit laufendem Schlüssel.
@@ -296,6 +303,82 @@ public class RunningKey extends Cipher {
    */
   public void breakCipher(BufferedReader ciphertext, BufferedWriter cleartext) {
 
+    try {
+
+      // Einlesen der Daten der Häufigkeitstabelle. Je nachdem, ob der benutzte
+      // Zeichensatz durch Angabe eines Modulus oder durch Angabe eines
+      // Alphabets definiert wurde, wird auf unterschiedliche Tabellen
+      // zugegriffen.
+      // 'nGrams' nimmt die Daten der Häufigkeitstabelle auf.
+      ArrayList<NGram> oneGrams = FrequencyTables.getNGramsAsList(1, charMap);
+      ArrayList<NGram> biGrams = FrequencyTables.getNGramsAsList(2, charMap);
+      ArrayList<NGram> triGrams = FrequencyTables.getNGramsAsList(3, charMap);
+      // Bestimme das häufigste Zeichen aus der zugehörigen Unigramm-Tabelle.
+      System.out.println("Häufigstes Zeichen in der Unigramm-Tabelle: \""
+          + oneGrams.get(0).getCharacters() + "\"");
+            
+      Scanner stdIn = new Scanner(System.in);
+      System.out.print("Textanfang eingeben (bei 0 beginnend): ");
+      int textStart = Integer.parseInt(stdIn.nextLine());
+      System.out.print("Textende eingeben: ");
+      int textEnd = Integer.parseInt(stdIn.nextLine());
+      System.out.println();
+      
+      ciphertext.skip(textStart);
+      int textLeft = textEnd - textStart;
+      
+      // Bestimme das häufigste Zeichen des Chiffretextes.
+      // 'character' ist die Integer-Repräsentation eines Zeichens.
+      int character;
+      Vector<Integer> textBlock = new Vector<Integer>(textLeft);
+      // Lese zeichenweise aus der Chiffretextdatei, bis das Dateiende erreicht
+      // ist.
+      while (textLeft > 0 && (character = ciphertext.read()) != -1) {
+        textLeft--;
+        // Bilde 'character' auf dessen interne Darstellung ab.
+        character = charMap.mapChar(character);
+        textBlock.add(character);
+      }
+      ciphertext.close();
+      
+      Vector<Vector<Integer>> possibleKeys = calculatePossibleKeys(textBlock, oneGrams);
+
+      System.out.println(possibleKeys);
+
+    } catch (IOException e) {
+      System.err.println("Abbruch: Fehler beim Lesen aus der "
+          + "Chiffretextdatei.");
+      e.printStackTrace();
+      System.exit(1);
+    }
+  }
+
+  private Vector<Vector<Integer>> calculatePossibleKeys(Vector<Integer> textBlock, ArrayList<NGram> oneGrams) {
+    
+    Vector<Vector<Integer>> pKeys = new Vector<Vector<Integer>>(textBlock.size());
+    
+    HashMap<Integer, Double> frequencies = new HashMap<Integer, Double>(oneGrams.size());
+    for(NGram g : oneGrams){
+      Integer c = charMap.mapChar(g.getCharacters().charAt(0));
+      frequencies.put(c, new Double(g.getFrequency()));
+    }
+    
+    int numRelevantChars = 5;
+    double minRelevantProbability = oneGrams.get(numRelevantChars - 1).getFrequency();
+    
+    for(Integer c : textBlock){
+      Vector<Integer> cCandidates = new Vector<Integer>();
+      pKeys.add(cCandidates);
+      for(int i = 0; i < numRelevantChars; ++i){
+        int keyChar = (c - charMap.mapChar(oneGrams.get(i).getIntegers().charAt(0)) + modulus) % modulus;
+        Double freq = frequencies.get(keyChar);
+        if(freq != null && freq.doubleValue() >= minRelevantProbability){
+          cCandidates.add(keyChar);
+        }
+      }
+    }
+    
+    return pKeys;
   }
 
 }
