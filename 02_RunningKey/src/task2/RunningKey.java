@@ -300,12 +300,12 @@ public class RunningKey extends Cipher {
 
     System.out.println("Bitte legen Sie den zu betrachtenden Textausschnitt fest (Index bei 0 beginnend).");
     Scanner stdIn = new Scanner(System.in);
-    int textStart = 0;
-    int textEnd   = 5;
+    int textStart = 1;
+    int textEnd   = 4;
     try {
-      System.out.print("Von (ENTER = von 0 bis 5): ");
+      System.out.print("Von (ENTER = von "+textStart+" bis "+textEnd+"): ");
       textStart = Integer.parseInt(stdIn.nextLine());
-      System.out.print("Bis (ENTER = 5): ");
+      System.out.print("Bis (ENTER = "+textEnd+"): ");
       textEnd = Integer.parseInt(stdIn.nextLine());
     }
     catch(NumberFormatException e) {

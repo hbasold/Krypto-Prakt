@@ -38,6 +38,9 @@ public class KeyFactory {
       key.remove(key.size()-1);
     }
     currentKeyNumber++;
+//    if (currentKeyNumber % countNGramms == 100) {
+//      currentKeyNumber += countNGramms-100;
+//    }
     return key;
   }
   

@@ -44,32 +44,48 @@ public class RunningKeyBreak {
   }
 
   private void calculatePossibleKeys() {
-    KeyFactory kf = new KeyFactory(nGramms[2], textBlock.size());
     double maxProbability = 0;
     Quantities bestKey = textBlock;
+    // Schlüssel vorgeben
+    System.out.println("Schlüssel vorgeben");
+    KeyFactory kf = new KeyFactory(nGramms[2], textBlock.size());
     while (kf.hasNext()) {
       Quantities key = kf.getNext();
-//      System.out.println(key.remap(charMap));
-      double pKey   = getProbabilityOfText(key);
-      double pPlain = getProbabilityOfText(textBlock.decryptWithKey(key));
+      Quantities plain = textBlock.decryptWithKey(key);
+      if (nGramms[2].containsSequence(plain)) {
+        System.out.println("plain sequence in nGramms: "+plain);
+      }
       
-//      StringBuffer sb = new StringBuffer();
-//      sb.append(textBlock.decryptWithKey(key).remap(charMap));
-//      sb.append(", key: ");
-//      sb.append(key.remap(charMap));
-//      System.out.println(sb.toString());
-
+      double pPlain = getProbabilityOfText(plain);
+      double pKey   = getProbabilityOfText(key);
       double p = pKey * pPlain;
       if (p > maxProbability) {
         maxProbability = p;
         bestKey = key;
+        StringBuffer sb = new StringBuffer();
+        sb.append(textBlock.decryptWithKey(key).remap(charMap))
+            .append(", key: ").append(key.remap(charMap))
+            .append(" p=").append(p);
+        System.out.println(sb.toString());
       }
     }
     textKeys.add(bestKey);
   }
 
-  private double getProbabilityOfText(Quantities key) {
-    return 0;
+  private double getProbabilityOfText(Quantities text) {
+    double resultSum = 0;
+    for (int n=0; n<3; n++) { // Uni-Gramme, Di-Gramme und Tri-Gramme
+      double sum = 0;
+      Quantities qs = nGramms[n];
+      for (int i=0; i<text.size()-n; i++) {
+        Quantity q = qs.getQuantityWithInteger(text.get(i).getInt());
+        if (q!=null) {
+          sum += q.getRelativeFrequency();
+        }
+      }
+      resultSum += g[n]*sum;
+    }
+    return resultSum;
   }
 
   private String remapToString(int charInt) {

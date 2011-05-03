@@ -236,4 +236,21 @@ public class Quantities extends Vector<Quantity> {
     return qs;
   }
 
+  public boolean containsSequence(Quantities plain) {
+    for (Quantity q: this) {
+      boolean equals = true;
+      int[] integers = q.getIntegers();
+      for (int i=0; i<integers.length; i++) {
+        if (integers[i]!=q.getInt()) {
+          equals = false;
+          break;
+        }
+      }
+      if (equals) {
+        return true;
+      }
+    }
+    return false;
+  }
+
 }
