@@ -81,11 +81,17 @@ public class Quantities extends Vector<Quantity> {
     this.languageQuantities = languageQuantities;
     this.modulus = modulus;
   }
+  /**
+   * Constructor for an alphabet quantities on chars.
+   * @param languageQuantities The language specific alphabet quantities.
+   * @see #createLanguageQuantities(CharacterMapping)
+   */
+  public Quantities(int modulus) {
+    this(null, modulus);
+  }
 
   public Quantities() {
-    super();
-    this.languageQuantities = null;
-    this.modulus = 0;
+    this(null, 0);
   }
 
   /**
@@ -101,6 +107,12 @@ public class Quantities extends Vector<Quantity> {
   public boolean add(int character) {
     countAllChars++;
     return super.add(new Quantity(character));
+  }
+
+  public void addNGrammAsUniGramms(Quantity quantity) {
+    for (int c: quantity.getIntegers()) {
+      add(new Quantity(c));
+    }
   }
 
   /**
@@ -214,6 +226,14 @@ public class Quantities extends Vector<Quantity> {
       cs[i++] = (char) charMap.remapChar(q.getInt());
     }
     return cs;
+  }
+
+  public Quantities decryptWithKey(Quantities key) {
+    Quantities qs = new Quantities();
+    for (int i = 0; i<size(); i++) {
+      qs.add(get(i).decryptWithKey(key.get(i), modulus));
+    }
+    return qs;
   }
 
 }

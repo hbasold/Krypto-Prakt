@@ -132,10 +132,13 @@ public class Quantity implements Comparable<Quantity> {
     return (integer - key.integer + modulus) % modulus;
   }
 
+  public Quantity decryptWithKey(Quantity key, int modulus) {
+    return new Quantity(getShift(key, modulus));
+  }
+  
   @Override
   public String toString() {
     return Integer.toString(integer);
   }
-  
 
 }

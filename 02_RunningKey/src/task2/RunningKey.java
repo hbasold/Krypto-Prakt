@@ -328,7 +328,7 @@ public class RunningKey extends Cipher {
     }
     catch(NumberFormatException e) {
     }
-    Quantities textBlock = new Quantities();
+    Quantities textBlock = new Quantities(modulus);
     try {
       ciphertext.skip(textStart);
       int textLeft = textEnd - textStart;
@@ -348,19 +348,11 @@ public class RunningKey extends Cipher {
       e.printStackTrace();
       System.exit(1);
     }
- 
-    Quantities uniQuantities = Quantities.createLanguageQuantities(1, charMap, modulus);
-    Quantities biQuantities  = Quantities.createLanguageQuantities(2, charMap, modulus);
-    Quantities triQuantities = Quantities.createLanguageQuantities(3, charMap, modulus);
 
-    Vector<Quantities> possibleKeys = calculatePossibleKeys(textBlock, uniQuantities);
-
+    RunningKeyBreak rkb = new RunningKeyBreak(charMap, modulus);
+    Vector<Quantities> possibleKeys = rkb.getMostPossibleKeys(textBlock, g);
     System.out.println(possibleKeys);
-    
-    Vector<Quantities> keyTexts = calculateMostProbableKeyText(possibleKeys, triQuantities);
-
-    System.out.println(keyTexts);
-    for (Quantities qs: keyTexts) {
+    for (Quantities qs: possibleKeys) {
       System.out.println(qs.remap(charMap));
     }
   }
