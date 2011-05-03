@@ -16,19 +16,12 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
-import java.util.StringTokenizer;
 import java.util.Vector;
 
 import de.tubs.cs.iti.jcrypt.chiffre.CharacterMapping;
 import de.tubs.cs.iti.jcrypt.chiffre.Cipher;
-import de.tubs.cs.iti.jcrypt.chiffre.FrequencyTables;
-import de.tubs.cs.iti.jcrypt.chiffre.NGram;
 
 /**
  * Klasse für die Chiffre mit laufendem Schlüssel.
@@ -305,36 +298,43 @@ public class RunningKey extends Cipher {
    */
   public void breakCipher(BufferedReader ciphertext, BufferedWriter cleartext) {
 
+    System.out.println("Bitte legen Sie den zu betrachtenden Textausschnitt fest (Index bei 0 beginnend).");
+    Scanner stdIn = new Scanner(System.in);
+    int textStart = 0;
+    int textEnd   = 5;
     try {
-
-      // Einlesen der Daten der Häufigkeitstabelle. Je nachdem, ob der benutzte
-      // Zeichensatz durch Angabe eines Modulus oder durch Angabe eines
-      // Alphabets definiert wurde, wird auf unterschiedliche Tabellen
-      // zugegriffen.
-      // 'nGrams' nimmt die Daten der Häufigkeitstabelle auf.
-      ArrayList<NGram> oneGrams = FrequencyTables.getNGramsAsList(1, charMap);
-      ArrayList<NGram> biGrams = FrequencyTables.getNGramsAsList(2, charMap);
-      ArrayList<NGram> triGrams = FrequencyTables.getNGramsAsList(3, charMap);
-      // Bestimme das häufigste Zeichen aus der zugehörigen Unigramm-Tabelle.
-      System.out.println("Häufigstes Zeichen in der Unigramm-Tabelle: \""
-          + oneGrams.get(0).getCharacters() + "\"");
-            
-      Scanner stdIn = new Scanner(System.in);
-      System.out.print("Textanfang eingeben (bei 0 beginnend): ");
-      int textStart = Integer.parseInt(stdIn.nextLine());
-      System.out.print("Textende eingeben: ");
-      int textEnd = Integer.parseInt(stdIn.nextLine());
-      System.out.println();
-      
+      System.out.print("Von (ENTER = von 0 bis 5): ");
+      textStart = Integer.parseInt(stdIn.nextLine());
+      System.out.print("Bis (ENTER = 5): ");
+      textEnd = Integer.parseInt(stdIn.nextLine());
+    }
+    catch(NumberFormatException e) {
+    }
+    System.out.println();
+    // ein Tri-Gramm mit mittlerer Wahrscheinlichkeit             (1 x  7%) => 9
+    // besser als 3 Di-Gramme mit höchster Wahrscheinlickeit plus (3 x  3%)
+    //            4 Uni-Gramme mit höchster Wahrscheinlichkeit    (4 x 13%)
+    // ein Di-Gramm mit mittlerer Wahrscheinlichkeit              (1 x  1.5%) => 9
+    //            4 Uni-Gramme mit höchster Wahrscheinlichkeit    (4 x 13.0%)
+    int[] g = { 1, 9, 9}; // Gewichte von Uni-, Di- und Tri-Grammen
+    System.out.println("Bitte legen Sie Gewichte fest (0-999).");
+    try {
+      System.out.print("Uni-Gramme (ENTER = Uni-Gramm "+g[0]+", Di-Gramm "+g[1]+" und Tri-Gramm "+g[2]+"): ");
+      g[0] = Integer.parseInt(stdIn.nextLine());
+      System.out.print("Di-Gramme: ");
+      g[1] = Integer.parseInt(stdIn.nextLine());
+      System.out.print("Tri-Gramme: ");
+      g[2] = Integer.parseInt(stdIn.nextLine());
+    }
+    catch(NumberFormatException e) {
+    }
+    Quantities textBlock = new Quantities();
+    try {
       ciphertext.skip(textStart);
       int textLeft = textEnd - textStart;
       
-      // Bestimme das häufigste Zeichen des Chiffretextes.
       // 'character' ist die Integer-Repräsentation eines Zeichens.
       int character;
-      Vector<Integer> textBlock = new Vector<Integer>(textLeft);
-      // Lese zeichenweise aus der Chiffretextdatei, bis das Dateiende erreicht
-      // ist.
       while (textLeft > 0 && (character = ciphertext.read()) != -1) {
         textLeft--;
         // Bilde 'character' auf dessen interne Darstellung ab.
@@ -342,36 +342,37 @@ public class RunningKey extends Cipher {
         textBlock.add(character);
       }
       ciphertext.close();
-      
-//      Vector<Vector<Integer>> possibleKeys = calculatePossibleKeys(textBlock, oneGrams);
-      Quantities uniQuantities = Quantities.createLanguageQuantities(1, charMap, modulus);
-//      Quantities biQuantities = Quantities.createLanguageQuantities(2, charMap, modulus);
-//      Quantities triQuantities = Quantities.createLanguageQuantities(3, charMap, modulus);
-      Vector<Quantities> possibleKeys = calculatePossibleKeys(textBlock, uniQuantities);
-
-      System.out.println(possibleKeys);
-      
-      Vector<Vector<Integer>> keyTexts = calculateMostProbableKeyText(possibleKeys, triGrams);
-
-      System.out.println(keyTexts);
-      
     } catch (IOException e) {
       System.err.println("Abbruch: Fehler beim Lesen aus der "
           + "Chiffretextdatei.");
       e.printStackTrace();
       System.exit(1);
     }
+ 
+    Quantities uniQuantities = Quantities.createLanguageQuantities(1, charMap, modulus);
+    Quantities biQuantities  = Quantities.createLanguageQuantities(2, charMap, modulus);
+    Quantities triQuantities = Quantities.createLanguageQuantities(3, charMap, modulus);
+
+    Vector<Quantities> possibleKeys = calculatePossibleKeys(textBlock, uniQuantities);
+
+    System.out.println(possibleKeys);
+    
+    Vector<Quantities> keyTexts = calculateMostProbableKeyText(possibleKeys, triQuantities);
+
+    System.out.println(keyTexts);
+    for (Quantities qs: keyTexts) {
+      System.out.println(qs.remap(charMap));
+    }
   }
 
-  private Vector<Quantities> calculatePossibleKeys(Vector<Integer> textBlock, Quantities languageQuantities) {
+  private Vector<Quantities> calculatePossibleKeys(Quantities textBlock, Quantities languageQuantities) {
     Vector<Quantities> vKeys = new Vector<Quantities>(textBlock.size());
 
     int numRelevantChars = 5;
     
-    for(Integer c : textBlock) {
+    for(Quantity enc : textBlock) {
       Quantities cCandidates = new Quantities(languageQuantities, modulus);
       vKeys.add(cCandidates);
-      Quantity enc = new Quantity(c);
       
       for(int i = 0; i < numRelevantChars; ++i){
         cCandidates.add(new Quantity(0, 0, 0));
@@ -395,22 +396,51 @@ public class RunningKey extends Cipher {
     return vKeys;
   }
 
-  private Vector<Vector<Integer>> calculateMostProbableKeyText(
-      Vector<Quantities> possibleKeys, ArrayList<NGram> triGrams) {
-    Vector<Vector<Integer>> keyTexts = new Vector<Vector<Integer>>();
-    Vector<Integer> text = new Vector<Integer>();
+  private Vector<Quantities> calculateMostProbableKeyText(
+      Vector<Quantities> possibleKeys, Quantities languageTriGrams) {
+    Vector<Quantities> keyTexts = new Vector<Quantities>();
+    Quantities text = new Quantities();
     keyTexts.add(text);
     for (int i=0; i<possibleKeys.size()-3 ; i++) {
       List<Quantities> keys3 = possibleKeys.subList(i, i+3);
-      text.addAll(calculateMostProbableTrigram(keys3, triGrams));
+      text.addAll(calculateMostProbableSequence(keys3, languageTriGrams));
     }
     return keyTexts;
   }
 
-  private Vector<Integer> calculateMostProbableTrigram(
-      List<Quantities> keys3, ArrayList<NGram> triGrams) {
-    return null;
+  /**
+   * Liefert das wahrscheinlichste Trigramm für die aufeinanderfolgenden
+   * Quantities in der Liste.
+   * @param sequenceKeys Liste 
+   * @param languageTriGrams
+   * @return
+   */
+  private Quantities calculateMostProbableSequence(
+      List<Quantities> sequenceKeys, Quantities languageTriGrams) {
+    Quantity best = new Quantity();
+    for (Quantity lng: languageTriGrams) {
+      Quantities keys = new Quantities();
+      for (int i = 0; i<lng.getIntegers().length; i++) {
+        int c = lng.getInt(i);
+        for (Quantity key: sequenceKeys.get(i)) {
+          if (c==key.getInt()) {
+            keys.add(key);
+            break;
+          }
+        }
+        if (keys.size()-1!=i) {
+          break;
+        }
+      }
+      if (best.getRelativeFrequency()<lng.getRelativeFrequency()) {
+        best = lng;
+      }
+    }
+    Quantities qs = new Quantities();
+    for (int i: best.getIntegers()) {
+      qs.add(new Quantity(i));
+    }
+    return qs;
   }
-
 
 }

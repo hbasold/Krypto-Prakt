@@ -8,6 +8,7 @@ package task2;
 public class Quantity implements Comparable<Quantity> {
 
   private int integer;
+  private int[] integers;
   private int count;
   private double frequency;
 
@@ -25,12 +26,23 @@ public class Quantity implements Comparable<Quantity> {
     this.frequency = relativeFrequency;
   }
   /**
+   * Constructor for letters with the most information.
+   * @param integers The list of integers representing the letter beginning with 0.
+   * @param count The counter of this letter in a text.
+   * @param relativeFrequency The relative frequency of this letter in a text.
+   */
+  public Quantity(int[] integers, int count, double relativeFrequency) {
+    this.integers = integers;
+    this.count = count;
+    this.frequency = relativeFrequency;
+  }
+  /**
    * Constructor for letters, where there is no information about
    * the relative frequency.
    * @see Quantity#Quantity(int, int, double)
    */
   public Quantity(int integer, int count) {
-    this(integer, count, -1);
+    this(integer, count, 0);
   }
   /**
    * Constructor for letters, where there is no information about
@@ -38,7 +50,15 @@ public class Quantity implements Comparable<Quantity> {
    * @see Quantity#Quantity(int, int, double)
    */
   public Quantity(int integer) {
-    this(integer, 0, -1);
+    this(integer, 0, 0);
+  }
+  /**
+   * Constructor for letters, where there is no information about
+   * the relative frequency.
+   * @see Quantity#Quantity(int, int, double)
+   */
+  public Quantity() {
+    this(0, 0, 0);
   }
   /**
    * @return Same as integer in constructor.
@@ -46,6 +66,22 @@ public class Quantity implements Comparable<Quantity> {
    */
   public int getInt() {
     return integer;
+  }
+  /**
+   * @param index The index in the list of integers.
+   * @return The value in the list of integers at the given index,
+   *         which is given in the constructor.
+   * @see Quantity#Quantity(int[], int, double)
+   */
+  public int getInt(int i) {
+    return integers[i];
+  }
+  /**
+   * @return The list of integers given in the constructor.
+   * @see Quantity#Quantity(int[], int, double)
+   */
+  public int[] getIntegers() {
+    return integers;
   }
   /**
    * @return Same as counter in constructor.

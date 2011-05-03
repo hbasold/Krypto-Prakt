@@ -3,6 +3,7 @@ package task2;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.StringTokenizer;
 import java.util.Vector;
 
 import de.tubs.cs.iti.jcrypt.chiffre.CharacterMapping;
@@ -43,10 +44,25 @@ public class Quantities extends Vector<Quantity> {
     Quantities quantities = new Quantities(nGrams.size(), modulus);
     for (NGram ngram: nGrams) {
 //      System.out.println("cs="+n.getCharacters()+" is="+n.getIntegers()+" f="+n.getFrequency()+" mapto="+charMap.mapChar(Integer.parseInt(n.getIntegers())));
-      Quantity q = new Quantity(
-          charMap.mapChar(Integer.parseInt(ngram.getIntegers())),
-          (int) ngram.getFrequency()*10, //dummy with one precision after point
-          ngram.getFrequency() / 100.0);
+      Quantity q;
+      if (n==1) {
+        q = new Quantity(
+            charMap.mapChar(Integer.parseInt(ngram.getIntegers())),
+            (int) ngram.getFrequency()*10, //dummy with one precision after point
+            ngram.getFrequency() / 100.0);
+      } else {
+        StringTokenizer st = new StringTokenizer(ngram.getIntegers(), "_");
+        int[] integers = new int[st.countTokens()];
+        int i = 0;
+        while (st.hasMoreElements()) {
+          integers[i] = charMap.mapChar(Integer.parseInt(st.nextToken()));
+          i = i+1;
+        }
+        q = new Quantity(
+            integers,
+            (int) ngram.getFrequency()*10, //dummy with one precision after point
+            ngram.getFrequency() / 100.0);
+      }
       quantities.add(q);
     }
     return quantities;
@@ -66,6 +82,12 @@ public class Quantities extends Vector<Quantity> {
     this.modulus = modulus;
   }
 
+  public Quantities() {
+    super();
+    this.languageQuantities = null;
+    this.modulus = 0;
+  }
+
   /**
    * Adds the quantity of a letter and counts all chars ever added.
    * @see Quantity#getCount()
@@ -74,6 +96,11 @@ public class Quantities extends Vector<Quantity> {
   public synchronized boolean add(Quantity q) {
     countAllChars += q.getCount();
     return super.add(q);
+  }
+
+  public boolean add(int character) {
+    countAllChars++;
+    return super.add(new Quantity(character));
   }
 
   /**
@@ -179,5 +206,14 @@ public class Quantities extends Vector<Quantity> {
     }
     return null;
   }
-  
+
+  public char[] remap(CharacterMapping charMap) {
+    char[] cs = new char[size()];
+    int i = 0;
+    for (Quantity q: this) {
+      cs[i++] = (char) charMap.remapChar(q.getInt());
+    }
+    return cs;
+  }
+
 }
