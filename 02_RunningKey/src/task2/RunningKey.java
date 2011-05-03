@@ -17,8 +17,10 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Scanner;
 import java.util.StringTokenizer;
 import java.util.Vector;
@@ -341,10 +343,18 @@ public class RunningKey extends Cipher {
       }
       ciphertext.close();
       
-      Vector<Vector<Integer>> possibleKeys = calculatePossibleKeys(textBlock, oneGrams);
+//      Vector<Vector<Integer>> possibleKeys = calculatePossibleKeys(textBlock, oneGrams);
+      Quantities uniQuantities = Quantities.createLanguageQuantities(1, charMap, modulus);
+//      Quantities biQuantities = Quantities.createLanguageQuantities(2, charMap, modulus);
+//      Quantities triQuantities = Quantities.createLanguageQuantities(3, charMap, modulus);
+      Vector<Quantities> possibleKeys = calculatePossibleKeys(textBlock, uniQuantities);
 
       System.out.println(possibleKeys);
+      
+      Vector<Vector<Integer>> keyTexts = calculateMostProbableKeyText(possibleKeys, triGrams);
 
+      System.out.println(keyTexts);
+      
     } catch (IOException e) {
       System.err.println("Abbruch: Fehler beim Lesen aus der "
           + "Chiffretextdatei.");
@@ -353,32 +363,54 @@ public class RunningKey extends Cipher {
     }
   }
 
-  private Vector<Vector<Integer>> calculatePossibleKeys(Vector<Integer> textBlock, ArrayList<NGram> oneGrams) {
-    
-    Vector<Vector<Integer>> pKeys = new Vector<Vector<Integer>>(textBlock.size());
-    
-    HashMap<Integer, Double> frequencies = new HashMap<Integer, Double>(oneGrams.size());
-    for(NGram g : oneGrams){
-      Integer c = charMap.mapChar(g.getCharacters().charAt(0));
-      frequencies.put(c, new Double(g.getFrequency()));
-    }
-    
+  private Vector<Quantities> calculatePossibleKeys(Vector<Integer> textBlock, Quantities languageQuantities) {
+    Vector<Quantities> vKeys = new Vector<Quantities>(textBlock.size());
+
     int numRelevantChars = 5;
-    double minRelevantProbability = oneGrams.get(numRelevantChars - 1).getFrequency();
     
-    for(Integer c : textBlock){
-      Vector<Integer> cCandidates = new Vector<Integer>();
-      pKeys.add(cCandidates);
+    for(Integer c : textBlock) {
+      Quantities cCandidates = new Quantities(languageQuantities, modulus);
+      vKeys.add(cCandidates);
+      Quantity enc = new Quantity(c);
+      
       for(int i = 0; i < numRelevantChars; ++i){
-        int keyChar = (c - charMap.mapChar(oneGrams.get(i).getIntegers().charAt(0)) + modulus) % modulus;
-        Double freq = frequencies.get(keyChar);
-        if(freq != null && freq.doubleValue() >= minRelevantProbability){
-          cCandidates.add(keyChar);
+        cCandidates.add(new Quantity(0, 0, 0));
+      }
+      // Schlüssel
+      for (Quantity key: languageQuantities) {
+        int shift = enc.getShift(key, modulus);
+        Quantity plain = languageQuantities.getQuantityWithInteger(shift);
+        if (plain!=null) {
+          double probability = key.getRelativeFrequency() * plain.getRelativeFrequency();
+          for(int i = 0; i < numRelevantChars; ++i){
+            if(cCandidates.get(i).getRelativeFrequency() < probability){
+              System.out.println(key.toString()+" "+plain+" pro:"+probability);
+              cCandidates.set(i, new Quantity(key.getInt(), 0, probability));
+              break;
+            }
+          }
         }
       }
     }
-    
-    return pKeys;
+    return vKeys;
   }
+
+  private Vector<Vector<Integer>> calculateMostProbableKeyText(
+      Vector<Quantities> possibleKeys, ArrayList<NGram> triGrams) {
+    Vector<Vector<Integer>> keyTexts = new Vector<Vector<Integer>>();
+    Vector<Integer> text = new Vector<Integer>();
+    keyTexts.add(text);
+    for (int i=0; i<possibleKeys.size()-3 ; i++) {
+      List<Quantities> keys3 = possibleKeys.subList(i, i+3);
+      text.addAll(calculateMostProbableTrigram(keys3, triGrams));
+    }
+    return keyTexts;
+  }
+
+  private Vector<Integer> calculateMostProbableTrigram(
+      List<Quantities> keys3, ArrayList<NGram> triGrams) {
+    return null;
+  }
+
 
 }
