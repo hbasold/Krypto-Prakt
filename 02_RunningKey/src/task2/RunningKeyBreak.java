@@ -1,7 +1,11 @@
 package task2;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Vector;
 
 import de.tubs.cs.iti.jcrypt.chiffre.CharacterMapping;
@@ -35,14 +39,199 @@ public class RunningKeyBreak {
    * 
    * @param textBlock The text to break.
    * @param g Die Gewichte, die der Benutzer festgelegt hat.
-   * @return Mögliche Schlüssel-Texte.
+   * @return Mögliche Schlüssel-Texte. (String von möglichen Schlüsseltexten)
    */
-  public Vector<Vector<Quantity>> getMostProbableKeys(Quantities textBlock, int[] g) {
+  public Vector<Vector<Vector<Quantity>>> getMostProbableKeys(Quantities textBlock, int[] g) {
     this.g = g;
     Vector<Quantities> possibleKeys = keyUnigramCandidates(textBlock, nGramms[0]);
-    Vector<Vector<Quantity>> k = possibleTrigramKey(possibleKeys,textBlock);
-    return k;
+    Vector<Vector<Quantity>> k = possibleTrigramKey(possibleKeys);
+    Vector<Vector<Vector<Quantity>>> weighted = weightKeys(k, textBlock);
+    return weighted;
   }
+
+  private Vector<Vector<Vector<Quantity>>> weightKeys(Vector<Vector<Quantity>> k,
+      Quantities textBlock) {
+    int charsToAnalyse = 12;
+    
+    Vector<Vector<Vector<Quantity>>> weightedStr = new Vector<Vector<Vector<Quantity>>>();
+    
+    Iterator<Vector<Quantity>> strIter = k.iterator();
+    int blockNum = 0;
+    while(strIter.hasNext()){
+      // Zeichen/Trigramme sammeln
+      Vector<Vector<Quantity>> subStr = new Vector<Vector<Quantity>>();
+      int i = 0;
+      for(; i < charsToAnalyse && strIter.hasNext(); ++i){
+        Vector<Quantity> cs = strIter.next();
+        i += cs.get(0).getIntegers().length - 1; // wenn Trigramm, gehe um 2 weiter
+        subStr.add(cs);
+      }
+      
+      // Evtl. weniger Text als angefordert vorhanden
+      Vector<Vector<Quantity>> weighted;
+      if(i < charsToAnalyse){
+        weighted
+          = weightSubKey(subStr,
+              textBlock, blockNum * charsToAnalyse, (blockNum + 1) * charsToAnalyse - (charsToAnalyse - i));
+      }
+      else{
+        weighted
+          = weightSubKey(subStr,
+              textBlock, blockNum * charsToAnalyse, (blockNum + 1) * charsToAnalyse);
+      }
+      
+      weightedStr.add(weighted);
+      
+      ++blockNum;
+    }
+    
+    return weightedStr;
+  }
+  
+  /**
+   * 
+   * Vergleichen von Paaren nur auf Basis des zweiten Wertes.
+   *
+   */
+  class CompareBySecond implements Comparator<Pair<Vector<Quantity>, Double>>{
+    @Override
+    public int compare(Pair<Vector<Quantity>, Double> o1,
+        Pair<Vector<Quantity>, Double> o2) {
+      return (int) (o2.second.doubleValue() - o1.second.doubleValue());
+    }    
+  }
+
+  /**
+   * 
+   * 
+   * 
+   * @param subStr
+   * @param textBlock
+   * @param start
+   * @param end
+   * @return Menge von Schlüssel-Texten sortiert nach ihrer Wahrscheinlichkeit 
+   */
+  private Vector<Vector<Quantity>> weightSubKey(
+      Vector<Vector<Quantity>> subStr, Quantities textBlock, int start, int end) {
+    
+    Vector<Pair<Vector<Quantity>, Double>> weighted = new Vector<Pair<Vector<Quantity>, Double>>();
+    
+    CombinationIterator combs = new CombinationIterator(subStr);
+
+    //System.out.println("Weighting: ");
+    while(combs.hasNext()){
+      Vector<Quantity> combined = combs.next();
+      Vector<Quantity> key = flatten(combined);
+      Vector<Quantity> plain = textBlock.decryptWithKey(key, start, end);
+      double pPlain = getProbabilityOfText(plain);
+      double pKey   = getProbabilityOfText(key);
+      double w = pKey * pPlain;
+      weighted.add(Pair.of(key, new Double(w)));
+      //System.out.println("W( " + key + " ⇒ " + plain + " ) = " + w);
+    }
+    
+    Collections.sort(weighted, new CompareBySecond());
+    
+    int numBest = 100;
+    Vector<Vector<Quantity>> best = getFirst(weighted.subList(0, Math.min(numBest, weighted.size())));
+    
+    return best;
+  }
+
+  /**
+   * Extrahiert aus einer Liste von Paaren eine Liste der
+   * Werte an erster Stelle.
+   * 
+   * @param subList
+   * @return
+   */
+  private Vector<Vector<Quantity>> getFirst(
+      List<Pair<Vector<Quantity>, Double>> subList) {
+    Vector<Vector<Quantity>> str = new Vector<Vector<Quantity>>();
+    for(Pair<Vector<Quantity>, Double> p : subList){
+      str.add(p.first);
+    }
+    return str;
+  }
+
+  /**
+   * Macht aus einem String von Polygrammen einen aus Unigrammen.
+   * 
+   * @param current
+   * @return
+   */
+  private Vector<Quantity> flatten(Vector<Quantity> polyStr) {
+    Vector<Quantity> uniStr = new Vector<Quantity>();
+    
+    for(Quantity cs : polyStr){
+      for(int c : cs.getIntegers()){
+        uniStr.add(new Quantity(c));
+      }
+    }
+    
+    return uniStr;
+  }
+  
+  /**
+   * 
+   * Erzeugt alle Kombinationen von Polygrammen aus subStr.
+   *
+   */
+  class CombinationIterator implements Iterator<Vector<Quantity>>{
+
+    private Vector<Quantity> current;
+    private Vector<Iterator<Quantity>> combs;
+    
+    CombinationIterator(Vector<Vector<Quantity>> subStr){
+      current = new Vector<Quantity>();
+      combs = combinationsBegin(subStr, current);
+    }
+    
+    private Vector<Iterator<Quantity>> combinationsBegin(
+        Vector<Vector<Quantity>> subStr, Vector<Quantity> combined) {
+      Vector<Iterator<Quantity>> combs = new Vector<Iterator<Quantity>>();
+      
+      for(Vector<Quantity> qs : subStr){
+        Iterator<Quantity> iq = qs.iterator();
+        combined.add(iq.next());
+        combs.add(iq);
+      }
+      
+      return combs;
+    }
+    
+    @Override
+    public boolean hasNext() {
+      boolean hasNext = false;
+      
+      for(Iterator<Quantity> iq : combs){
+        hasNext = iq.hasNext();
+        if(hasNext){
+          break; // Optimierung
+        }
+      }
+      
+      return hasNext;
+    }
+
+    @Override
+    public Vector<Quantity> next() {
+      // Rückwärts laufen
+      for(int i = combs.size() - 1; i >= 0; --i){
+        Iterator<Quantity> iq = combs.get(i);
+        if(iq.hasNext()){
+          current.set(i, iq.next());
+          break;
+        }
+      }
+      
+      return current;
+    }
+
+    @Override
+    public void remove() { }   
+  }
+
 
   /**
    * Berechnet eine Menge von möglichen Strings aus Uni- oder Trigrammen.
@@ -53,10 +242,9 @@ public class RunningKeyBreak {
    * ursprünglichen Möglichkeiten.
    * 
    * @param possibleKeys
-   * @param textBlock
    * @return Menge von Strings aus Uni- oder Trigrammen (Quantity bel. kann n-Gramm sein)
    */
-  private Vector<Vector<Quantity>> possibleTrigramKey(Vector<Quantities> possibleKeys, Quantities textBlock) {
+  private Vector<Vector<Quantity>> possibleTrigramKey(Vector<Quantities> possibleKeys) {
     // Schlüssel vorgeben
     
     // "String" mit mehreren Trigramm-Kandidaten pro Position
@@ -155,14 +343,14 @@ public class RunningKeyBreak {
     return allMatched;
   }
 
-  private double getProbabilityOfText(Quantities text) {
+  private double getProbabilityOfText(Vector<Quantity> plain) {
     double resultSum = 0;
     for (int n=0; n<3; n++) { // Uni-Gramme, Di-Gramme und Tri-Gramme
       int[] integers = new int[n+1];
       double sum = 0;
-      for (int i=0; i<text.size()-n; i++) {
+      for (int i=0; i<plain.size()-n; i++) {
         for (int j=0; j < n + 1; j++) {
-          integers[j] = text.get(i+j).getInt();
+          integers[j] = plain.get(i+j).getInt();
         }
 //        System.out.println("integers = " + integers);
         Quantity q = nGramms[n].getQuantityWithIntegers(integers);

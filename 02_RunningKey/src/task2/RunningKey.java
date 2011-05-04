@@ -349,34 +349,49 @@ public class RunningKey extends Cipher {
     }
 
     RunningKeyBreak rkb = new RunningKeyBreak(charMap, modulus);
-    Vector<Vector<Quantity>> possibleKeys = rkb.getMostProbableKeys(textBlock, g);
-    System.out.println("possible keys raw: " + possibleKeys);
+    Vector<Vector<Vector<Quantity>>> possibleKeys = rkb.getMostProbableKeys(textBlock, g);
+    //System.out.println("possible keys raw: " + possibleKeys);
     System.out.println("Kandidaten-Schlüssel: ");
     printCandidates(possibleKeys);
   }
 
-  private void printCandidates(Vector<Vector<Quantity>> possibleKeys) {
+//  private void printCandidatesH(Vector<Vector<Vector<Quantity>>> possibleKeys) {
+//    for(Vector<Vector<Quantity>> strs : possibleKeys){
+//      for(Vector<Quantity> str : strs){
+//        for(Quantity c : str){
+//          char c_ = c.remap(charMap).charAt(0);
+//          if(c_ >= 33){
+//            System.out.print(c_);
+//          }
+//          else{
+//            System.out.print("¥");
+//          }
+//        }
+//        System.out.println();
+//      }
+//    }    
+//  }
+
+  private void printCandidates(Vector<Vector<Vector<Quantity>>> possibleKeys) {
     boolean atEnd = false;
     for(int i = 0; !atEnd; ++i){
       atEnd = true;
-      for(Vector<Quantity> ks : possibleKeys){
+      for(Vector<Vector<Quantity>> ks : possibleKeys){
         if(i < ks.size()){
           atEnd = false;
-          for(char c : ks.get(i).remap(charMap).toCharArray()){
-            if(c >= 33){
-              System.out.print(c);
+          for(Quantity c : ks.get(i)){
+            char c_ = c.remap(charMap).charAt(0);
+            if(c_ >= 33){
+              System.out.print(c_);
             }
             else{
-              System.out.print("¥");
+//              System.out.print("¥");
+              System.out.print(c_);
             }
           }
-          System.out.print(" ");
         }
         else{
-          for(int j = 0; j < ks.get(0).getIntegers().length; ++j){
-            System.out.print("…");
-          }
-          System.out.print(" ");
+          System.out.print("…");
         }
       }
       System.out.println();
