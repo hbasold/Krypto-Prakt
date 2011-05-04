@@ -316,7 +316,7 @@ public class RunningKey extends Cipher {
     //            4 Uni-Gramme mit höchster Wahrscheinlichkeit    (4 x 13%)
     // ein Di-Gramm mit mittlerer Wahrscheinlichkeit              (1 x  1.5%) => 9
     //            4 Uni-Gramme mit höchster Wahrscheinlichkeit    (4 x 13.0%)
-    int[] g = { 1, 9, 9}; // Gewichte von Uni-, Di- und Tri-Grammen
+    int[] g = { 1, 9, 999}; // Gewichte von Uni-, Di- und Tri-Grammen
     System.out.println("Bitte legen Sie Gewichte fest (0-999).");
     try {
       System.out.print("Uni-Gramme (ENTER = Uni-Gramm "+g[0]+", Di-Gramm "+g[1]+" und Tri-Gramm "+g[2]+"): ");
@@ -363,7 +363,7 @@ public class RunningKey extends Cipher {
     int numRelevantChars = 5;
     
     for(Quantity enc : textBlock) {
-      Quantities cCandidates = new Quantities(languageQuantities, modulus);
+      Quantities cCandidates = new Quantities(modulus);
       vKeys.add(cCandidates);
       
       for(int i = 0; i < numRelevantChars; ++i){

@@ -7,7 +7,6 @@ package task2;
  */
 public class Quantity implements Comparable<Quantity> {
 
-  private int integer;
   private int[] integers;
   private int count;
   private double frequency;
@@ -21,7 +20,8 @@ public class Quantity implements Comparable<Quantity> {
    * @param relativeFrequency The relative frequency of this letter in a text.
    */
   public Quantity(int integer, int count, double relativeFrequency) {
-    this.integer = integer;
+    this.integers = new int[1];
+    integers[0] = integer;
     this.count = count;
     this.frequency = relativeFrequency;
   }
@@ -65,7 +65,7 @@ public class Quantity implements Comparable<Quantity> {
    * @see Quantity#Quantity(int, int, double)
    */
   public int getInt() {
-    return integer;
+    return integers[0];
   }
   /**
    * @param index The index in the list of integers.
@@ -107,12 +107,6 @@ public class Quantity implements Comparable<Quantity> {
     return frequency;
   }
   /**
-   * @param shift The shift of this letter in an encrypted text.
-   */
-  public void calculateShift(Quantity languageQuantity, int modulus) {
-    shift = (integer - languageQuantity.integer + modulus) % modulus;
-  }
-  /**
    * @return The shift of this letter used for the encryption.
    */
   public int getShift() {
@@ -128,12 +122,22 @@ public class Quantity implements Comparable<Quantity> {
   public int compareTo(Quantity o) {
     return o.count - count; // descending order
   }
+  
+  public boolean equals(int[] integers) {
+    for (int i=0; i<this.integers.length; i++) {
+      if (this.integers[i]!=integers[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+  
   public int getShift(Quantity key, int modulus) {
-    return (integer - key.integer + modulus) % modulus;
+    return (integers[0] - key.integers[0] + modulus) % modulus;
   }
 
   /**
-   * p+k % m = e
+   * (p+k) % m = e
    * p = (e-k+m) % m
    * @param key
    * @param modulus
@@ -146,7 +150,17 @@ public class Quantity implements Comparable<Quantity> {
 
   @Override
   public String toString() {
-    return Integer.toString(integer);
+    if (integers.length==1) {
+      return Integer.toString(integers[0]);
+    } else {
+      StringBuffer sb = new StringBuffer();
+      sb.append(integers[0]);
+      for (int i=1; i<integers.length; i++) {
+        sb.append(' ');
+        sb.append(integers[i]);
+      }
+      return sb.toString();
+    }
   }
 
 }
