@@ -39,7 +39,7 @@ public class RunningKeyBreak {
    * 
    * @param textBlock The text to break.
    * @param g Die Gewichte, die der Benutzer festgelegt hat.
-   * @return Mögliche Schlüssel-Texte. (String von möglichen Schlüsseltexten)
+   * @return Mögliche Schlüssel-Texte. (String von Mengen möglicher Schlüsseltexte)
    */
   public Vector<Vector<Vector<Quantity>>> getMostProbableKeys(Quantities textBlock, int[] g) {
     this.g = g;
@@ -51,7 +51,7 @@ public class RunningKeyBreak {
 
   private Vector<Vector<Vector<Quantity>>> weightKeys(Vector<Vector<Quantity>> k,
       Quantities textBlock) {
-    int charsToAnalyse = 12;
+    int charsToAnalyse = 6;
     
     Vector<Vector<Vector<Quantity>>> weightedStr = new Vector<Vector<Vector<Quantity>>>();
     

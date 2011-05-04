@@ -393,6 +393,7 @@ public class RunningKey extends Cipher {
         else{
           System.out.print("…");
         }
+        System.out.print("↦");
       }
       System.out.println();
     }
