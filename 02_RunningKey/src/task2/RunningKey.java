@@ -254,7 +254,6 @@ public class RunningKey extends Cipher {
    *          Der Writer, der den Klartext schreiben soll.
    */
   public void decipher(BufferedReader ciphertext, BufferedWriter cleartext) {
-
     // Kommentierung analog 'encipher(cleartext, ciphertext)'.
     try {
       FileReader key = new FileReader(keyFile);
@@ -350,10 +349,37 @@ public class RunningKey extends Cipher {
     }
 
     RunningKeyBreak rkb = new RunningKeyBreak(charMap, modulus);
-    Vector<Quantities> possibleKeys = rkb.getMostPossibleKeys(textBlock, g);
+    Vector<Vector<Quantity>> possibleKeys = rkb.getMostProbableKeys(textBlock, g);
     System.out.println("possible keys raw: " + possibleKeys);
-    for (Quantities qs: possibleKeys) {
-      System.out.println("Kandidaten-Schlüssel: " + qs.remap(charMap));
+    System.out.println("Kandidaten-Schlüssel: ");
+    printCandidates(possibleKeys);
+  }
+
+  private void printCandidates(Vector<Vector<Quantity>> possibleKeys) {
+    boolean atEnd = false;
+    for(int i = 0; !atEnd; ++i){
+      atEnd = true;
+      for(Vector<Quantity> ks : possibleKeys){
+        if(i < ks.size()){
+          atEnd = false;
+          for(char c : ks.get(i).remap(charMap).toCharArray()){
+            if(c >= 33){
+              System.out.print(c);
+            }
+            else{
+              System.out.print("¥");
+            }
+          }
+          System.out.print(" ");
+        }
+        else{
+          for(int j = 0; j < ks.get(0).getIntegers().length; ++j){
+            System.out.print("…");
+          }
+          System.out.print(" ");
+        }
+      }
+      System.out.println();
     }
   }
 

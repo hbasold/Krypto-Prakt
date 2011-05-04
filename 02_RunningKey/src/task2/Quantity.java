@@ -1,5 +1,7 @@
 package task2;
 
+import de.tubs.cs.iti.jcrypt.chiffre.CharacterMapping;
+
 /**
  * Data class for a letter in an alphabet to store
  * associated information.
@@ -161,6 +163,14 @@ public class Quantity implements Comparable<Quantity> {
       }
       return sb.toString();
     }
+  }
+  public String remap(CharacterMapping charMap) {
+    char[] cs = new char[getIntegers().length];
+    int i = 0;
+    for (int q : getIntegers()) {
+      cs[i++] = (char) charMap.remapChar(q);
+    }
+    return new String(cs);
   }
 
 }

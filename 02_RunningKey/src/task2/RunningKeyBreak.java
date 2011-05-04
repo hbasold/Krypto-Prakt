@@ -37,52 +37,66 @@ public class RunningKeyBreak {
    * @param g Die Gewichte, die der Benutzer festgelegt hat.
    * @return Mögliche Schlüssel-Texte.
    */
-  public Vector<Quantities> getMostPossibleKeys(Quantities textBlock, int[] g) {
+  public Vector<Vector<Quantity>> getMostProbableKeys(Quantities textBlock, int[] g) {
     this.g = g;
     Vector<Quantities> possibleKeys = keyUnigramCandidates(textBlock, nGramms[0]);
-    Vector<Quantities> k = calculatePossibleKeys(possibleKeys,textBlock);
+    Vector<Vector<Quantity>> k = possibleTrigramKey(possibleKeys,textBlock);
     return k;
   }
 
-  private Vector<Quantities> calculatePossibleKeys(Vector<Quantities> possibleKeys, Quantities textBlock) {
+  /**
+   * Berechnet eine Menge von möglichen Strings aus Uni- oder Trigrammen.
+   * 
+   * Dabei werden die möglichen Zeichen für den String durchlaufen und es wird
+   * versucht aus diesen Trigramme zu machen. Wenn dies nicht möglich ist, wird
+   * beim nächsten Zeichen fortgefahren und das übersprungene behält seine
+   * ursprünglichen Möglichkeiten.
+   * 
+   * @param possibleKeys
+   * @param textBlock
+   * @return Menge von Strings aus Uni- oder Trigrammen (Quantity bel. kann n-Gramm sein)
+   */
+  private Vector<Vector<Quantity>> possibleTrigramKey(Vector<Quantities> possibleKeys, Quantities textBlock) {
     // Schlüssel vorgeben
     
-    Vector<Quantities> k = new Vector<Quantities>();    
-    Quantities bestKey = new Quantities();
+    // "String" mit mehreren Trigramm-Kandidaten pro Position
+    Vector<Vector<Quantity>> k = new Vector<Vector<Quantity>>();
     
-    for(int i = 0; i < possibleKeys.size() - 3; i += 3){
-      Vector<Quantities> triGramCandidates = calcTrigramCandidates(possibleKeys.subList(i, i + 3));
+    for(int i = 0; i < possibleKeys.size() - 3; ++i){
+      Vector<Quantity> triGramCandidates = calcTrigramCandidates(possibleKeys.subList(i, i + 3));
       if(!triGramCandidates.isEmpty()){
-        double maxWeight = -1;
-        Quantities bestKeyTrigram = null;
-        for(Quantities key : triGramCandidates) {
-          Quantities plain = textBlock.decryptWithKey(key, i, i + 3);
-          double pPlain = getProbabilityOfText(plain);
-          double pKey   = getProbabilityOfText(key);
-          double w = pKey * pPlain;
-          if (w > maxWeight) {
-            maxWeight = w;
-            bestKeyTrigram = key;
-            StringBuffer sb = new StringBuffer();
-            sb.append("enc: ").append(textBlock.remap(charMap)) //.append(textBlock)
-            .append(", key: ").append(key.remap(charMap)) //.append(key)
-            .append(", plain: ").append(plain.remap(charMap)) //.append(plain)
-            .append(", w=").append(w);
-            System.out.println(sb.toString());
-          }
-        }
-        System.out.println("bestTrigram = " + bestKeyTrigram.remap(charMap));
-        bestKey.addAll(bestKeyTrigram);
+        k.add(triGramCandidates);
+//        double maxWeight = 0;
+//        Quantities bestKeyTrigram = null;
+//        for(Quantity trigramKey : triGramCandidates) {
+//          Quantities plain = textBlock.decryptWithKey(makeQuantities(trigramKey), i, i + 3);
+//          // TODO: nutze letztes Trigramm mit zur Bewertung
+//          
+//          double pPlain = getProbabilityOfText(plain);
+//          double pKey   = getProbabilityOfText(makeQuantities(trigramKey));
+////          System.out.println("pPlian = " + pPlain + " pKey = " + pKey);
+//          double w = pKey * pPlain;
+//          if (w > maxWeight) {
+//            maxWeight = w;
+//            bestKeyTrigram = trigramKey;
+//            StringBuffer sb = new StringBuffer();
+//            sb.append("enc: ").append(textBlock.remap(charMap)) //.append(textBlock)
+//            .append(", key: ").append(trigramKey.remap(charMap)) //.append(key)
+//            .append(", plain: ").append(plain.remap(charMap)) //.append(plain)
+//            .append(", w=").append(w);
+//            System.out.println(sb.toString());
+//          }
+//        }
+//        System.out.println("bestTrigram = " + bestKeyTrigram.remap(charMap));
+//        bestKey.addAll(bestKeyTrigram);
+        i += 2; // um 3 weitergehen (s. Schleifenkopf)
       }
       else{
         System.out.println("no trigram found");
-        bestKey.add(new Quantity(0));
-        bestKey.add(new Quantity(0));
-        bestKey.add(new Quantity(0));
+        k.add(possibleKeys.get(i));
       }
     }
     
-    k.add(bestKey);
     return k;
   }
 
@@ -91,15 +105,15 @@ public class RunningKeyBreak {
    * @param triGram Kandidaten für ein Trigramm (d.h. Liste von Kandidaten für jede Position)
    * @return Menge möglicher Trigramme, die gebildet werden können.
    */
-  private Vector<Quantities> calcTrigramCandidates(List<Quantities> triGram) {
+  private Vector<Quantity> calcTrigramCandidates(List<Quantities> triGram) {
     assert triGram.size() == 3;
     assert triGram.get(0).get(0).getIntegers().length == 1;
     
-    Vector<Quantities> cand = new Vector<Quantities>();
+    Vector<Quantity> cand = new Vector<Quantity>();
     
     for(Quantity t : nGramms[2]){
       if(matchTriGram(t, triGram)){
-        cand.add(makeQuantities(t));
+        cand.add(t);
       }
     }
     
@@ -146,12 +160,12 @@ public class RunningKeyBreak {
     for (int n=0; n<3; n++) { // Uni-Gramme, Di-Gramme und Tri-Gramme
       int[] integers = new int[n+1];
       double sum = 0;
-      Quantities qs = nGramms[n];
       for (int i=0; i<text.size()-n; i++) {
-        for (int j=0; j<n+1; j++) {
+        for (int j=0; j < n + 1; j++) {
           integers[j] = text.get(i+j).getInt();
         }
-        Quantity q = qs.getQuantityWithIntegers(integers);
+//        System.out.println("integers = " + integers);
+        Quantity q = nGramms[n].getQuantityWithIntegers(integers);
         if (q!=null) {
           sum += q.getRelativeFrequency();
         }
