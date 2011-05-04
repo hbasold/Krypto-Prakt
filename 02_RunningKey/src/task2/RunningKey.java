@@ -351,88 +351,10 @@ public class RunningKey extends Cipher {
 
     RunningKeyBreak rkb = new RunningKeyBreak(charMap, modulus);
     Vector<Quantities> possibleKeys = rkb.getMostPossibleKeys(textBlock, g);
-    System.out.println(possibleKeys);
+    System.out.println("possible keys raw: " + possibleKeys);
     for (Quantities qs: possibleKeys) {
-      System.out.println(qs.remap(charMap));
+      System.out.println("Kandidaten-Schlüssel: " + qs.remap(charMap));
     }
-  }
-
-  private Vector<Quantities> calculatePossibleKeys(Quantities textBlock, Quantities languageQuantities) {
-    Vector<Quantities> vKeys = new Vector<Quantities>(textBlock.size());
-
-    int numRelevantChars = 5;
-    
-    for(Quantity enc : textBlock) {
-      Quantities cCandidates = new Quantities(modulus);
-      vKeys.add(cCandidates);
-      
-      for(int i = 0; i < numRelevantChars; ++i){
-        cCandidates.add(new Quantity(0, 0, 0));
-      }
-      // Schlüssel
-      for (Quantity key: languageQuantities) {
-        int shift = enc.getShift(key, modulus);
-        Quantity plain = languageQuantities.getQuantityWithInteger(shift);
-        if (plain!=null) {
-          double probability = key.getRelativeFrequency() * plain.getRelativeFrequency();
-          for(int i = 0; i < numRelevantChars; ++i){
-            if(cCandidates.get(i).getRelativeFrequency() < probability){
-              System.out.println(key.toString()+" "+plain+" pro:"+probability);
-              cCandidates.set(i, new Quantity(key.getInt(), 0, probability));
-              break;
-            }
-          }
-        }
-      }
-    }
-    return vKeys;
-  }
-
-  private Vector<Quantities> calculateMostProbableKeyText(
-      Vector<Quantities> possibleKeys, Quantities languageTriGrams) {
-    Vector<Quantities> keyTexts = new Vector<Quantities>();
-    Quantities text = new Quantities();
-    keyTexts.add(text);
-    for (int i=0; i<possibleKeys.size()-3 ; i++) {
-      List<Quantities> keys3 = possibleKeys.subList(i, i+3);
-      text.addAll(calculateMostProbableSequence(keys3, languageTriGrams));
-    }
-    return keyTexts;
-  }
-
-  /**
-   * Liefert das wahrscheinlichste Trigramm für die aufeinanderfolgenden
-   * Quantities in der Liste.
-   * @param sequenceKeys Liste 
-   * @param languageTriGrams
-   * @return
-   */
-  private Quantities calculateMostProbableSequence(
-      List<Quantities> sequenceKeys, Quantities languageTriGrams) {
-    Quantity best = new Quantity();
-    for (Quantity lng: languageTriGrams) {
-      Quantities keys = new Quantities();
-      for (int i = 0; i<lng.getIntegers().length; i++) {
-        int c = lng.getInt(i);
-        for (Quantity key: sequenceKeys.get(i)) {
-          if (c==key.getInt()) {
-            keys.add(key);
-            break;
-          }
-        }
-        if (keys.size()-1!=i) {
-          break;
-        }
-      }
-      if (best.getRelativeFrequency()<lng.getRelativeFrequency()) {
-        best = lng;
-      }
-    }
-    Quantities qs = new Quantities();
-    for (int i: best.getIntegers()) {
-      qs.add(new Quantity(i));
-    }
-    return qs;
   }
 
 }

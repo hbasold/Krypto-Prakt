@@ -131,21 +131,17 @@ public class Quantities extends Vector<Quantity> {
     return null;
   }
 
-  public char[] remap(CharacterMapping charMap) {
+  public String remap(CharacterMapping charMap) {
     char[] cs = new char[size()];
     int i = 0;
     for (Quantity q: this) {
       cs[i++] = (char) charMap.remapChar(q.getInt());
     }
-    return cs;
+    return new String(cs);
   }
 
   public Quantities decryptWithKey(Quantities key) {
-    Quantities qs = new Quantities();
-    for (int i = 0; i<size(); i++) {
-      qs.add(get(i).decryptWithKey(key.get(i), modulus));
-    }
-    return qs;
+    return decryptWithKey(key, 0, size());
   }
 
   public boolean containsSequence(Quantities plain) {
@@ -163,6 +159,17 @@ public class Quantities extends Vector<Quantity> {
       }
     }
     return false;
+  }
+
+  public Quantities decryptWithKey(Quantities key, int start, int end) {
+    if(!(size() > start && end <= size() && key.size() > 0 && (start - end) <= key.size())){
+      System.out.println("decrypt error: " + this + " " + key);
+    }
+    Quantities qs = new Quantities();
+    for (int i = 0; i < (start - end); i++) {
+      qs.add(get(i + start).decryptWithKey(key.get(i), modulus));
+    }
+    return qs;
   }
 
 }
