@@ -1,11 +1,9 @@
 package task2;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Vector;
 
 import de.tubs.cs.iti.jcrypt.chiffre.CharacterMapping;
@@ -349,7 +347,7 @@ public class RunningKeyBreak {
   }
 
   private Quantities makeQuantities(Quantity t) {
-    Quantities q = new Quantities();
+    Quantities q = new Quantities(modulus);
     for(int c : t.getIntegers()){
       q.add(new Quantity(c));
     }
@@ -393,7 +391,7 @@ public class RunningKeyBreak {
           integers[j] = plain.get(i+j).getInt();
         }
 //        System.out.println("integers = " + integers);
-        Quantity q = nGramms[n].getQuantityWithIntegers(integers);
+        Quantity q = nGramms[n].findQuantityWithIntegers(integers);
         if (q!=null) {
           sum += q.getRelativeFrequency();
         }
@@ -413,18 +411,18 @@ public class RunningKeyBreak {
       vKeys.add(cCandidates);
       
       for(int i = 0; i < numRelevantChars; ++i){
-        cCandidates.add(new Quantity(0, 0, 0));
+        cCandidates.add(new Quantity());
       }
       // Schlüssel
       for (Quantity key: languageQuantities) {
         int shift = enc.getShift(key, modulus);
-        Quantity plain = languageQuantities.getQuantityWithInteger(shift);
+        Quantity plain = languageQuantities.findQuantityWithInteger(shift);
         if (plain!=null) {
           double probability = key.getRelativeFrequency() * plain.getRelativeFrequency();
           for(int i = 0; i < numRelevantChars; ++i){
             if(cCandidates.get(i).getRelativeFrequency() < probability){
               System.out.println(key.toString()+" "+plain+" pro:"+probability);
-              cCandidates.set(i, new Quantity(key.getInt(), 0, probability));
+              cCandidates.set(i, new Quantity(key.getInt(), probability));
               break;
             }
           }
@@ -437,7 +435,7 @@ public class RunningKeyBreak {
   private Vector<Quantities> calculateMostProbableKeyText(
       Vector<Quantities> possibleKeys, Quantities languageTriGrams) {
     Vector<Quantities> keyTexts = new Vector<Quantities>();
-    Quantities text = new Quantities();
+    Quantities text = new Quantities(modulus);
     keyTexts.add(text);
     for (int i=0; i<possibleKeys.size()-3 ; i++) {
       List<Quantities> keys3 = possibleKeys.subList(i, i+3);
@@ -457,7 +455,7 @@ public class RunningKeyBreak {
       List<Quantities> sequenceKeys, Quantities languageTriGrams) {
     Quantity best = new Quantity();
     for (Quantity lng: languageTriGrams) {
-      Quantities keys = new Quantities();
+      Quantities keys = new Quantities(modulus);
       for (int i = 0; i<lng.getIntegers().length; i++) {
         int c = lng.getInt(i);
         for (Quantity key: sequenceKeys.get(i)) {
@@ -474,7 +472,7 @@ public class RunningKeyBreak {
         best = lng;
       }
     }
-    Quantities qs = new Quantities();
+    Quantities qs = new Quantities(modulus);
     for (int i: best.getIntegers()) {
       qs.add(new Quantity(i));
     }

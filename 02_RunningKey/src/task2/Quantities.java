@@ -15,10 +15,14 @@ public class Quantities extends Vector<Quantity> {
   private final int modulus;
   
   private int countAllChars;
-  private Vector<Pair<Integer, Quantity>> guessedShifts;
 
-  private Quantities(int size, int modulus) {
-    super(size);
+  /**
+   * Constructor for an alphabet quantities on chars.
+   * @param languageQuantities The language specific alphabet quantities.
+   * @see #createLanguageQuantities(CharacterMapping)
+   */
+  public Quantities(int modulus) {
+    super();
     this.modulus = modulus;
   }
 
@@ -37,41 +41,19 @@ public class Quantities extends Vector<Quantity> {
     // 'nGrams' nimmt die Daten der Häufigkeitstabelle auf.
     System.out.println("Unigramm-Tabelle beginnend mit den häufigsten:");
     ArrayList<NGram> nGrams = FrequencyTables.getNGramsAsList(n, charMap);
-    Quantities quantities = new Quantities(nGrams.size(), modulus);
+    Quantities quantities = new Quantities(modulus);
     for (NGram ngram: nGrams) {
 //      System.out.println("cs="+n.getCharacters()+" is="+n.getIntegers()+" f="+n.getFrequency()+" mapto="+charMap.mapChar(Integer.parseInt(n.getIntegers())));
       Quantity q;
       StringTokenizer st = new StringTokenizer(ngram.getIntegers(), "_");
       int[] integers = new int[st.countTokens()];
-      int i = 0;
-      while (st.hasMoreElements()) {
+      for (int i = 0; st.hasMoreElements(); i++) {
         integers[i] = charMap.mapChar(Integer.parseInt(st.nextToken()));
-        i = i+1;
       }
-      q = new Quantity(
-          integers,
-          (int) ngram.getFrequency()*10, //dummy with one precision after point
-          ngram.getFrequency() / 100.0);
+      q = new Quantity(integers, ngram.getFrequency() / 100.0);
       quantities.add(q);
     }
     return quantities;
-  }
-  public static Quantities createLanguageQuantities(CharacterMapping charMap, int modulus) {
-    return createLanguageQuantities(1, charMap, modulus);
-  }
-
-  /**
-   * Constructor for an alphabet quantities on chars.
-   * @param languageQuantities The language specific alphabet quantities.
-   * @see #createLanguageQuantities(CharacterMapping)
-   */
-  public Quantities(int modulus) {
-    super();
-    this.modulus = modulus;
-  }
-
-  public Quantities() {
-    this(0);
   }
 
   /**
@@ -80,7 +62,7 @@ public class Quantities extends Vector<Quantity> {
    */
   @Override
   public synchronized boolean add(Quantity q) {
-    countAllChars += q.getCount();
+    countAllChars += q.getIntegers().length;
     return super.add(q);
   }
 
@@ -105,15 +87,7 @@ public class Quantities extends Vector<Quantity> {
     return countAllChars;
   }
 
-  /**
-   * @return The frequencies of all shifts calculated by
-   * {@link #calculateShiftFrequencies()}.
-   */
-  public Vector<Pair<Integer, Quantity>> getShiftFrequencies() {
-    return guessedShifts;
-  }
-
-  public Quantity getQuantityWithInteger(int shift) {
+  public Quantity findQuantityWithInteger(int shift) {
     for (Quantity q: this) {
       if (q.getInt()==shift) {
         return q;
@@ -122,26 +96,13 @@ public class Quantities extends Vector<Quantity> {
     return null;
   }
 
-  public Quantity getQuantityWithIntegers(int[] integers) {
+  public Quantity findQuantityWithIntegers(int[] integers) {
     for (Quantity q: this) {
       if (q.equals(integers)) {
         return q;
       }
     }
     return null;
-  }
-
-  public String remap(CharacterMapping charMap) {
-    char[] cs = new char[size()];
-    int i = 0;
-    for (Quantity q: this) {
-      cs[i++] = (char) charMap.remapChar(q.getInt());
-    }
-    return new String(cs);
-  }
-
-  public Quantities decryptWithKey(Quantities key) {
-    return decryptWithKey(key, 0, size());
   }
 
   public boolean containsSequence(Quantities plain) {
@@ -165,7 +126,7 @@ public class Quantities extends Vector<Quantity> {
     if(!(size() > start && end <= size() && key.size() > 0 && (end - start) <= key.size())){
       System.out.println("decrypt error: " + this + " " + key);
     }
-    Quantities qs = new Quantities();
+    Quantities qs = new Quantities(modulus);
     for (int i = 0; i < (end - start); i++) {
       qs.add(get(i + start).decryptWithKey(key.get(i), modulus));
     }
@@ -181,6 +142,19 @@ public class Quantities extends Vector<Quantity> {
       qs.add(get(i + start).decryptWithKey(key.get(i), modulus));
     }
     return qs;
+  }
+
+  public Quantities decryptWithKey(Quantities key) {
+    return decryptWithKey(key, 0, size());
+  }
+
+  public String remap(CharacterMapping charMap) {
+    char[] cs = new char[size()];
+    int i = 0;
+    for (Quantity q: this) {
+      cs[i++] = (char) charMap.remapChar(q.getInt());
+    }
+    return new String(cs);
   }
 
 }
