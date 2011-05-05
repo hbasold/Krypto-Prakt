@@ -44,45 +44,47 @@ public class RunningKeyBreak {
   public Vector<Vector<Vector<Quantity>>> getMostProbableKeys(Quantities textBlock, int[] g) {
     this.g = g;
     Vector<Quantities> possibleKeys = keyUnigramCandidates(textBlock, nGramms[0]);
-    Vector<Vector<Quantity>> k = possibleTrigramKey(possibleKeys);
-    Vector<Vector<Vector<Quantity>>> weighted = weightKeys(k, textBlock);
-    return weighted;
+    Vector<Vector<Vector<Quantity>>> k = lift(possibleKeys);
+    //Vector<Vector<Vector<Quantity>>> k = possibleTrigramKey(possibleKeys);
+    Vector<Vector<Vector<Quantity>>> weighted3 = weightKeys(k, textBlock, 3);
+    Vector<Vector<Vector<Quantity>>> weighted6 = weightKeys(weighted3, textBlock, 6);
+    return weighted6;
   }
 
-  private Vector<Vector<Vector<Quantity>>> weightKeys(Vector<Vector<Quantity>> k,
-      Quantities textBlock) {
-    int charsToAnalyse = 6;
+  /**
+   * Macht aus einem String von Kandidaten einen String von Mengen von
+   * Kandidaten-Substrings, wobei jeder Substring nur einen Buchstaben hat.
+   * 
+   * @param possibleKeys
+   * @return
+   */
+  private Vector<Vector<Vector<Quantity>>> lift(Vector<Quantities> possibleKeys) {
+    Vector<Vector<Vector<Quantity>>> str = new Vector<Vector<Vector<Quantity>>>();
+    for(Quantities candidates : possibleKeys){
+      Vector<Vector<Quantity>> cand = new Vector<Vector<Quantity>>();
+      str.add(cand);
+      for(Quantity c : candidates){
+        Vector<Quantity> c_ = new Vector<Quantity>();
+        c_.add(c);
+        cand.add(c_);
+      }
+    }
+    return str;
+  }
+
+  private Vector<Vector<Vector<Quantity>>> weightKeys(Vector<Vector<Vector<Quantity>>> k,
+      Quantities textBlock, int charsToAnalyse) {
     
     Vector<Vector<Vector<Quantity>>> weightedStr = new Vector<Vector<Vector<Quantity>>>();
     
-    Iterator<Vector<Quantity>> strIter = k.iterator();
-    int blockNum = 0;
-    while(strIter.hasNext()){
-      // Zeichen/Trigramme sammeln
-      Vector<Vector<Quantity>> subStr = new Vector<Vector<Quantity>>();
-      int i = 0;
-      for(; i < charsToAnalyse && strIter.hasNext(); ++i){
-        Vector<Quantity> cs = strIter.next();
-        i += cs.get(0).getIntegers().length - 1; // wenn Trigramm, gehe um 2 weiter
-        subStr.add(cs);
-      }
-      
-      // Evtl. weniger Text als angefordert vorhanden
-      Vector<Vector<Quantity>> weighted;
-      if(i < charsToAnalyse){
-        weighted
-          = weightSubKey(subStr,
-              textBlock, blockNum * charsToAnalyse, (blockNum + 1) * charsToAnalyse - (charsToAnalyse - i));
-      }
-      else{
-        weighted
-          = weightSubKey(subStr,
-              textBlock, blockNum * charsToAnalyse, (blockNum + 1) * charsToAnalyse);
-      }
+    for(int i = 0; i < k.size(); ++i){
+      // FIXME: Länge der Substrings beachten!
+      int end = Math.min(i + charsToAnalyse, k.size());
+      Vector<Vector<Quantity>> weighted
+        = weightSubKey(k.subList(i, end),
+            textBlock, i, end);
       
       weightedStr.add(weighted);
-      
-      ++blockNum;
     }
     
     return weightedStr;
@@ -105,29 +107,28 @@ public class RunningKeyBreak {
    * 
    * 
    * 
-   * @param subStr
+   * @param list
    * @param textBlock
    * @param start
    * @param end
    * @return Menge von Schlüssel-Texten sortiert nach ihrer Wahrscheinlichkeit 
    */
   private Vector<Vector<Quantity>> weightSubKey(
-      Vector<Vector<Quantity>> subStr, Quantities textBlock, int start, int end) {
+      List<Vector<Vector<Quantity>>> list, Quantities textBlock, int start, int end) {
     
     Vector<Pair<Vector<Quantity>, Double>> weighted = new Vector<Pair<Vector<Quantity>, Double>>();
     
-    CombinationIterator combs = new CombinationIterator(subStr);
+    CombinationIterator combs = new CombinationIterator(list);
 
     System.out.println("Weighting: ");
     while(combs.hasNext()){
-      Vector<Quantity> combined = combs.next();
-      Vector<Quantity> key = flatten(combined);
+      Vector<Quantity> key = flatten(combs.next());
       Vector<Quantity> plain = textBlock.decryptWithKey(key, start, end);
       double pPlain = getProbabilityOfText(plain);
       double pKey   = getProbabilityOfText(key);
       double w = pKey * pPlain;
       weighted.add(Pair.of(key, new Double(w)));
-      //System.out.println("W( " + key + " ⇒ " + plain + " ) = " + w);
+      System.out.println("W( " + key + " ⇒ " + plain + " ) = " + w);
     }
     
     Collections.sort(weighted, new CompareBySecondDesc());
@@ -136,6 +137,22 @@ public class RunningKeyBreak {
     Vector<Vector<Quantity>> best = getFirst(weighted.subList(0, Math.min(numBest, weighted.size())));
     
     return best;
+  }
+
+  /**
+   * Macht aus einem String von Substrings einen flachen String
+   * 
+   * @param next
+   * @return
+   */
+  private Vector<Quantity> flatten(Vector<Vector<Quantity>> next) {
+    Vector<Quantity> str = new Vector<Quantity>();
+    
+    for(Vector<Quantity> sub : next){
+      str.addAll(sub);
+    }
+    
+    return str;
   }
 
   /**
@@ -160,14 +177,12 @@ public class RunningKeyBreak {
    * @param current
    * @return
    */
-  private Vector<Quantity> flatten(Vector<Quantity> polyStr) {
+  private Vector<Quantity> flatten(Quantity trigram) {
     Vector<Quantity> uniStr = new Vector<Quantity>();
     
-    for(Quantity cs : polyStr){
-      for(int c : cs.getIntegers()){
+      for(int c : trigram.getIntegers()){
         uniStr.add(new Quantity(c));
       }
-    }
     
     return uniStr;
   }
@@ -177,22 +192,22 @@ public class RunningKeyBreak {
    * Erzeugt alle Kombinationen von Polygrammen aus subStr.
    *
    */
-  class CombinationIterator implements Iterator<Vector<Quantity>>{
+  class CombinationIterator implements Iterator<Vector<Vector<Quantity>>>{
 
-    private Vector<Quantity> current;
-    private Vector<Iterator<Quantity>> combs;
+    private Vector<Vector<Quantity>> current; // String von Substrings
+    private Vector<Iterator<Vector<Quantity>>> combs; // Iteratoren über die Kandidaten für jeden Substring
     
-    CombinationIterator(Vector<Vector<Quantity>> subStr){
-      current = new Vector<Quantity>();
-      combs = combinationsBegin(subStr, current);
+    CombinationIterator(List<Vector<Vector<Quantity>>> list){
+      current = new Vector<Vector<Quantity>>();
+      combs = combinationsBegin(list, current);
     }
     
-    private Vector<Iterator<Quantity>> combinationsBegin(
-        Vector<Vector<Quantity>> subStr, Vector<Quantity> combined) {
-      Vector<Iterator<Quantity>> combs = new Vector<Iterator<Quantity>>();
+    private Vector<Iterator<Vector<Quantity>>> combinationsBegin(
+        List<Vector<Vector<Quantity>>> list, Vector<Vector<Quantity>> combined) {
+      Vector<Iterator<Vector<Quantity>>> combs = new Vector<Iterator<Vector<Quantity>>>();
       
-      for(Vector<Quantity> qs : subStr){
-        Iterator<Quantity> iq = qs.iterator();
+      for(Vector<Vector<Quantity>> qs : list){
+        Iterator<Vector<Quantity>> iq = qs.iterator();
         combined.add(iq.next());
         combs.add(iq);
       }
@@ -204,7 +219,7 @@ public class RunningKeyBreak {
     public boolean hasNext() {
       boolean hasNext = false;
       
-      for(Iterator<Quantity> iq : combs){
+      for(Iterator<Vector<Quantity>> iq : combs){
         hasNext = iq.hasNext();
         if(hasNext){
           break; // Optimierung
@@ -215,10 +230,10 @@ public class RunningKeyBreak {
     }
 
     @Override
-    public Vector<Quantity> next() {
+    public Vector<Vector<Quantity>> next() {
       // Rückwärts laufen
       for(int i = combs.size() - 1; i >= 0; --i){
-        Iterator<Quantity> iq = combs.get(i);
+        Iterator<Vector<Quantity>> iq = combs.get(i);
         if(iq.hasNext()){
           current.set(i, iq.next());
           break;
@@ -244,16 +259,21 @@ public class RunningKeyBreak {
    * @param possibleKeys
    * @return Menge von Strings aus Uni- oder Trigrammen (Quantity bel. kann n-Gramm sein)
    */
-  private Vector<Vector<Quantity>> possibleTrigramKey(Vector<Quantities> possibleKeys) {
+  private Vector<Vector<Vector<Quantity>>> possibleTrigramKey(Vector<Quantities> possibleKeys) {
     // Schlüssel vorgeben
     
     // "String" mit mehreren Trigramm-Kandidaten pro Position
-    Vector<Vector<Quantity>> k = new Vector<Vector<Quantity>>();
+    Vector<Vector<Vector<Quantity>>> str = new Vector<Vector<Vector<Quantity>>>();
     
     for(int i = 0; i < possibleKeys.size() - 3; ++i){
+      Vector<Vector<Quantity>> subStr = new Vector<Vector<Quantity>>();
+      str.add(subStr);
+      
       Vector<Quantity> triGramCandidates = calcTrigramCandidates(possibleKeys.subList(i, i + 3));
       if(!triGramCandidates.isEmpty()){
-        k.add(triGramCandidates);
+        for(Quantity trigram : triGramCandidates){
+          subStr.add(flatten(trigram));
+        }
 //        double maxWeight = 0;
 //        Quantities bestKeyTrigram = null;
 //        for(Quantity trigramKey : triGramCandidates) {
@@ -281,11 +301,11 @@ public class RunningKeyBreak {
       }
       else{
         System.out.println("no trigram found");
-        k.add(possibleKeys.get(i));
+        subStr.add(possibleKeys.get(i));
       }
     }
     
-    return k;
+    return str;
   }
 
   /**
