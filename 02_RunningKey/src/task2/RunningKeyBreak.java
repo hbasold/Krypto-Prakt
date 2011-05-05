@@ -44,11 +44,13 @@ public class RunningKeyBreak {
   public Vector<Vector<Vector<Quantity>>> getMostProbableKeys(Quantities textBlock, int[] g) {
     this.g = g;
     Vector<Quantities> possibleKeys = keyUnigramCandidates(textBlock, nGramms[0]);
-    Vector<Vector<Vector<Quantity>>> k = lift(possibleKeys);
-    //Vector<Vector<Vector<Quantity>>> k = possibleTrigramKey(possibleKeys);
-    Vector<Vector<Vector<Quantity>>> weighted3 = weightKeys(k, textBlock, 3);
-    Vector<Vector<Vector<Quantity>>> weighted6 = weightKeys(weighted3, textBlock, 6);
-    return weighted6;
+    Vector<Vector<Vector<Quantity>>> weighted = lift(possibleKeys);;
+    for(int blockSize = 4; blockSize < textBlock.size(); blockSize *= 2){
+      System.out.println("Weighting " + blockSize + " blocks:");
+      weighted = weightKeys(weighted, textBlock, blockSize);
+    }
+    //weighted = weightKeys(weighted, textBlock, textBlock.size());
+    return weighted;
   }
 
   /**
@@ -75,16 +77,24 @@ public class RunningKeyBreak {
   private Vector<Vector<Vector<Quantity>>> weightKeys(Vector<Vector<Vector<Quantity>>> k,
       Quantities textBlock, int charsToAnalyse) {
     
+    int subStrSize = k.get(0).get(0).size();
+    assert charsToAnalyse % subStrSize == 0;
+    int subStrStep = charsToAnalyse / subStrSize;
+    
+    int steps = (int)((textBlock.size() + charsToAnalyse) / charsToAnalyse);
+    
     Vector<Vector<Vector<Quantity>>> weightedStr = new Vector<Vector<Vector<Quantity>>>();
     
-    for(int i = 0; i < k.size(); ++i){
-      // FIXME: Länge der Substrings beachten!
-      int end = Math.min(i + charsToAnalyse, k.size());
+    for(int i = 0; i < steps; i += 1){
+      int end = Math.min((i + 1) * subStrStep, k.size());
+      int strEnd = Math.min((i + 1) * charsToAnalyse, textBlock.size());
       Vector<Vector<Quantity>> weighted
-        = weightSubKey(k.subList(i, end),
-            textBlock, i, end);
+        = weightSubKey(k.subList(i * subStrStep, end),
+            textBlock, i * charsToAnalyse, strEnd);
       
-      weightedStr.add(weighted);
+      if(!weighted.isEmpty()){
+        weightedStr.add(weighted);
+      }
     }
     
     return weightedStr;
