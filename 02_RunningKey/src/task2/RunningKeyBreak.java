@@ -44,10 +44,13 @@ public class RunningKeyBreak {
   public Vector<Vector<Vector<Quantity>>> getMostProbableKeys(Quantities textBlock, int[] g) {
     this.g = g;
     Vector<Quantities> possibleKeys = keyUnigramCandidates(textBlock, nGramms[0]);
-    Vector<Vector<Vector<Quantity>>> weighted = lift(possibleKeys);;
-    for(int blockSize = 4; blockSize <= textBlock.size(); blockSize *= 2){
-      System.out.println("Weighting " + blockSize + " blocks:");
-      weighted = weightKeys(weighted, textBlock, blockSize);
+    Vector<Vector<Vector<Quantity>>> weighted = lift(possibleKeys);
+    // Exponentiell abnehmende Zahl an Möglichkeiten, wobei am Ende 50 Möglichkeiten
+    // übrig bleiben sollen.
+    int possiblitiesToGenerate = 50 * ((int)Math.ceil((Math.log(textBlock.size()) / Math.log(2))) - 1);
+    for(int blockSize = 4; blockSize <= textBlock.size(); blockSize *= 2, possiblitiesToGenerate /= 2){
+      System.out.println("Weighting " + possiblitiesToGenerate + " blocks (size " + blockSize + "):");
+      weighted = weightKeys(weighted, textBlock, blockSize, possiblitiesToGenerate);
     }
     //weighted = weightKeys(weighted, textBlock, textBlock.size());
     return weighted;
@@ -75,7 +78,7 @@ public class RunningKeyBreak {
   }
 
   private Vector<Vector<Vector<Quantity>>> weightKeys(Vector<Vector<Vector<Quantity>>> k,
-      Quantities textBlock, int charsToAnalyse) {
+      Quantities textBlock, int charsToAnalyse, int possiblitiesToGenerate) {
     
     int subStrSize = k.get(0).get(0).size();
     assert charsToAnalyse % subStrSize == 0;
@@ -90,7 +93,7 @@ public class RunningKeyBreak {
       int strEnd = Math.min((i + 1) * charsToAnalyse, textBlock.size());
       Vector<Vector<Quantity>> weighted
         = weightSubKey(k.subList(i * subStrStep, end),
-            textBlock, i * charsToAnalyse, strEnd);
+            textBlock, i * charsToAnalyse, strEnd, possiblitiesToGenerate);
       
       if(!weighted.isEmpty()){
         weightedStr.add(weighted);
@@ -121,10 +124,11 @@ public class RunningKeyBreak {
    * @param textBlock
    * @param start
    * @param end
+   * @param possiblitiesToGenerate 
    * @return Menge von Schlüssel-Texten sortiert nach ihrer Wahrscheinlichkeit 
    */
   private Vector<Vector<Quantity>> weightSubKey(
-      List<Vector<Vector<Quantity>>> list, Quantities textBlock, int start, int end) {
+      List<Vector<Vector<Quantity>>> list, Quantities textBlock, int start, int end, int possiblitiesToGenerate) {
     
     Vector<Pair<Vector<Quantity>, Double>> weighted = new Vector<Pair<Vector<Quantity>, Double>>();
     
@@ -143,8 +147,7 @@ public class RunningKeyBreak {
     
     Collections.sort(weighted, new CompareBySecondDesc());
     
-    int numBest = 50;
-    Vector<Vector<Quantity>> best = getFirst(weighted.subList(0, Math.min(numBest, weighted.size())));
+    Vector<Vector<Quantity>> best = getFirst(weighted.subList(0, Math.min(possiblitiesToGenerate, weighted.size())));
     
     return best;
   }
