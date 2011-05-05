@@ -102,14 +102,18 @@ public class Quantity implements Comparable<Quantity> {
     return position;
   }
   /**
-   * Sort quantity in descending order by counter.
+   * Sort quantity in >>descending<< order by size followed by frequency.
    * @return 0 if quantity of this object and the quantity of the given object are equal.
    * A positive integer if the quantity of this object is less
    * than the quantity of the given object, a negative integer otherwise.
    */
   @Override
   public int compareTo(Quantity o) {
-    return (int) Math.signum(o.frequency - frequency); // descending order
+    int result = o.integers.length - integers.length;
+    if (result==0) {
+      result = (int) Math.signum(o.frequency - frequency);
+    }
+    return result;
   }
   
   public boolean equals(int[] integers) {
