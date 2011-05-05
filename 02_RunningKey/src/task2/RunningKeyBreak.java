@@ -93,11 +93,11 @@ public class RunningKeyBreak {
    * Vergleichen von Paaren nur auf Basis des zweiten Wertes.
    *
    */
-  class CompareBySecond implements Comparator<Pair<Vector<Quantity>, Double>>{
+  class CompareBySecondDesc implements Comparator<Pair<Vector<Quantity>, Double>>{
     @Override
     public int compare(Pair<Vector<Quantity>, Double> o1,
         Pair<Vector<Quantity>, Double> o2) {
-      return (int) (o2.second.doubleValue() - o1.second.doubleValue());
+      return (int) Math.signum((o2.second.doubleValue() - o1.second.doubleValue()));
     }    
   }
 
@@ -118,7 +118,7 @@ public class RunningKeyBreak {
     
     CombinationIterator combs = new CombinationIterator(subStr);
 
-    //System.out.println("Weighting: ");
+    System.out.println("Weighting: ");
     while(combs.hasNext()){
       Vector<Quantity> combined = combs.next();
       Vector<Quantity> key = flatten(combined);
@@ -130,7 +130,7 @@ public class RunningKeyBreak {
       //System.out.println("W( " + key + " ⇒ " + plain + " ) = " + w);
     }
     
-    Collections.sort(weighted, new CompareBySecond());
+    Collections.sort(weighted, new CompareBySecondDesc());
     
     int numBest = 100;
     Vector<Vector<Quantity>> best = getFirst(weighted.subList(0, Math.min(numBest, weighted.size())));
