@@ -143,7 +143,7 @@ public class RunningKeyBreak {
     
     Collections.sort(weighted, new CompareBySecondDesc());
     
-    int numBest = 150;
+    int numBest = 50;
     Vector<Vector<Quantity>> best = getFirst(weighted.subList(0, Math.min(numBest, weighted.size())));
     
     return best;
@@ -206,10 +206,12 @@ public class RunningKeyBreak {
 
     private Vector<Vector<Quantity>> current; // String von Substrings
     private Vector<Iterator<Vector<Quantity>>> combs; // Iteratoren über die Kandidaten für jeden Substring
+    private List<Vector<Vector<Quantity>>> possibilies; // Anfangsiteratoren
     
     CombinationIterator(List<Vector<Vector<Quantity>>> list){
       current = new Vector<Vector<Quantity>>();
       combs = combinationsBegin(list, current);
+      possibilies = list;
     }
     
     private Vector<Iterator<Vector<Quantity>>> combinationsBegin(
@@ -247,6 +249,11 @@ public class RunningKeyBreak {
         if(iq.hasNext()){
           current.set(i, iq.next());
           break;
+        }
+        else {
+          iq = possibilies.get(i).iterator();
+          combs.set(i, iq);
+          current.set(i, iq.next());
         }
       }
       
