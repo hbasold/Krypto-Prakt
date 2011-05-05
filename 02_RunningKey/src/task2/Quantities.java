@@ -174,7 +174,7 @@ public class Quantities extends Vector<Quantity> {
 
   public Vector<Quantity> decryptWithKey(Vector<Quantity> key, int start, int end) {
     if(!(size() > start && end <= size() && key.size() > 0 && (end - start) <= key.size())){
-      System.out.println("decrypt error: " + this + " " + key);
+      System.out.println("decrypt error (" + start + ", " + end + "):" + this + " " + key);
     }
     Vector<Quantity> qs = new Vector<Quantity>();
     for (int i = 0; i < (end - start); i++) {

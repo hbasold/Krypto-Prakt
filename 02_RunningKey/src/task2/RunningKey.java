@@ -351,8 +351,8 @@ public class RunningKey extends Cipher {
     RunningKeyBreak rkb = new RunningKeyBreak(charMap, modulus);
     Vector<Vector<Vector<Quantity>>> possibleKeys = rkb.getMostProbableKeys(textBlock, g);
     //System.out.println("possible keys raw: " + possibleKeys);
-    System.out.println("Kandidaten-Schlüssel: ");
-    printCandidates(possibleKeys);
+    System.out.println("Kandidaten-Schlüssel (¥ - Steuerzeichen, ⇒ - Trenner zw. Schlüssel und Klartext, ↦ - Blocktrenner): ");
+    printCandidates(possibleKeys, textBlock);
   }
 
 //  private void printCandidatesH(Vector<Vector<Vector<Quantity>>> possibleKeys) {
@@ -372,30 +372,50 @@ public class RunningKey extends Cipher {
 //    }    
 //  }
 
-  private void printCandidates(Vector<Vector<Vector<Quantity>>> possibleKeys) {
+  private void printCandidates(Vector<Vector<Vector<Quantity>>> possibleKeys, Quantities textBlock) {
     boolean atEnd = false;
+    int pos = 0;
     for(int i = 0; !atEnd; ++i){
       atEnd = true;
+      pos = 0;
       for(Vector<Vector<Quantity>> ks : possibleKeys){
         if(i < ks.size()){
           atEnd = false;
-          for(Quantity c : ks.get(i)){
+          Vector<Quantity> subStr = ks.get(i); 
+          for(Quantity c : subStr){
             char c_ = c.remap(charMap).charAt(0);
             if(c_ >= 33){
               System.out.print(c_);
             }
             else{
-//              System.out.print("¥");
+              System.out.print("¥");
+//              System.out.print(c_);
+            }
+          }
+          
+          System.out.println(" ⇒ ");
+          
+          Vector<Quantity> plain = textBlock.decryptWithKey(subStr, pos, pos + subStr.size());
+          for(Quantity c : plain){
+            char c_ = c.remap(charMap).charAt(0);
+            if(c_ >= 33){
               System.out.print(c_);
+            }
+            else{
+              System.out.print("¥");
+//              System.out.print(c_);
             }
           }
         }
         else{
           System.out.print("…");
         }
-        System.out.print("↦");
+        System.out.print(" ↦ ");
+        if(!atEnd){
+          pos += possibleKeys.get(0).get(i).size();
+        }
       }
-      System.out.println();
+      System.out.println("\n");
     }
   }
 

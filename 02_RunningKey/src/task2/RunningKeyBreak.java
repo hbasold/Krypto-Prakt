@@ -138,12 +138,12 @@ public class RunningKeyBreak {
       double pKey   = getProbabilityOfText(key);
       double w = pKey * pPlain;
       weighted.add(Pair.of(key, new Double(w)));
-      System.out.println("W( " + key + " ⇒ " + plain + " ) = " + w);
+      //System.out.println("W( " + key + " ⇒ " + plain + " ) = " + w);
     }
     
     Collections.sort(weighted, new CompareBySecondDesc());
     
-    int numBest = 100;
+    int numBest = 150;
     Vector<Vector<Quantity>> best = getFirst(weighted.subList(0, Math.min(numBest, weighted.size())));
     
     return best;
@@ -396,7 +396,7 @@ public class RunningKeyBreak {
   private Vector<Quantities> keyUnigramCandidates(Quantities textBlock, Quantities languageQuantities) {
     Vector<Quantities> vKeys = new Vector<Quantities>(textBlock.size());
 
-    int numRelevantChars = 5;
+    int numRelevantChars = 10;
     
     for(Quantity enc : textBlock) {
       Quantities cCandidates = new Quantities(modulus);
