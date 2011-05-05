@@ -45,7 +45,7 @@ public class RunningKeyBreak {
     this.g = g;
     Vector<Quantities> possibleKeys = keyUnigramCandidates(textBlock, nGramms[0]);
     Vector<Vector<Vector<Quantity>>> weighted = lift(possibleKeys);;
-    for(int blockSize = 4; blockSize < textBlock.size(); blockSize *= 2){
+    for(int blockSize = 4; blockSize <= textBlock.size(); blockSize *= 2){
       System.out.println("Weighting " + blockSize + " blocks:");
       weighted = weightKeys(weighted, textBlock, blockSize);
     }
