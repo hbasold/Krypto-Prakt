@@ -12,11 +12,12 @@ public class Quantity implements Comparable<Quantity> {
   private int[] integers;
   private double frequency;
   private int position;
+  private Quantity key;
+  private double weight;
 
   /**
    * Constructor for letters with the most information.
    * @param integers The list of integers representing the letter beginning with 0.
-   * @param count The counter of this letter in a text.
    * @param relativeFrequency The relative frequency of this letter in a text.
    * @param position The position of this quantity in a text.
    */
@@ -89,6 +90,12 @@ public class Quantity implements Comparable<Quantity> {
     return integers;
   }
   /**
+   * @return The length of the integers array given in the constructor.
+   */
+  public int size() {
+    return integers.length;
+  }
+  /**
    * @return Same as relativeFrequency in constructor.
    * @see Quantity#Quantity(int, int, double)
    */
@@ -101,15 +108,25 @@ public class Quantity implements Comparable<Quantity> {
   public int getPosition() {
     return position;
   }
+  public Quantity getKey() {
+    return key;
+  }
+  public double getWeight() {
+    return weight;
+  }
   /**
-   * Sort quantity in descending order by counter.
+   * Sort quantity in >>descending<< order by size followed by frequency.
    * @return 0 if quantity of this object and the quantity of the given object are equal.
    * A positive integer if the quantity of this object is less
    * than the quantity of the given object, a negative integer otherwise.
    */
   @Override
   public int compareTo(Quantity o) {
-    return (int) Math.signum(o.frequency - frequency); // descending order
+    int result = o.integers.length - integers.length;
+    if (result==0) {
+      result = (int) Math.signum(o.frequency - frequency);
+    }
+    return result;
   }
   
   public boolean equals(int[] integers) {
@@ -133,10 +150,24 @@ public class Quantity implements Comparable<Quantity> {
    * @return
    */
   public Quantity decryptWithKey(Quantity key, int modulus) {
-    return new Quantity(getShift(key, modulus), 0);
+    int[] newIntegers = new int[key.size()];
+    for (int i=0; i<key.size(); i++) {
+      newIntegers[i] = (integers[i] - key.integers[i] + modulus) % modulus;
+    }
+    return new Quantity(newIntegers, 0);
   }
   
-
+  private static int decryptWithKey(int encrypted, int key, int modulus) {
+    return (encrypted - key + modulus) % modulus;
+  }
+  public static Quantity decryptWithKey(Quantities quantities, int start, Quantity key, int modulus) {
+    Quantity plain = new Quantity(new int[key.size()], 0, start);
+    for (int i = 0; i < key.size(); i++) {
+      plain.integers[i] = decryptWithKey(quantities.get(start+i).integers[0], key.integers[i], modulus);
+    }
+    return plain;
+  }
+  
   @Override
   public String toString() {
     if (integers.length==1) {
@@ -155,9 +186,59 @@ public class Quantity implements Comparable<Quantity> {
     char[] cs = new char[getIntegers().length];
     int i = 0;
     for (int q : getIntegers()) {
-      cs[i++] = (char) charMap.remapChar(q);
+      cs[i] = (char) charMap.remapChar(q);
+      if (cs[i]<32) {
+        cs[i] = '#';
+      }
+      i++;
     }
     return new String(cs);
+  }
+  public void copyKeyFromAndCalculateWeight(Quantity newKey) {
+    key = new Quantity(newKey.integers, newKey.frequency, newKey.position);
+    key.position = position;
+    key.key = this;
+    weight = frequency * key.frequency;
+    key.weight = weight;
+  }
+  public void copyFrequencyFrom(Quantity matchingTriGram) {
+    frequency = matchingTriGram.frequency;
+  }
+  public boolean hasDirectOverlapping(Quantity q) {
+    if (position<=q.position) { // sicherstellen, dass diese Zeichen immer links von den gegebene Zeichen stehen
+      int delta = q.position - position;
+      if (integers.length<=delta) {
+        return false;
+      } else {
+        for (int i=0; i<integers.length-delta; i++) {
+          if (integers[delta+i]!=q.integers[i]) {
+            return false;
+          }
+        }
+        return true;
+      }
+    }
+    return q.hasDirectOverlapping(this); // Gleiche Methode mit vertauschten Argumenten aufrufen
+  }
+  public void swapValues(Quantity q) {
+    int[] tmpIntegers = integers;
+    integers = q.integers;
+    q.integers = tmpIntegers;
+    double tmpDouble = frequency;
+    frequency = q.frequency;
+    q.frequency = tmpDouble;
+    int tmpInt = position;
+    position = q.position;
+    q.position = tmpInt;
+    tmpDouble = weight;
+    weight = q.weight;
+    q.weight = tmpDouble;
+    Quantity tmpQuantity = key;
+    key = q.key;
+    q.key = tmpQuantity;
+  }
+  public void swapPlainAndKey() {
+    swapValues(getKey());
   }
 
 }

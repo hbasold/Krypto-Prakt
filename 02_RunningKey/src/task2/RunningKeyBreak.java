@@ -9,11 +9,11 @@ import java.util.Vector;
 import de.tubs.cs.iti.jcrypt.chiffre.CharacterMapping;
 
 public class RunningKeyBreak {
+  private final CharacterMapping charMap;
   private final Quantities[] nGramms;
   private final int modulus;
 
   private int[] g;
-    
   /**
    * Constructor generates the language quantities specified by {@link #charMap}.
    * @param charMap The character map.
@@ -21,12 +21,125 @@ public class RunningKeyBreak {
    */
   public RunningKeyBreak(CharacterMapping charMap, int modulus) {
     this.modulus = modulus;
+    this.charMap = charMap;
     nGramms = new Quantities[3];
     for (int i = 0 ; i< 3; i++) {
       nGramms[i] = Quantities.createLanguageQuantities(i+1, charMap, modulus);
     }
   }
   
+  /**
+   * @param textBlock The text to break.
+   * @param g Die Gewichte, die der Benutzer festgelegt hat.
+   * @return Mögliche Schlüssel-Texte durch Verwendung der Tri-Gramme. (2-dim. Vector von NGrammen)
+   */
+  private Vector<Quantity> getProbableKeysByUsingTriGrams(Quantities textBlock) {
+    Vector<Vector<Quantity>> mostPossibleTriGrams = new Vector<Vector<Quantity>>(textBlock.size());
+    Vector<Quantity> listOfTriGrams = new Vector<Quantity>();
+    SortQuantityByDescWeight sortByDescWeight = new SortQuantityByDescWeight();
+    for (int x=0; x<textBlock.size()-2; x++) {
+      Vector<Quantity> triGrams = new Vector<Quantity>();
+      for (int y = 0; y<nGramms[2].size(); y++) { // alle Trigramme durchlaufen, bis max fünf gefunden wurden
+        Quantity triGram = nGramms[2].get(y);
+        Quantity plain = textBlock.decryptWithKey(x, triGram); // entschlüsseln
+        Quantity matchingTriGram = nGramms[2].findQuantity(plain);
+        if (matchingTriGram!=null) { // plain Trigramm vorhanden
+          plain.copyFrequencyFrom(matchingTriGram);
+          plain.copyKeyFromAndCalculateWeight(triGram);
+//          System.out.println("Find Tri-Gram: "+plain.getKey().remap(charMap)+ " (p="+plain.getPosition()+", w="+ plain.getWeight()+")");
+          triGrams.add(plain);
+        }
+      }
+      Collections.sort(triGrams, sortByDescWeight); // sort by descending weight
+      mostPossibleTriGrams.add(triGrams);
+      listOfTriGrams.addAll(triGrams);
+    }
+    Collections.sort(listOfTriGrams, sortByDescWeight); // sort by descending weight
+    return listOfTriGrams;
+  }
+  
+  public Quantities getBestSequence(Quantities textBlock) {
+    Vector<Quantity> listOfTriGrams = getProbableKeysByUsingTriGrams(textBlock);
+    Quantities qs = new Quantities(modulus);
+    qs.setSize(textBlock.size());
+    for (Quantity q: listOfTriGrams) {
+//      System.out.println("q="+q.remap(charMap)+" pos="+q.getPosition()+" weight="+q.getWeight());
+      int position = q.getPosition();
+      if (qs.get(position)==null) { // an dieser Stelle ist noch Platz
+        // Keine Kollision an dieser Stelle?
+        if (hasTriGramDirectOverlapping(qs, q)) { // keine Kollision, dann einfügen
+          qs.set(position, q);
+          System.out.println("D Overlapping="+q.remap(charMap)+ " pos="+q.getPosition());
+        } else {
+          q.swapPlainAndKey();
+          if (hasTriGramDirectOverlapping(qs, q)) {
+            qs.set(position, q);
+            System.out.println("S Overlapping="+q.remap(charMap)+ " pos="+q.getPosition());
+          } else {
+            System.out.print("TODO...");
+            // TODO:...
+          }
+        }
+      }
+    }
+    return qs;
+  }
+
+  private boolean hasTriGramDirectOverlapping(Quantities qs, Quantity q) {
+    int position = q.getPosition();
+    int start = position-2;
+    int end   = position+3;
+    int max = qs.size();
+    if (start<0) {
+      start = 0;
+    }
+    if (end>max-3) {
+      end = max-3;
+    }
+    for (int i=start; i<end; i++) {
+      Quantity test = qs.get(i);
+      if (test!=null && !test.hasDirectOverlapping(q)) {
+        System.out.println("Not overlapping "+q+" (pos="+position+")");
+        return false;
+      }
+    }
+    return true;
+  }
+
+//  private boolean hasTriGramEqualOverlapping(Quantities qs, Quantity q) {
+//    int position = q.getPosition();
+//    if (position>0 && !hasEqualOverlapping(q, qs.get(position-1))) {
+//      return false;
+//    }
+//    if (position<qs.size()-3 && !hasEqualOverlapping(q, qs.get(position+1))) {
+//      return false;
+//    }
+////    if (position>1 && !hasEqualOverlapping(q, qs.get(position-2))) {
+////      return false;
+////    }
+////    if (position<qs.size()-4 && !hasEqualOverlapping(q, qs.get(position+2))) {
+////      return false;
+////    }
+//    return true;
+//  }
+//
+//  private boolean hasEqualOverlapping(Quantity q, Quantity test) {
+//    if (test!=null
+//        && !test.hasDirectOverlapping(q)
+//        && !test.getKey().hasDirectOverlapping(q)
+//        && !test.hasDirectOverlapping(q.getKey())
+//        && !test.getKey().hasDirectOverlapping(q.getKey())) {
+//      return false;
+//    }
+//    if (test==null
+//        || test.hasDirectOverlapping(q)
+//        || test.getKey().hasDirectOverlapping(q.getKey())) {
+//      return true;
+//    }
+//    test.swapValues(q);
+//    return true;
+//  }
+
   /**
    * 
    * @param textBlock The text to break.
