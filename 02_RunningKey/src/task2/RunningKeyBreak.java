@@ -9,15 +9,11 @@ import java.util.Vector;
 import de.tubs.cs.iti.jcrypt.chiffre.CharacterMapping;
 
 public class RunningKeyBreak {
-
-  private final CharacterMapping charMap;
   private final Quantities[] nGramms;
   private final int modulus;
 
   private int[] g;
-  
-  private Vector<Quantities> textKeys;
-  
+    
   /**
    * Constructor generates the language quantities specified by {@link #charMap}.
    * @param charMap The character map.
@@ -25,12 +21,10 @@ public class RunningKeyBreak {
    */
   public RunningKeyBreak(CharacterMapping charMap, int modulus) {
     this.modulus = modulus;
-    this.charMap = charMap;
     nGramms = new Quantities[3];
     for (int i = 0 ; i< 3; i++) {
       nGramms[i] = Quantities.createLanguageQuantities(i+1, charMap, modulus);
     }
-    textKeys = new Vector<Quantities>();
   }
   
   /**
@@ -181,22 +175,6 @@ public class RunningKeyBreak {
     }
     return str;
   }
-
-  /**
-   * Macht aus einem String von Polygrammen einen aus Unigrammen.
-   * 
-   * @param current
-   * @return
-   */
-  private Vector<Quantity> flatten(Quantity trigram) {
-    Vector<Quantity> uniStr = new Vector<Quantity>();
-    
-      for(int c : trigram.getIntegers()){
-        uniStr.add(new Quantity(c));
-      }
-    
-    return uniStr;
-  }
   
   /**
    * 
@@ -265,122 +243,6 @@ public class RunningKeyBreak {
     public void remove() { }   
   }
 
-
-  /**
-   * Berechnet eine Menge von möglichen Strings aus Uni- oder Trigrammen.
-   * 
-   * Dabei werden die möglichen Zeichen für den String durchlaufen und es wird
-   * versucht aus diesen Trigramme zu machen. Wenn dies nicht möglich ist, wird
-   * beim nächsten Zeichen fortgefahren und das übersprungene behält seine
-   * ursprünglichen Möglichkeiten.
-   * 
-   * @param possibleKeys
-   * @return Menge von Strings aus Uni- oder Trigrammen (Quantity bel. kann n-Gramm sein)
-   */
-  private Vector<Vector<Vector<Quantity>>> possibleTrigramKey(Vector<Quantities> possibleKeys) {
-    // Schlüssel vorgeben
-    
-    // "String" mit mehreren Trigramm-Kandidaten pro Position
-    Vector<Vector<Vector<Quantity>>> str = new Vector<Vector<Vector<Quantity>>>();
-    
-    for(int i = 0; i < possibleKeys.size() - 3; ++i){
-      Vector<Vector<Quantity>> subStr = new Vector<Vector<Quantity>>();
-      str.add(subStr);
-      
-      Vector<Quantity> triGramCandidates = calcTrigramCandidates(possibleKeys.subList(i, i + 3));
-      if(!triGramCandidates.isEmpty()){
-        for(Quantity trigram : triGramCandidates){
-          subStr.add(flatten(trigram));
-        }
-//        double maxWeight = 0;
-//        Quantities bestKeyTrigram = null;
-//        for(Quantity trigramKey : triGramCandidates) {
-//          Quantities plain = textBlock.decryptWithKey(makeQuantities(trigramKey), i, i + 3);
-//          // TODO: nutze letztes Trigramm mit zur Bewertung
-//          
-//          double pPlain = getProbabilityOfText(plain);
-//          double pKey   = getProbabilityOfText(makeQuantities(trigramKey));
-////          System.out.println("pPlian = " + pPlain + " pKey = " + pKey);
-//          double w = pKey * pPlain;
-//          if (w > maxWeight) {
-//            maxWeight = w;
-//            bestKeyTrigram = trigramKey;
-//            StringBuffer sb = new StringBuffer();
-//            sb.append("enc: ").append(textBlock.remap(charMap)) //.append(textBlock)
-//            .append(", key: ").append(trigramKey.remap(charMap)) //.append(key)
-//            .append(", plain: ").append(plain.remap(charMap)) //.append(plain)
-//            .append(", w=").append(w);
-//            System.out.println(sb.toString());
-//          }
-//        }
-//        System.out.println("bestTrigram = " + bestKeyTrigram.remap(charMap));
-//        bestKey.addAll(bestKeyTrigram);
-        i += 2; // um 3 weitergehen (s. Schleifenkopf)
-      }
-      else{
-        System.out.println("no trigram found");
-        subStr.add(possibleKeys.get(i));
-      }
-    }
-    
-    return str;
-  }
-
-  /**
-   * 
-   * @param triGram Kandidaten für ein Trigramm (d.h. Liste von Kandidaten für jede Position)
-   * @return Menge möglicher Trigramme, die gebildet werden können.
-   */
-  private Vector<Quantity> calcTrigramCandidates(List<Quantities> triGram) {
-    assert triGram.size() == 3;
-    assert triGram.get(0).get(0).getIntegers().length == 1;
-    
-    Vector<Quantity> cand = new Vector<Quantity>();
-    
-    for(Quantity t : nGramms[2]){
-      if(matchTriGram(t, triGram)){
-        cand.add(t);
-      }
-    }
-    
-    return cand;
-  }
-
-  private Quantities makeQuantities(Quantity t) {
-    Quantities q = new Quantities(modulus);
-    for(int c : t.getIntegers()){
-      q.add(new Quantity(c));
-    }
-    return q;
-  }
-
-  /**
-   * Prüft, ob sich die Buchstaben aus triGramCand derart kombinieren
-   * lassen, dass sich triGram ergibt.
-   * 
-   * @param triGram
-   * @param triGramCand
-   * @return
-   */
-  private boolean matchTriGram(Quantity triGram, List<Quantities> triGramCand) {
-    assert triGram.getIntegers().length == triGramCand.size();
-    
-    Iterator<Quantities> it = triGramCand.iterator();
-    boolean allMatched = false;
-    for(int c : triGram.getIntegers()){
-      allMatched = false;
-      Quantities candidates = it.next();
-      for(Quantity cc : candidates){
-        if(c == cc.getInt()){
-          allMatched = true;
-          break;
-        }
-      }
-    }
-    
-    return allMatched;
-  }
-
   private double getProbabilityOfText(Vector<Quantity> plain) {
     double resultSum = 0;
     for (int n=0; n<3; n++) { // Uni-Gramme, Di-Gramme und Tri-Gramme
@@ -430,53 +292,5 @@ public class RunningKeyBreak {
       }
     }
     return vKeys;
-  }
-
-  private Vector<Quantities> calculateMostProbableKeyText(
-      Vector<Quantities> possibleKeys, Quantities languageTriGrams) {
-    Vector<Quantities> keyTexts = new Vector<Quantities>();
-    Quantities text = new Quantities(modulus);
-    keyTexts.add(text);
-    for (int i=0; i<possibleKeys.size()-3 ; i++) {
-      List<Quantities> keys3 = possibleKeys.subList(i, i+3);
-      text.addAll(calculateMostProbableSequence(keys3, languageTriGrams));
-    }
-    return keyTexts;
-  }
-
-  /**
-   * Liefert das wahrscheinlichste Trigramm für die aufeinanderfolgenden
-   * Quantities in der Liste.
-   * @param sequenceKeys Liste 
-   * @param languageTriGrams
-   * @return
-   */
-  private Quantities calculateMostProbableSequence(
-      List<Quantities> sequenceKeys, Quantities languageTriGrams) {
-    Quantity best = new Quantity();
-    for (Quantity lng: languageTriGrams) {
-      Quantities keys = new Quantities(modulus);
-      for (int i = 0; i<lng.getIntegers().length; i++) {
-        int c = lng.getInt(i);
-        for (Quantity key: sequenceKeys.get(i)) {
-          if (c==key.getInt()) {
-            keys.add(key);
-            break;
-          }
-        }
-        if (keys.size()-1!=i) {
-          break;
-        }
-      }
-      if (best.getRelativeFrequency()<lng.getRelativeFrequency()) {
-        best = lng;
-      }
-    }
-    Quantities qs = new Quantities(modulus);
-    for (int i: best.getIntegers()) {
-      qs.add(new Quantity(i));
-    }
-    return qs;
-  }
-  
+  } 
 }
