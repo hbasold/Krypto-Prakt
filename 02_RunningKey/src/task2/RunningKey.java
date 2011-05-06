@@ -348,10 +348,42 @@ public class RunningKey extends Cipher {
     }
 
     RunningKeyBreak rkb = new RunningKeyBreak(charMap, modulus);
-    Vector<Vector<Vector<Quantity>>> possibleKeys = rkb.getMostProbableKeys(textBlock, g);
-    //System.out.println("possible keys raw: " + possibleKeys);
-    System.out.println("Kandidaten-Schlüssel (¥ - Steuerzeichen, ⇒ - Trenner zw. Schlüssel und Klartext, ↦ - Blocktrenner): ");
-    printCandidates(possibleKeys, textBlock);
+//    Vector<Vector<Vector<Quantity>>> possibleKeys = rkb.getMostProbableKeys(textBlock, g);
+//    //System.out.println("possible keys raw: " + possibleKeys);
+//    System.out.println("Kandidaten-Schlüssel (¥ - Steuerzeichen, ⇒ - Trenner zw. Schlüssel und Klartext, ↦ - Blocktrenner): ");
+//    printCandidates(possibleKeys, textBlock);
+    System.out.println("Result by using only Tri-Grams:");
+    Quantities qs = rkb.getBestSequence(textBlock);
+    for (int i=0; i<qs.size()-4; i++) {
+      for (int k=0; k<i; k++) {
+        System.out.print(">");
+      }
+      if (qs.get(i)!=null) {
+        System.out.println(qs.get(i).remap(charMap));
+        for (int k=0; k<i; k++) {
+          System.out.print(">");
+        }
+        System.out.println(qs.get(i).getKey().remap(charMap));
+      } else {
+        System.out.println("?");
+      }
+    }
+    for (int i=0; i<qs.size()-4; i++) {
+      if (qs.get(i)!=null) {
+        System.out.print(qs.get(i).remap(charMap).charAt(0));
+      } else {
+        System.out.print("?");
+      }
+    }
+    System.out.println();
+    for (int i=0; i<qs.size()-4; i++) {
+      if (qs.get(i)!=null) {
+        System.out.print(qs.get(i).getKey().remap(charMap).charAt(0));
+      } else {
+        System.out.print("?");
+      }
+    }
+    System.out.println();
   }
 
 //  private void printCandidatesH(Vector<Vector<Vector<Quantity>>> possibleKeys) {

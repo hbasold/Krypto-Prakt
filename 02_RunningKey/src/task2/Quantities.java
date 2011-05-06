@@ -87,6 +87,14 @@ public class Quantities extends Vector<Quantity> {
     return countAllChars;
   }
 
+  public Quantity findQuantity(Quantity plain) {
+    for (Quantity q: this) {
+      if (q.equals(plain.getIntegers())) {
+        return q;
+      }
+    }
+    return null;  }
+
   public Quantity findQuantityWithInteger(int shift) {
     for (Quantity q: this) {
       if (q.getInt()==shift) {
@@ -122,9 +130,13 @@ public class Quantities extends Vector<Quantity> {
     return false;
   }
 
+  public Quantity decryptWithKey(int start, Quantity key) {
+    return Quantity.decryptWithKey(this, start, key, modulus);
+  }
+
   public Quantities decryptWithKey(Quantities key, int start, int end) {
     if(!(size() > start && end <= size() && key.size() > 0 && (end - start) <= key.size())){
-      System.out.println("decrypt error: " + this + " " + key);
+      System.err.println("decrypt error: " + this + " " + key);
     }
     Quantities qs = new Quantities(modulus);
     for (int i = 0; i < (end - start); i++) {
@@ -135,7 +147,7 @@ public class Quantities extends Vector<Quantity> {
 
   public Vector<Quantity> decryptWithKey(Vector<Quantity> key, int start, int end) {
     if(!(size() > start && end <= size() && key.size() > 0 && (end - start) <= key.size())){
-      System.out.println("decrypt error (" + start + ", " + end + "):" + this + " " + key);
+      System.err.println("decrypt error (" + start + ", " + end + "):" + this + " " + key);
     }
     Vector<Quantity> qs = new Vector<Quantity>();
     for (int i = 0; i < (end - start); i++) {
@@ -149,12 +161,12 @@ public class Quantities extends Vector<Quantity> {
   }
 
   public String remap(CharacterMapping charMap) {
-    char[] cs = new char[size()];
-    int i = 0;
+    StringBuffer sb = new StringBuffer();
     for (Quantity q: this) {
-      cs[i++] = (char) charMap.remapChar(q.getInt());
+      sb.append(q.remap(charMap));
     }
-    return new String(cs);
+    return sb.toString();
   }
+
 
 }
