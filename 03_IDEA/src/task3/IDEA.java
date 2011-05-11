@@ -16,8 +16,13 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.math.BigInteger;
+import java.util.Random;
+import java.util.StringTokenizer;
 
 import de.tubs.cs.iti.jcrypt.chiffre.BlockCipher;
+import de.tubs.cs.iti.jcrypt.chiffre.CharacterMapping;
 
 /**
  * Dummy-Klasse für den International Data Encryption Algorithm (IDEA).
@@ -26,6 +31,8 @@ import de.tubs.cs.iti.jcrypt.chiffre.BlockCipher;
  * @version 1.1 - Sat Apr 03 21:57:35 CEST 2010
  */
 public final class IDEA extends BlockCipher {
+  
+  BigInteger key;
 
   /**
    * Entschlüsselt den durch den FileInputStream <code>ciphertext</code>
@@ -62,8 +69,35 @@ public final class IDEA extends BlockCipher {
    * @see #writeKey writeKey
    */
   public void makeKey() {
-
-    System.out.println("Dummy für die Schlüsselerzeugung.");
+    BufferedReader standardInput = launcher.openStandardInput();
+    boolean accepted = false;
+    // Frage jeweils solange die Eingabe ab, bis diese akzeptiert werden kann.
+    do {
+      System.out.print("Geben Sie den Schlüssel ein (entweder 16 Zeichen oder nichts, dann wird ein zufälliger generiert): ");
+      try {
+        String key_ = standardInput.readLine();
+        if (!(key_.isEmpty() || key_.length() == 16)) {
+          System.out.println("Schlüssel muss leer sein oder genau 16 Zeichen haben. Bitte "
+              + "korrigieren Sie Ihre Eingabe.");
+        } else {
+          accepted = true;
+          if(key_.length() == 0){
+            Random rnd = new Random(System.currentTimeMillis());
+            key = new BigInteger(128, rnd);
+          }
+          else{
+            key = new BigInteger(key_.getBytes());
+          }
+        }
+      } catch (NumberFormatException e) {
+        // kann nicht auftreten
+      } catch (IOException e) {
+        System.err
+            .println("Abbruch: Fehler beim Lesen von der Standardeingabe.");
+        e.printStackTrace();
+        System.exit(1);
+      }
+    } while (!accepted);
   }
 
   /**
@@ -75,7 +109,22 @@ public final class IDEA extends BlockCipher {
    * @see #writeKey writeKey
    */
   public void readKey(BufferedReader key) {
-
+    try {
+      String key_ = key.readLine();
+      this.key = new BigInteger(key_, 16);
+      System.out.println("Schlüssel: " + this.key);
+      key.close();
+    } catch (IOException e) {
+      System.err.println("Abbruch: Fehler beim Lesen oder Schließen der "
+          + "Schlüsseldatei.");
+      e.printStackTrace();
+      System.exit(1);
+    } catch (NumberFormatException e) {
+      System.err.println("Abbruch: Fehler beim Parsen eines Wertes aus der "
+          + "Schlüsseldatei.");
+      e.printStackTrace();
+      System.exit(1);
+    }
   }
 
   /**
@@ -87,6 +136,14 @@ public final class IDEA extends BlockCipher {
    * @see #readKey readKey
    */
   public void writeKey(BufferedWriter key) {
-
+    try {
+      key.write(this.key.toString(16));
+      key.close();
+    } catch (IOException e) {
+      System.out.println("Abbruch: Fehler beim Schreiben oder Schließen der "
+          + "Schlüsseldatei.");
+      e.printStackTrace();
+      System.exit(1);
+    }
   }
 }
