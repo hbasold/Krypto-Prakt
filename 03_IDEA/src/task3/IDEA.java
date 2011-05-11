@@ -45,7 +45,27 @@ public final class IDEA extends BlockCipher {
    * Der FileOutputStream, in den der Klartext geschrieben werden soll.
    */
   public void decipher(FileInputStream ciphertext, FileOutputStream cleartext) {
-
+    try {
+      byte[] block = new byte[8]; // 64 bit block
+      if (ciphertext.read(block)!=8) {
+        throw new IOException("Kein vollständiger initialer Vektor (8 Bytes) vorhanden!");
+      }
+      BigInteger initialVector = new BigInteger(block);
+      int len = ciphertext.read(block);
+      while (len!=-1) {
+        // if not read a full block, fill with spaces
+        if (len!=8) {
+          throw new IOException("Kein vollständiger Block (8 Bytes) am Ende der Datei!");
+        }
+        // TODO: decrypt
+        cleartext.write(block); // write encrypted block
+        len = ciphertext.read(block);
+      }
+      cleartext.close();
+      ciphertext.close();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 
   /**
@@ -59,7 +79,26 @@ public final class IDEA extends BlockCipher {
    * Der FileOutputStream, in den der Chiffretext geschrieben werden soll.
    */
   public void encipher(FileInputStream cleartext, FileOutputStream ciphertext) {
-
+    Random rnd = new Random(System.currentTimeMillis());
+    BigInteger initialVector = new BigInteger(64, rnd);
+    try {
+      ciphertext.write(initialVector.toByteArray());
+      byte[] block = new byte[8]; // 64 bit block
+      int len = cleartext.read(block);
+      while (len!=-1) {
+        // if not read a full block, fill with spaces
+        for (int i=len; i<block.length; i++) {
+          block[i] = (byte) ' ';
+        }
+        // TODO: encrypt
+        ciphertext.write(block); // write encrypted block
+        len = cleartext.read(block);
+      }
+      cleartext.close();
+      ciphertext.close();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 
   /**
