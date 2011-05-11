@@ -19,10 +19,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Random;
-import java.util.StringTokenizer;
-
 import de.tubs.cs.iti.jcrypt.chiffre.BlockCipher;
-import de.tubs.cs.iti.jcrypt.chiffre.CharacterMapping;
 
 /**
  * Dummy-Klasse für den International Data Encryption Algorithm (IDEA).
@@ -83,16 +80,19 @@ public final class IDEA extends BlockCipher {
     BigInteger initialVector = new BigInteger(64, rnd);
     try {
       ciphertext.write(initialVector.toByteArray());
-      byte[] block = new byte[8]; // 64 bit block
-      int len = cleartext.read(block);
+      byte[] inBlock  = new byte[8]; // 64 bit block
+      byte[] outBlock = new byte[8]; // 64 bit block
+      int len = cleartext.read(inBlock);
+      // TODO: CBC Modus hinzufügen
+      CoDecIDEA idea = new CoDecIDEA(key.toByteArray());
       while (len!=-1) {
         // if not read a full block, fill with spaces
-        for (int i=len; i<block.length; i++) {
-          block[i] = (byte) ' ';
+        for (int i=len; i<inBlock.length; i++) {
+          inBlock[i] = (byte) ' ';
         }
-        // TODO: encrypt
-        ciphertext.write(block); // write encrypted block
-        len = cleartext.read(block);
+        idea.encode(inBlock, outBlock);
+        ciphertext.write(outBlock); // write encrypted block
+        len = cleartext.read(inBlock);
       }
       cleartext.close();
       ciphertext.close();
