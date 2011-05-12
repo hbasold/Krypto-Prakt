@@ -84,7 +84,7 @@ public final class IDEA extends BlockCipher {
       byte[] outBlock = new byte[8]; // 64 bit block
       int len = cleartext.read(inBlock);
       // TODO: CBC Modus hinzufügen
-      CoDecIDEA idea = new CoDecIDEA(key.toByteArray());
+      CoDecIDEA idea = new CoDecIDEA(key);
       while (len!=-1) {
         // if not read a full block, fill with spaces
         for (int i=len; i<inBlock.length; i++) {

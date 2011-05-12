@@ -1,5 +1,7 @@
 package task3;
 
+import java.math.BigInteger;
+
 public class UInt16 {
 
   private int value;
@@ -12,6 +14,15 @@ public class UInt16 {
   
   public UInt16(UInt16 uint16) {
     value = uint16.value;
+  }
+
+  /**
+   * Get lower 16 bit of a.
+   * @param a
+   */
+  public UInt16(BigInteger a) {
+    int a_ = a.intValue();
+    value = a_ & 0xFFFF;
   }
 
   public int getValue() {

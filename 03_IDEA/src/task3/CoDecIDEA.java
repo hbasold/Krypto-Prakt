@@ -11,32 +11,34 @@ public class CoDecIDEA {
    * Encodes and decodes IDEA.
    * @param key The user key with 16 bytes (128 bits).
    */
-  public CoDecIDEA(byte[] key) {
+  public CoDecIDEA(BigInteger key) {
     generateSubKey(key);
   }
   
-  private void generateSubKey(byte[] key) {
-    int index = 0;
-    while (index<8) {
-      subKey[index++] = new UInt16(key, index*2);
-    }
-    BigInteger key128Bit  = new BigInteger(key);
-    BigInteger key1024Bit = new BigInteger(key);
-    for (int i=0; i<7; i++) {
-      key1024Bit = key1024Bit.shiftLeft(128);
-      key1024Bit.add(key128Bit);
-    }
-    for (int round=0; round<5; round++) {
-      key1024Bit = key1024Bit.shiftRight(128-25);
-      byte[] a = key1024Bit.toByteArray();
-      for (int i=0; i<8; i++) {
-        subKey[index++] = new UInt16(a, a.length-16+2*i);
+  private BigInteger rotateLeft(BigInteger a, int shift){
+    return a.shiftLeft(shift).or(a.shiftRight(a.bitLength() - shift));
+  }
+  
+  private void generateSubKey(BigInteger key) {
+    // 6*8 + 4 = 52 Schlüssel generieren
+    int generatedKeys = 0;
+    int keyBlock = 0;
+    
+    while(generatedKeys < 51){
+      // copy 8 blocks and in the last step 4 blocks 
+      int toCopy = (keyBlock < 6) ? 8 : 4;
+      
+      // rotate key
+      BigInteger key128Bit = rotateLeft(key, keyBlock * 25);
+            
+      // copy into 16 bit blocks      
+      for(int i = 0; i < toCopy; ++i){
+        subKey[generatedKeys + i] = new UInt16(key128Bit);
+        key128Bit = key128Bit.shiftRight(16);
       }
-    }
-    key1024Bit = key1024Bit.shiftRight(128-25);
-    byte[] a = key1024Bit.toByteArray();
-    for (int i=0; i<4; i++) {
-      subKey[index++] = new UInt16(a, a.length-16+2*i);
+      
+      ++keyBlock;
+      generatedKeys += toCopy;
     }
   }
 
