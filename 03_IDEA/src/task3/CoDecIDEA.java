@@ -1,7 +1,5 @@
 package task3;
 
-import java.util.Arrays;
-
 public class CoDecIDEA {
 
   // generated key with 52=8*6+4 UInt16 (104 bytes, 832 bits)
@@ -15,7 +13,6 @@ public class CoDecIDEA {
   public CoDecIDEA(UInt16[] key) {
     subKey = generateSubKey(key);
     invKey = generateInverseSubKey(subKey);
-    System.out.println(Arrays.toString(invKey));
   }
 
   private UInt16[] generateSubKey(UInt16[] key) {
@@ -74,12 +71,20 @@ public class CoDecIDEA {
         k[i]=((k[i-15] & 127) << 9 | k[i-14] >>> 7);
     }
 
-    //assert Arrays.equals(subKeys, k);
+    assert equal(subKeys, k);
 
-    System.out.println(Arrays.toString(subKeys));
-    System.out.println(Arrays.toString(k));
+    //System.out.println(Arrays.toString(subKeys));
+    //System.out.println(Arrays.toString(k));
 
     return subKeys;
+  }
+
+  private boolean equal(UInt16[] subKeys, int[] k) {
+    boolean equal = true;
+    for(int i = 0; i < subKeys.length; ++i){
+      equal = equal && subKeys[i].getValue() == k[i];
+    }
+    return equal;
   }
 
   /**
@@ -133,34 +138,45 @@ public class CoDecIDEA {
   private UInt16[] generateInverseSubKey(UInt16[] subKeys) {
     UInt16[] invKeys = new UInt16[52];
 
-    // Round 1:
-    invKeys[0] = subKeys[51].invert();
-    invKeys[1] = subKeys[50].negate();
-    invKeys[2] = subKeys[49].negate();
-    invKeys[3] = subKeys[48].invert();
-    for(int round = 0; round < 8; ++round){
-      int pos = round * 6;
-      invKeys[pos] = subKeys[51 - pos].invert();
-      ++pos;
-      invKeys[pos] = subKeys[51 - pos].negate();
-      ++pos;
-      invKeys[pos] = subKeys[51 - pos].negate();
-      ++pos;
-      invKeys[pos] = subKeys[51 - pos].invert();
-      ++pos;
-      invKeys[pos] = new UInt16(subKeys[51 - pos]);
-      ++pos;
-      invKeys[pos] = new UInt16(subKeys[51 - pos]);
+    int invKeyPos = 0;
+    int subKeyPos = 51; // go backwards
+
+    UInt16 k4 = subKeys[subKeyPos--].invert();
+    UInt16 k3 = subKeys[subKeyPos--].negate();
+    UInt16 k2 = subKeys[subKeyPos--].negate();
+    UInt16 k1 = subKeys[subKeyPos--].invert();
+    UInt16 k6 = new UInt16(subKeys[subKeyPos--]);
+    UInt16 k5 = new UInt16(subKeys[subKeyPos--]);
+    invKeys[invKeyPos++] = k1;
+    invKeys[invKeyPos++] = k2;
+    invKeys[invKeyPos++] = k3;
+    invKeys[invKeyPos++] = k4;
+    invKeys[invKeyPos++] = k5;
+    invKeys[invKeyPos++] = k6;
+
+    for(int round = 1; round < 8; ++round){
+      k4 = subKeys[subKeyPos--].invert();
+      k3 = subKeys[subKeyPos--].negate();
+      k2 = subKeys[subKeyPos--].negate();
+      k1 = subKeys[subKeyPos--].invert();
+      k6 = new UInt16(subKeys[subKeyPos--]);
+      k5 = new UInt16(subKeys[subKeyPos--]);
+      invKeys[invKeyPos++] = k1;
+      invKeys[invKeyPos++] = k3; // beware of ordering here!
+      invKeys[invKeyPos++] = k2; // These two are exchanged
+      invKeys[invKeyPos++] = k4;
+      invKeys[invKeyPos++] = k5;
+      invKeys[invKeyPos++] = k6;
     }
 
-    int pos = 8 * 6;
-    invKeys[pos] = subKeys[51 - pos].invert();
-    ++pos;
-    invKeys[pos] = subKeys[51 - pos].negate();
-    ++pos;
-    invKeys[pos] = subKeys[51 - pos].negate();
-    ++pos;
-    invKeys[pos] = subKeys[51 - pos].invert();
+    k4 = subKeys[subKeyPos--].invert();
+    k3 = subKeys[subKeyPos--].negate();
+    k2 = subKeys[subKeyPos--].negate();
+    k1 = subKeys[subKeyPos--].invert();
+    invKeys[invKeyPos++] = k1;
+    invKeys[invKeyPos++] = k2;
+    invKeys[invKeyPos++] = k3;
+    invKeys[invKeyPos++] = k4;
 
     return invKeys;
   }
