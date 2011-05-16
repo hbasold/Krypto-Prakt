@@ -4,14 +4,15 @@ import java.math.BigInteger;
 
 public class UInt16 {
 
+  private static final int twoPow16 = 1 << 16;
   private int value;
-  
+
   public UInt16(byte[] a, int pos) {
     int high = a[pos]   & 0xFF;
     int low  = a[pos+1] & 0xFF;
     value = (high << 8) + low;
   }
-  
+
   public UInt16(UInt16 uint16) {
     value = uint16.value;
   }
@@ -25,17 +26,31 @@ public class UInt16 {
     value = a_ & 0xFFFF;
   }
 
+  public UInt16(long a) {
+    assert a <= 0xFFFF;
+    value = (int)a;
+  }
+
   public int getValue() {
     return value;
   }
-  
+
   public void xor(UInt16 uint16) {
     value = (value ^ uint16.value) & 0xFFFF;
   }
 
   public void add(UInt16 uint16) {
+    long expected = (value + uint16.value) % twoPow16;
     value = (value + uint16.value) & 0xFFFF;
+    assert value == expected : "got=" + value + ", expected=" + expected;
   }
+
+  public void sub(UInt16 uint16) {
+    long expected = (value - uint16.value) % 65536;
+    value = (value - uint16.value) & 0xFFFF;
+    assert value == expected : "got=" + value + ", expected=" + expected;
+  }
+
   /**
    * Multiplication modulo 2^16+1=65537 used for IDEA.
    * If input  is 0    it is replaced by 2^16.
@@ -43,18 +58,31 @@ public class UInt16 {
    * @param uint16 The second factor for multiplication.
    */
   public void mul(UInt16 uint16) {
+    // save values for postcondition
+    int oldValThis = this.value;
+    int oldValOther = uint16.value;
+
     long uint32 = (long) value * uint16.value;
-    if (uint32==0) { // this.value==0 and/or uint16.value==0 
+    if (uint32==0) { // this.value==0 and/or uint16.value==0
       value = (65537-value-uint16.value) & 0xFFFF;
     } else {
       value        = (int)(uint32 >> 16);
-      uint16.value = (int)(uint32 & 0xFFFF);
-      value        = (uint16.value-value) & 0xFFFF;
-      if (uint16.value < value) {
+      int rhsVal = (int)(uint32 & 0xFFFF);
+      value        = (rhsVal - value) & 0xFFFF;
+      if (rhsVal < value) {
         value = (value + 65537) & 0xFFFF;
       }
     }
 
+    // postcondition
+    {
+      long lhs = (oldValThis == 0) ? twoPow16 : oldValThis;
+      long rhs = (oldValOther == 0) ? twoPow16 : oldValOther;
+      long res = (lhs * rhs) % (twoPow16 + 1);
+      res = (res == twoPow16) ? 0 : res;
+      assert this.value == res : "got=" + this.value + ", expected=" + res;
+      assert uint16.value == oldValOther;
+    }
   }
 
   public void copyTo(byte[] out, int pos) {

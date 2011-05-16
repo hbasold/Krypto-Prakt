@@ -9,4 +9,5 @@
 <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="de.tubs.cs.iti.jcrypt.chiffre.Launcher"/>
 <stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="-execute task3.IDEA&#13;&#10;-action encipher&#13;&#10;-cleartext ../text/programmierer.txt&#13;&#10;-ciphertext ../03_IDEA/tmp/programmierer_enc.txt&#13;&#10;-key ../03_IDEA/key.txt"/>
 <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="03_IDEA"/>
+<stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-ea"/>
 </launchConfiguration>
