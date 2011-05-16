@@ -36,18 +36,12 @@ public class UInt16 {
   }
 
   public void xor(UInt16 uint16) {
-    value = (value ^ uint16.value) & 0xFFFF;
+    value = value ^ uint16.value;
   }
 
   public void add(UInt16 uint16) {
     long expected = (value + uint16.value) % twoPow16;
     value = (value + uint16.value) & 0xFFFF;
-    assert value == expected : "got=" + value + ", expected=" + expected;
-  }
-
-  public void sub(UInt16 uint16) {
-    long expected = (value - uint16.value) % 65536;
-    value = (value - uint16.value) & 0xFFFF;
     assert value == expected : "got=" + value + ", expected=" + expected;
   }
 
@@ -96,6 +90,20 @@ public class UInt16 {
   @Override
   public String toString() {
     return Integer.toString(value, 16);
+  }
+
+  public UInt16 invert() {
+    BigInteger t = BigInteger.valueOf((value == 0) ? twoPow16 : value);
+    t.modInverse(BigInteger.valueOf(twoPow16 + 1));
+    long res = t.intValue();
+    return new UInt16((res == twoPow16) ? 0 : res);
+  }
+
+  public UInt16 negate() {
+    long expected = (twoPow16 - value) % twoPow16;
+    long res = (twoPow16 - value) & 0xFFFF;
+    assert res == expected : "got=" + value + ", expected=" + expected;
+    return new UInt16(res);
   }
 
 }
