@@ -2,7 +2,7 @@
  * jCrypt - Programmierumgebung für das Kryptologie-Praktikum
  * Studienarbeit am Institut für Theoretische Informatik der
  * Technischen Universität Braunschweig
- * 
+ *
  * Datei:        IDEA.java
  * Beschreibung: Dummy-Implementierung des International Data Encryption
  *               Algorithm (IDEA)
@@ -28,8 +28,8 @@ import de.tubs.cs.iti.jcrypt.chiffre.BlockCipher;
  * @version 1.1 - Sat Apr 03 21:57:35 CEST 2010
  */
 public final class IDEA extends BlockCipher {
-  
-  BigInteger key;
+
+  UInt16[] key;
 
   /**
    * Entschlüsselt den durch den FileInputStream <code>ciphertext</code>
@@ -43,20 +43,22 @@ public final class IDEA extends BlockCipher {
    */
   public void decipher(FileInputStream ciphertext, FileOutputStream cleartext) {
     try {
-      byte[] block = new byte[8]; // 64 bit block
-      if (ciphertext.read(block)!=8) {
+      byte[] inBlock  = new byte[8]; // 64 bit block
+      byte[] outBlock = new byte[8]; // 64 bit block
+      CoDecIDEA idea = new CoDecIDEA(key);
+      if (ciphertext.read(inBlock)!=8) {
         throw new IOException("Kein vollständiger initialer Vektor (8 Bytes) vorhanden!");
       }
-      BigInteger initialVector = new BigInteger(block);
-      int len = ciphertext.read(block);
+      BigInteger initialVector = new BigInteger(inBlock);
+      int len = ciphertext.read(inBlock);
       while (len!=-1) {
         // if not read a full block, fill with spaces
         if (len!=8) {
           throw new IOException("Kein vollständiger Block (8 Bytes) am Ende der Datei!");
         }
-        // TODO: decrypt
-        cleartext.write(block); // write encrypted block
-        len = ciphertext.read(block);
+        idea.decode(inBlock, outBlock);
+        cleartext.write(outBlock); // write decrypted block
+        len = ciphertext.read(inBlock);
       }
       cleartext.close();
       ciphertext.close();
@@ -69,7 +71,7 @@ public final class IDEA extends BlockCipher {
    * Verschlüsselt den durch den FileInputStream <code>cleartext</code>
    * gegebenen Klartext und schreibt den Chiffretext in den FileOutputStream
    * <code>ciphertext</code>.
-   * 
+   *
    * @param cleartext
    * Der FileInputStream, der den Klartext liefert.
    * @param ciphertext
@@ -103,7 +105,7 @@ public final class IDEA extends BlockCipher {
 
   /**
    * Erzeugt einen neuen Schlüssel.
-   * 
+   *
    * @see #readKey readKey
    * @see #writeKey writeKey
    */
@@ -121,11 +123,15 @@ public final class IDEA extends BlockCipher {
         } else {
           accepted = true;
           if(key_.length() == 0){
+            // Zufällig erzeugen
             Random rnd = new Random(System.currentTimeMillis());
-            key = new BigInteger(128, rnd);
+            key = new UInt16[8];
+            for(int i = 0; i < 8; ++i){
+              key[i] = new UInt16(rnd.nextInt(0xFFFF + 1));
+            }
           }
           else{
-            key = new BigInteger(key_.getBytes());
+            key = toUInt16s(key_.toCharArray());
           }
         }
       } catch (NumberFormatException e) {
@@ -139,9 +145,19 @@ public final class IDEA extends BlockCipher {
     } while (!accepted);
   }
 
+  private UInt16[] toUInt16s(char[] k_) {
+    UInt16[] k = new UInt16[8];
+    for(int i = 0; i < 16; i += 2){
+      k[i/2] = new UInt16((k_[i]) << 8 | k_[i + 1]);
+      char[] a = new char[2];
+      k[i/2].copyTo(a, 0);
+    }
+    return k;
+  }
+
   /**
    * Liest den Schlüssel mit dem Reader <code>key</code>.
-   * 
+   *
    * @param key
    * Der Reader, der aus der Schlüsseldatei liest.
    * @see #makeKey makeKey
@@ -150,8 +166,8 @@ public final class IDEA extends BlockCipher {
   public void readKey(BufferedReader key) {
     try {
       String key_ = key.readLine();
-      this.key = new BigInteger(key_, 16);
-      System.out.println("Schlüssel: " + this.key);
+      this.key = toUInt16s(key_.toCharArray());
+      //System.out.println("Schlüssel: " + this.key);
       key.close();
     } catch (IOException e) {
       System.err.println("Abbruch: Fehler beim Lesen oder Schließen der "
@@ -168,7 +184,7 @@ public final class IDEA extends BlockCipher {
 
   /**
    * Schreibt den Schlüssel mit dem Writer <code>key</code>.
-   * 
+   *
    * @param key
    * Der Writer, der in die Schlüsseldatei schreibt.
    * @see #makeKey makeKey
@@ -176,7 +192,12 @@ public final class IDEA extends BlockCipher {
    */
   public void writeKey(BufferedWriter key) {
     try {
-      key.write(this.key.toString(16));
+      char[] str = new char[16];
+      for(int i = 0; i < this.key.length; ++i){
+        this.key[i].copyTo(str, i * 2);
+      }
+      System.out.println(str);
+      key.write(String.copyValueOf(str));
       key.close();
     } catch (IOException e) {
       System.out.println("Abbruch: Fehler beim Schreiben oder Schließen der "

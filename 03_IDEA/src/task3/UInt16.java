@@ -84,12 +84,18 @@ public class UInt16 {
     out[pos+1] = (byte) ( value       & 0xFF);
   }
 
+  public void copyTo(char[] out, int pos) {
+    out[pos]   = (char) ((value >> 8) & 0xFF);
+    out[pos+1] = (char) ( value       & 0xFF);
+  }
+
   /**
    * Value of this UInt16 as a hex-string.
    */
   @Override
   public String toString() {
-    return Integer.toString(value, 16);
+    //return Integer.toString(value, 16);
+    return Integer.toString(value, 10);
   }
 
   public UInt16 invert() {
