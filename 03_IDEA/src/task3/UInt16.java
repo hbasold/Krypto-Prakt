@@ -2,6 +2,18 @@ package task3;
 
 import java.math.BigInteger;
 
+class IntTriple {
+  int p1;
+  int p2;
+  int p3;
+
+  IntTriple(int p1_, int p2_, int p3_){
+    p1 = p1_;
+    p2 = p2_;
+    p3 = p3_;
+  }
+}
+
 public class UInt16 {
 
   private static final int twoPow16 = 1 << 16;
@@ -74,7 +86,7 @@ public class UInt16 {
       long rhs = (oldValOther == 0) ? twoPow16 : oldValOther;
       long res = (lhs * rhs) % (twoPow16 + 1);
       res = (res == twoPow16) ? 0 : res;
-      assert this.value == res : "got=" + this.value + ", expected=" + res;
+      assert this.value == res : "in " + lhs + " * " + rhs + " got=" + this.value + ", expected=" + res;
       assert uint16.value == oldValOther;
     }
   }
@@ -99,16 +111,15 @@ public class UInt16 {
   }
 
   public UInt16 invert() {
-    BigInteger t = BigInteger.valueOf((value == 0) ? twoPow16 : value);
-    t.modInverse(BigInteger.valueOf(twoPow16 + 1));
-    long res = t.intValue();
-    return new UInt16((res == twoPow16) ? 0 : res);
+    int inv = modinv(value, twoPow16 + 1);
+    return new UInt16(inv);
   }
 
   public UInt16 negate() {
     long expected = (twoPow16 - value) % twoPow16;
     long res = (twoPow16 - value) & 0xFFFF;
     assert res == expected : "got=" + value + ", expected=" + expected;
+    assert res == getAddInverse().getValue();
     return new UInt16(res);
   }
 
@@ -118,6 +129,35 @@ public class UInt16 {
    */
   UInt16 getAddInverse() {
     return new UInt16((-value) & 0xFFFF);
+  }
+
+  private static IntTriple gcd(int x, int y){
+    assert x < y;
+    assert x >= 0;
+    assert y > 0;
+
+    if(x == 0){
+      return new IntTriple(0, 1, y);
+    }
+    else{
+      int d = y/x;
+      int r = y - d*x;
+      IntTriple abg = gcd(r, x);
+
+      return new IntTriple(abg.p2 - abg.p1 * d, abg.p1, abg.p3);
+    }
+  }
+
+  private static int modinv(int x, int n){
+    IntTriple abg = gcd(x % n, n);
+    assert abg.p3 == 1;
+
+    int r = abg.p1;
+    if(r < 0){
+      r = r + ((Math.abs(r) / n) + 1) * n;
+    }
+
+    return r % n;
   }
 
   /**
@@ -153,7 +193,7 @@ public class UInt16 {
     int t = this.value;
     this.value = a.value;
     a.value = t;
-    
+
   }
 
 }
