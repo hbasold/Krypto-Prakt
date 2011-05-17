@@ -112,4 +112,41 @@ public class UInt16 {
     return new UInt16(res);
   }
 
+  /**
+   * Converts this number to its additive inverse modulo 65537.
+   * x.add(getMulInverse(x)) == 0
+   */
+  UInt16 getAddInverse() {
+    return new UInt16((-value) & 0xFFFF);
+  }
+
+  /**
+   * Calculates this number to its multiplicative inverse
+   * modulo 65537 with Euclid's algorithm for the
+   * greatest common divisor. 0 and 1 are self inverse.
+   * x.mul(getMulInverse(x)) == 1 (modulo 65537).
+   */
+  UInt16 getMulInverse() {
+    int x = value;
+    if (x < 2) {
+      return new UInt16(x);
+    }
+    int t0 = 0;
+    int t1 = 65537 / x;
+    int r  = 65537 % x;
+    while (r!=1) {
+      int q = x / r;
+      x = x % r;
+      t0 = (t0 + (t1 * q)) & 0xFFFF;
+      if (x == 1) {
+        x = t0;
+        return new UInt16(x);
+      }
+      q = r / x;
+      r = r % x;
+      t1 = t1 + (t0 * q);
+    }
+    return new UInt16((65537-x) & 0xFFFF);
+  }
+
 }
