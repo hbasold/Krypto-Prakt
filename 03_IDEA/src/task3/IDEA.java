@@ -46,10 +46,10 @@ public final class IDEA extends BlockCipher {
       byte[] inBlock  = new byte[8]; // 64 bit block
       byte[] outBlock = new byte[8]; // 64 bit block
       CoDecIDEA idea = new CoDecIDEA(key);
-      if (ciphertext.read(inBlock)!=8) {
-        throw new IOException("Kein vollständiger initialer Vektor (8 Bytes) vorhanden!");
-      }
-      BigInteger initialVector = new BigInteger(inBlock);
+      //if (ciphertext.read(inBlock)!=8) {
+      //  throw new IOException("Kein vollständiger initialer Vektor (8 Bytes) vorhanden!");
+      //}
+      //BigInteger initialVector = new BigInteger(inBlock);
       int len = ciphertext.read(inBlock);
       while (len!=-1) {
         // if not read a full block, fill with spaces
@@ -79,9 +79,9 @@ public final class IDEA extends BlockCipher {
    */
   public void encipher(FileInputStream cleartext, FileOutputStream ciphertext) {
     Random rnd = new Random(System.currentTimeMillis());
-    BigInteger initialVector = new BigInteger(64, rnd);
+    //BigInteger initialVector = new BigInteger(64, rnd);
     try {
-      ciphertext.write(initialVector.toByteArray());
+      //ciphertext.write(initialVector.toByteArray());
       byte[] inBlock  = new byte[8]; // 64 bit block
       byte[] outBlock = new byte[8]; // 64 bit block
       int len = cleartext.read(inBlock);

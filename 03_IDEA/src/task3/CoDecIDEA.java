@@ -97,42 +97,43 @@ public class CoDecIDEA {
   }
 
   private void idea(byte[] in, byte[] out, UInt16[] keys) {
-    UInt16 x0 = new UInt16(in, 0); // M1
-    UInt16 x1 = new UInt16(in, 2); // M2
-    UInt16 x2 = new UInt16(in, 4); // M3
-    UInt16 x3 = new UInt16(in, 6); // M4
+    UInt16 m1 = new UInt16(in, 0);
+    UInt16 m2 = new UInt16(in, 2);
+    UInt16 m3 = new UInt16(in, 4);
+    UInt16 m4 = new UInt16(in, 6);
 
+    int key = 0;
     for (int round = 0; round < 8; round++) {
-      int keyOffset = round * 4;
-      x0.mul(keys[keyOffset]);   // M1 * K1
-      x1.add(keys[keyOffset+1]); // M2 + K2
-      x2.add(keys[keyOffset+2]); // M3 + K3
-      x3.mul(keys[keyOffset+3]); // M4 * K4
+      m1.mul(keys[key++]); // M1 * K_1^(round)
+      m2.add(keys[key++]); // M2 + K_2^(round)
+      m3.add(keys[key++]); // M3 + K_3^(round)
+      m4.mul(keys[key++]); // M4 * K_4^(round)
 
-      UInt16 tx1 = new UInt16(x1); // store x1 temporarily for later use
-      UInt16 tx2 = new UInt16(x2); // store x2 temporarily for later use
-      x2.xor(x0); // M3'' = M3' ^ M1'
-      x1.xor(x3); // M2'' = M2' ^ M4'
+      UInt16 tx1 = new UInt16(m1); // intermediate values
+      UInt16 tx2 = new UInt16(m2);
+      tx1.xor(m3);
+      tx2.xor(m4);
+      tx1.mul(keys[key++]);
+      tx2.add(tx1);
+      tx2.mul(keys[key++]);
+      tx1.add(tx2);
 
-      x2.mul(keys[keyOffset+4]); // M3''' = M3'' * K5
-      x1.add(x2); // M2''' = M2'' + M3'''
-      x1.mul(keys[keyOffset+5]); // M2''' = M2'' * K6
-      x2.add(x1); // M3''' = M3'' + M2'''
-
-      x0.xor(x1);
-      x3.xor(x2);
-      x1.xor(tx2);
-      x2.xor(tx1);
+      m1.xor(tx2);
+      m2.xor(tx1);
+      m3.xor(tx2);
+      m4.xor(tx1);
+      
+      m2.swap(m3);
     }
-    int keyOffset = 8 * 4;
-    x0.mul(keys[keyOffset]);
-    x2.add(keys[keyOffset+1]);
-    x1.add(keys[keyOffset+2]);
-    x3.mul(keys[keyOffset+3]);
-    x0.copyTo(out, 0);
-    x2.copyTo(out, 2);
-    x1.copyTo(out, 4);
-    x3.copyTo(out, 6);
+    m1.mul(keys[key++]);
+    m3.add(keys[key++]);
+    m2.add(keys[key++]);
+    m4.mul(keys[key]);
+    
+    m1.copyTo(out, 0);
+    m3.copyTo(out, 2);
+    m2.copyTo(out, 4);
+    m4.copyTo(out, 6);
   }
 
   private UInt16[] generateInverseSubKey(UInt16[] subKeys) {

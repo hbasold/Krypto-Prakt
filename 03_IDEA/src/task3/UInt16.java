@@ -149,4 +149,11 @@ public class UInt16 {
     return new UInt16((65537-x) & 0xFFFF);
   }
 
+  public void swap(UInt16 a) {
+    int t = this.value;
+    this.value = a.value;
+    a.value = t;
+    
+  }
+
 }
