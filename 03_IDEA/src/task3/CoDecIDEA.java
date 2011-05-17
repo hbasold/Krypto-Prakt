@@ -122,17 +122,19 @@ public class CoDecIDEA {
       m2.xor(tx1);
       m3.xor(tx2);
       m4.xor(tx1);
-      
+
       m2.swap(m3);
     }
+
+    m2.swap(m3);
     m1.mul(keys[key++]);
-    m3.add(keys[key++]);
     m2.add(keys[key++]);
+    m3.add(keys[key++]);
     m4.mul(keys[key]);
-    
+
     m1.copyTo(out, 0);
-    m3.copyTo(out, 2);
-    m2.copyTo(out, 4);
+    m2.copyTo(out, 2);
+    m3.copyTo(out, 4);
     m4.copyTo(out, 6);
   }
 
