@@ -119,19 +119,17 @@ public class UInt16 {
     long expected = (twoPow16 - value) % twoPow16;
     long res = (twoPow16 - value) & 0xFFFF;
     assert res == expected : "got=" + value + ", expected=" + expected;
-    assert res == getAddInverse().getValue();
     return new UInt16(res);
   }
 
   /**
-   * Converts this number to its additive inverse modulo 65537.
-   * x.add(getMulInverse(x)) == 0
+   * Erweiterter Euklidscher Alg.
+   * 
+   * @param x
+   * @param y
+   * @return
    */
-  UInt16 getAddInverse() {
-    return new UInt16((-value) & 0xFFFF);
-  }
-
-  private static IntTriple gcd(int x, int y){
+  private static IntTriple gcdExt(int x, int y){
     assert x < y;
     assert x >= 0;
     assert y > 0;
@@ -140,16 +138,23 @@ public class UInt16 {
       return new IntTriple(0, 1, y);
     }
     else{
-      int d = y/x;
-      int r = y - d*x;
-      IntTriple abg = gcd(r, x);
+      int d = y / x;
+      int r = y - d * x;
+      IntTriple abg = gcdExt(r, x);
 
       return new IntTriple(abg.p2 - abg.p1 * d, abg.p1, abg.p3);
     }
   }
 
+  /**
+   * Berechnet das modulare Inverse von x mod n.
+   * 
+   * @param x
+   * @param n
+   * @return
+   */
   private static int modinv(int x, int n){
-    IntTriple abg = gcd(x % n, n);
+    IntTriple abg = gcdExt(x % n, n);
     assert abg.p3 == 1;
 
     int r = abg.p1;
@@ -158,35 +163,6 @@ public class UInt16 {
     }
 
     return r % n;
-  }
-
-  /**
-   * Calculates this number to its multiplicative inverse
-   * modulo 65537 with Euclid's algorithm for the
-   * greatest common divisor. 0 and 1 are self inverse.
-   * x.mul(getMulInverse(x)) == 1 (modulo 65537).
-   */
-  UInt16 getMulInverse() {
-    int x = value;
-    if (x < 2) {
-      return new UInt16(x);
-    }
-    int t0 = 0;
-    int t1 = 65537 / x;
-    int r  = 65537 % x;
-    while (r!=1) {
-      int q = x / r;
-      x = x % r;
-      t0 = (t0 + (t1 * q)) & 0xFFFF;
-      if (x == 1) {
-        x = t0;
-        return new UInt16(x);
-      }
-      q = r / x;
-      r = r % x;
-      t1 = t1 + (t0 * q);
-    }
-    return new UInt16((65537-x) & 0xFFFF);
   }
 
   public void swap(UInt16 a) {
