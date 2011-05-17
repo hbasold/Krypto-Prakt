@@ -8,8 +8,8 @@ public class UInt16 {
   private int value;
 
   public UInt16(byte[] a, int pos) {
-    int high = a[pos]   & 0xFF;
-    int low  = a[pos+1] & 0xFF;
+    int high = (char)a[pos]   & 0xFF;
+    int low  = (char)a[pos+1] & 0xFF;
     value = (high << 8) + low;
   }
 
