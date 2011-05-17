@@ -26,7 +26,7 @@ public class CoDecIDEA {
     int block = 0; // index to the first of the blocks we are shifting by 25 bits
     int j = 8; // current calculated sub key
     // We are copying from
-    // block + 1 | block + 2 (so we start at bit 25 (= 16 + 9 jumped over))
+    // subKeys[block + 1](0,6) | subKeys[block + 2](6, 15) (so we start at bit 25 (= 16 + 9 jumped over))
     // block + 2 | block + 3
     // ....
     // block + 7 | block + 0
