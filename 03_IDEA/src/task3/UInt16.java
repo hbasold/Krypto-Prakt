@@ -52,9 +52,7 @@ public class UInt16 {
   }
 
   public void add(UInt16 uint16) {
-    long expected = (value + uint16.value) % twoPow16;
     value = (value + uint16.value) & 0xFFFF;
-    assert value == expected : "got=" + value + ", expected=" + expected;
   }
 
   /**
@@ -64,10 +62,6 @@ public class UInt16 {
    * @param uint16 The second factor for multiplication.
    */
   public void mul(UInt16 uint16) {
-    // save values for postcondition
-    int oldValThis = this.value;
-    int oldValOther = uint16.value;
-
     long uint32 = (long) value * uint16.value;
     if (uint32==0) { // this.value==0 and/or uint16.value==0
       value = (65537-value-uint16.value) & 0xFFFF;
@@ -78,16 +72,6 @@ public class UInt16 {
       if (rhsVal < value) {
         value = (value + 65537) & 0xFFFF;
       }
-    }
-
-    // postcondition
-    {
-      long lhs = (oldValThis == 0) ? twoPow16 : oldValThis;
-      long rhs = (oldValOther == 0) ? twoPow16 : oldValOther;
-      long res = (lhs * rhs) % (twoPow16 + 1);
-      res = (res == twoPow16) ? 0 : res;
-      assert this.value == res : "in " + lhs + " * " + rhs + " got=" + this.value + ", expected=" + res;
-      assert uint16.value == oldValOther;
     }
   }
 
@@ -116,9 +100,7 @@ public class UInt16 {
   }
 
   public UInt16 negate() {
-    long expected = (twoPow16 - value) % twoPow16;
     long res = (twoPow16 - value) & 0xFFFF;
-    assert res == expected : "got=" + value + ", expected=" + expected;
     return new UInt16(res);
   }
 

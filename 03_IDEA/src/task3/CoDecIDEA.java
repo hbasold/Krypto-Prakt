@@ -53,38 +53,7 @@ public class CoDecIDEA {
       i++;
     }
 
-    // check with reference implementation from http://packetstormsecurity.org/files/view/20397/idea-algorithm.txt
-    int[] ukey = new int[8];
-    for(int i = 0; i < 8; ++i) {
-      ukey[i] = key[i].getValue();
-    }
-
-    int[] k = new int[52];
-    int i;
-    for (i=0; i<8; i++) k[i]=ukey[i];
-    for (i=8; i<52; i++) {
-      if ((i & 7) < 6)
-        k[i]=((k[i-7] & 127) << 9 | k[i-6] >>> 7);
-      else if ((i & 7) == 6)
-        k[i]=((k[i-7] & 127) << 9 | k[i-14] >>> 7);
-      else
-        k[i]=((k[i-15] & 127) << 9 | k[i-14] >>> 7);
-    }
-
-    assert equal(subKeys, k);
-
-    //System.out.println(Arrays.toString(subKeys));
-    //System.out.println(Arrays.toString(k));
-
     return subKeys;
-  }
-
-  private boolean equal(UInt16[] subKeys, int[] k) {
-    boolean equal = true;
-    for(int i = 0; i < subKeys.length; ++i){
-      equal = equal && subKeys[i].getValue() == k[i];
-    }
-    return equal;
   }
 
   /**
@@ -187,21 +156,4 @@ public class CoDecIDEA {
   public void decode(byte[] in, byte[] out) {
     idea(in, out, invKey);
   }
-
-  /*
-  public static void main(String[] args) {
-    byte[] a = {(byte)0x12, (byte)0x34};
-    UInt16 u = new UInt16(a, 0);
-    System.out.println(u.getValue());
-    System.out.println("i="+Integer.toString(u.getValue(), 16));
-    BigInteger i = new BigInteger(a);
-    System.out.println("BI="+i.toString(16));
-    i = i.shiftLeft(8);
-    System.out.println("BI << 8="+i.toString(16));
-    i = i.and(new BigInteger(
-        new byte[] {0, 0, (byte)0xFF, (byte)0xFF }));
-    System.out.println("BI << 8 &0xFFFF="+i.toString(16));
-  }
-  */
-
 }
