@@ -1,10 +1,20 @@
 package task3;
 
-public class CoDecIDEA {
+interface BlockCipherPure {
+  public void encode(byte[] in, byte[] out);
+  public void decode(byte[] in, byte[] out);
+  public int blockSize(); // in bytes
+}
+
+public class CoDecIDEA implements BlockCipherPure {
 
   // generated key with 52=8*6+4 UInt16 (104 bytes, 832 bits)
   private UInt16[] subKey;
   private UInt16[] invKey;
+
+  public int blockSize(){
+    return 8;
+  }
 
   /**
    * Encodes and decodes IDEA.

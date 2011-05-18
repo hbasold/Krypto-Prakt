@@ -17,7 +17,6 @@ import java.io.BufferedWriter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.math.BigInteger;
 import java.util.Random;
 import de.tubs.cs.iti.jcrypt.chiffre.BlockCipher;
 
@@ -46,17 +45,19 @@ public final class IDEA extends BlockCipher {
       byte[] inBlock  = new byte[8]; // 64 bit block
       byte[] outBlock = new byte[8]; // 64 bit block
       CoDecIDEA idea = new CoDecIDEA(key);
+
       if (ciphertext.read(inBlock)!=8) {
         throw new IOException("Kein vollständiger initialer Vektor (8 Bytes) vorhanden!");
       }
-      BigInteger initialVector = new BigInteger(inBlock);
+      CBC cbc = new CBC(idea, inBlock);
+
       int len = ciphertext.read(inBlock);
       while (len!=-1) {
         // if not read a full block, fill with spaces
         if (len!=8) {
           throw new IOException("Kein vollständiger Block (8 Bytes) am Ende der Datei!");
         }
-        idea.decode(inBlock, outBlock);
+        cbc.decryptNextBlock(inBlock, outBlock);
         cleartext.write(outBlock); // write decrypted block
         len = ciphertext.read(inBlock);
       }
@@ -78,21 +79,24 @@ public final class IDEA extends BlockCipher {
    * Der FileOutputStream, in den der Chiffretext geschrieben werden soll.
    */
   public void encipher(FileInputStream cleartext, FileOutputStream ciphertext) {
-    Random rnd = new Random(System.currentTimeMillis());
-    BigInteger initialVector = new BigInteger(64, rnd);
     try {
-      ciphertext.write(initialVector.toByteArray());
       byte[] inBlock  = new byte[8]; // 64 bit block
       byte[] outBlock = new byte[8]; // 64 bit block
-      int len = cleartext.read(inBlock);
-      // TODO: CBC Modus hinzufügen
+
+      Random rnd = new Random(System.currentTimeMillis());
+      rnd.nextBytes(outBlock);
+      ciphertext.write(outBlock);
+
       CoDecIDEA idea = new CoDecIDEA(key);
+      CBC cbc = new CBC(idea, outBlock);
+
+      int len = cleartext.read(inBlock);
       while (len!=-1) {
         // if not read a full block, fill with spaces
         for (int i=len; i<inBlock.length; i++) {
           inBlock[i] = (byte) ' ';
         }
-        idea.encode(inBlock, outBlock);
+        cbc.encryptNextBlock(inBlock, outBlock);
         ciphertext.write(outBlock); // write encrypted block
         len = cleartext.read(inBlock);
       }

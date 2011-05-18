@@ -106,7 +106,7 @@ public class UInt16 {
 
   /**
    * Erweiterter Euklidscher Alg.
-   * 
+   *
    * @param x
    * @param y
    * @return
@@ -130,7 +130,7 @@ public class UInt16 {
 
   /**
    * Berechnet das modulare Inverse von x mod n.
-   * 
+   *
    * @param x
    * @param n
    * @return
