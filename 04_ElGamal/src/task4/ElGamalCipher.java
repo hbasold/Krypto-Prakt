@@ -54,7 +54,25 @@ public final class ElGamalCipher extends BlockCipher {
    * Der FileOutputStream, in den der Klartext geschrieben werden soll.
    */
   public void decipher(FileInputStream ciphertext, FileOutputStream cleartext) {
-
+    try {
+      BigInteger pMinus1MinusX = p.subtract(BigInteger.ONE); // p-1-x
+      BigInteger c = readCipher(ciphertext); // Block einlesen
+      // TODO: Woher weiß BlockCypherUtil, wie viele Bytes ein Block hat?
+      while (c != null) { // solange Block vorhanden
+        BigInteger a = c.mod(p);                   // a = C' mod p
+        BigInteger b = c.divide(p);                // b = C' div p
+        BigInteger z = a.modPow(pMinus1MinusX, p); // z = a^(p-1-x) mod p
+        BigInteger m = z.multiply(b).mod(p);       // M = z*b mod p
+        writeClear(cleartext, m); // entschlüsselten Block schreiben
+        c = readCipher(ciphertext); // nächsten verschlüsselten Block einlesen
+      }
+      cleartext.close();
+      ciphertext.close();
+    } catch (IOException e) {
+      System.err.println("Abbruch: Fehler beim Zugriff auf Klar- oder Chiffretextdatei.");
+      e.printStackTrace();
+      System.exit(1);
+    }
   }
 
   /**
