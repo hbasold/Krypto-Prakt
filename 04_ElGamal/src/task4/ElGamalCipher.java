@@ -55,9 +55,9 @@ public final class ElGamalCipher extends BlockCipher {
    */
   public void decipher(FileInputStream ciphertext, FileOutputStream cleartext) {
     try {
-      BigInteger pMinus1MinusX = p.subtract(BigInteger.ONE); // p-1-x
+      BigInteger pMinus1MinusX = p.subtract(BigInteger.ONE).subtract(x); // p-1-x
+      // Die Blocklänge wird durch die ersten 8 Zeichen erkannt (interpretiert als Hex-Zahl).
       BigInteger c = readCipher(ciphertext); // Block einlesen
-      // TODO: Woher weiß BlockCypherUtil, wie viele Bytes ein Block hat?
       while (c != null) { // solange Block vorhanden
         BigInteger a = c.mod(p);                   // a = C' mod p
         BigInteger b = c.divide(p);                // b = C' div p
@@ -91,9 +91,9 @@ public final class ElGamalCipher extends BlockCipher {
   public void encipher(FileInputStream cleartext, FileOutputStream ciphertext) {
     Random rnd = new Random(System.currentTimeMillis());
     BigInteger upperBoundK = p.subtract(BigInteger.ONE);
+    // Anzahl der Bytes pro Block
+    int blocksize = (p.bitLength()-1) / 8; // Integer-Division macht Math.floor()
     try {
-      // Anzahl der Bytes pro Block
-      int blocksize = (int) Math.floor( (p.bitLength()-1)/8 );
       BigInteger m = readClear(cleartext, blocksize); // Block einlesen
       while (m != null) { // solange Block vorhanden
         BigInteger k = BigIntegerUtil.randomBetween(BigInteger.ONE, upperBoundK, rnd);
