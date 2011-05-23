@@ -1,0 +1,2 @@
+../04_ElGamal/key.secr
+../04_ElGamal/key.secr.public

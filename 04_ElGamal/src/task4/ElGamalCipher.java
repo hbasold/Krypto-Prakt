@@ -71,7 +71,27 @@ public final class ElGamalCipher extends BlockCipher {
    * Der FileOutputStream, in den der Chiffretext geschrieben werden soll.
    */
   public void encipher(FileInputStream cleartext, FileOutputStream ciphertext) {
-
+    Random rnd = new Random(System.currentTimeMillis());
+    BigInteger upperBoundK = p.subtract(BigInteger.ONE);
+    try {
+      // Anzahl der Bytes pro Block
+      int blocksize = (int) Math.floor( (p.bitLength()-1)/8 );
+      BigInteger m = readClear(cleartext, blocksize); // Block einlesen
+      while (m != null) { // solange Block vorhanden
+        BigInteger k = BigIntegerUtil.randomBetween(BigInteger.ONE, upperBoundK, rnd);
+        BigInteger a = g.modPow(k, p);                    // a =   g^k mod p
+        BigInteger b = m.multiply(y.modPow(k, p)).mod(p); // b = M*y^k mod p
+        BigInteger c = a.add(b.multiply(p));              // C'= a+b*p
+        writeCipher(ciphertext, c);          // verschlüsselten Block schreiben
+        m = readClear(cleartext, blocksize); // nächsten Klartext-Block einlesen
+      }
+      cleartext.close();
+      ciphertext.close();
+    } catch (IOException e) {
+      System.err.println("Abbruch: Fehler beim Zugriff auf Klar- oder Chiffretextdatei.");
+      e.printStackTrace();
+      System.exit(1);
+    }
   }
 
   /**
@@ -177,7 +197,6 @@ public final class ElGamalCipher extends BlockCipher {
       assert g.equals(g_);
       
     } catch (IOException e) {
-      // TODO Auto-generated catch block
       e.printStackTrace();
     }
   }
@@ -194,6 +213,7 @@ public final class ElGamalCipher extends BlockCipher {
     try {
       key.write(privateKeyFile); key.newLine();
       key.write(publicKeyFile); key.newLine();
+      key.close();
       
       BufferedWriter out = new BufferedWriter(new FileWriter(privateKeyFile));
       out.write(p.toString(16)); out.newLine();
@@ -208,7 +228,6 @@ public final class ElGamalCipher extends BlockCipher {
       out.close();
       
     } catch (IOException e) {
-      // TODO Auto-generated catch block
       e.printStackTrace();
     }
   }
