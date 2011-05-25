@@ -16,6 +16,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 
 import de.tubs.cs.iti.jcrypt.chiffre.HashFunction;
 
@@ -26,6 +27,8 @@ import de.tubs.cs.iti.jcrypt.chiffre.HashFunction;
  * @version 1.1 - Sat Apr 03 22:20:18 CEST 2010
  */
 public final class Fingerprint extends HashFunction {
+
+  private ChaumKeys keys = new ChaumKeys();
 
   /**
    * Berechnet den Hash-Wert des durch den FileInputStream
@@ -48,8 +51,31 @@ public final class Fingerprint extends HashFunction {
    * @see #writeParam writeParam
    */
   public void makeParam() {
+    BufferedReader standardInput = launcher.openStandardInput();
+    boolean accepted = false;
 
-    System.out.println("Dummy für die Parametererzeugung.");
+    int bitLength = 0;
+
+    do {
+      System.out.print("Geben Sie die gewünschte Bitlänge ein (min. 512): ");
+      try {
+        bitLength = Integer.parseInt(standardInput.readLine());
+        if (bitLength < 512) {
+          System.out.println("Bitlänge zu klein.");
+        } else {
+          accepted = true;
+        }
+      } catch (NumberFormatException e) {
+        System.out.println("Bitlänge ungültig.");
+      } catch (IOException e) {
+        System.err
+            .println("Abbruch: Fehler beim Lesen von der Standardeingabe.");
+        e.printStackTrace();
+        System.exit(1);
+      }
+    } while (!accepted);
+
+    keys.createKeys(bitLength);
   }
 
   /**
@@ -61,7 +87,11 @@ public final class Fingerprint extends HashFunction {
    * @see #writeParam writeParam
    */
   public void readParam(BufferedReader param) {
-
+    try {
+      keys.readKeys(param);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 
   /**
@@ -89,6 +119,10 @@ public final class Fingerprint extends HashFunction {
    * @see #readParam readParam
    */
   public void writeParam(BufferedWriter param) {
-
+    try {
+      keys.writeKeys(param);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 }
