@@ -9,4 +9,5 @@
 <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="de.tubs.cs.iti.jcrypt.chiffre.Launcher"/>
 <stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="-execute task5.Fingerprint&#13;&#10;-action hash&#13;&#10;-cleartext ../text/programmierer.txt&#13;&#10;-ciphertext ../05_Fingerprint/tmp/programmierer_hash.txt&#13;&#10;-param ../05_Fingerprint/param.txt"/>
 <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="05_Fingerprint"/>
+<stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-ea"/>
 </launchConfiguration>

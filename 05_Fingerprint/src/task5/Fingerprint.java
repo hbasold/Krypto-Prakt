@@ -44,21 +44,17 @@ public final class Fingerprint extends HashFunction {
    * Der FileOutputStream, in den der Hash-Wert geschrieben werden soll.
    */
   public void hash(FileInputStream cleartext, FileOutputStream ciphertext) {
+    HashExpansion hash = new HashExpansion(keys);
     // Anzahl der Bytes pro Block
-    int blocksize = 2 * (keys.bitLength() / 8); // Integer-Division macht Math.floor()
+    int blocksize = hash.inputBitLength() / 8; // Integer-Division macht Math.floor()
     byte[] input = new byte[blocksize];
-    byte[] output;
     try {
       int read = cleartext.read(input);
-      //while (read != -1) { // solange Block vorhanden
-        for(int i = read; i < blocksize; ++i){
-          input[i] = 0;
-        }
-        BigInteger h = keys.hash(input);
-        output = h.toByteArray();
-        ciphertext.write(output);
+      while (read != -1) { // solange Block vorhanden
+        hash.concat(input, read);
         read = cleartext.read(input);
-      //}
+      }
+      ciphertext.write(hash.read().toByteArray());
       cleartext.close();
       ciphertext.close();
     } catch (IOException e) {

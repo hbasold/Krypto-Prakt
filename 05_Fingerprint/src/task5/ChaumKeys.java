@@ -8,9 +8,17 @@ import java.util.Random;
 
 import de.tubs.cs.iti.jcrypt.chiffre.BigIntegerUtil;
 
-public class ChaumKeys {
+interface Hash {
+  int inputBitLength();
+  int outputBitLength();
+  BigInteger hash(byte data[]);
+  BigInteger hash(BigInteger x1, BigInteger x2);
+  BigInteger hash(BigInteger state);
+}
 
-  private int bitLength;
+public class ChaumKeys implements Hash {
+
+  private int bitLength; // Bitlänge von q = Bitlänge von p - 1
   private BigInteger p;
   private BigInteger g1;
   private BigInteger g2;
@@ -59,7 +67,7 @@ public class ChaumKeys {
   }
   
   public BigInteger hash(byte data[]){
-    assert data.length == 2 * (bitLength / 8);
+    assert data.length == inputBitLength() / 8;
     
     byte x1_[] = new byte[data.length / 2];
     System.arraycopy(data, 0, x1_, 0, data.length / 2);
@@ -77,8 +85,22 @@ public class ChaumKeys {
     return g1.modPow(x1, p).multiply(g2.modPow(x2, p)).mod(p);
   }
 
-  public int bitLength() {
-    return bitLength;
+  public int inputBitLength() {
+    return 2 * bitLength;
+  }
+
+  public int outputBitLength() {
+    return bitLength + 1;
+  }
+
+  public BigInteger hash(BigInteger in) {
+    assert in.bitLength() <= inputBitLength();
+    
+    BigInteger lowerMask = BigInteger.ONE.shiftLeft(bitLength - 1).subtract(BigInteger.ONE);
+    
+    BigInteger x1 = in.and(lowerMask);
+    BigInteger x2 = in.shiftRight(bitLength);
+    return hash(x1, x2);
   }
 
 }
