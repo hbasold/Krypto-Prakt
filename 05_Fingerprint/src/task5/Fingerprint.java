@@ -17,7 +17,10 @@ import java.io.BufferedWriter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.math.BigInteger;
+import java.util.Random;
 
+import de.tubs.cs.iti.jcrypt.chiffre.BigIntegerUtil;
 import de.tubs.cs.iti.jcrypt.chiffre.HashFunction;
 
 /**
@@ -41,7 +44,28 @@ public final class Fingerprint extends HashFunction {
    * Der FileOutputStream, in den der Hash-Wert geschrieben werden soll.
    */
   public void hash(FileInputStream cleartext, FileOutputStream ciphertext) {
-
+    // Anzahl der Bytes pro Block
+    int blocksize = 2 * (keys.bitLength() / 8); // Integer-Division macht Math.floor()
+    byte[] input = new byte[blocksize];
+    byte[] output;
+    try {
+      int read = cleartext.read(input);
+      //while (read != -1) { // solange Block vorhanden
+        for(int i = read; i < blocksize; ++i){
+          input[i] = 0;
+        }
+        BigInteger h = keys.hash(input);
+        output = h.toByteArray();
+        ciphertext.write(output);
+        read = cleartext.read(input);
+      //}
+      cleartext.close();
+      ciphertext.close();
+    } catch (IOException e) {
+      System.err.println("Abbruch: Fehler beim Zugriff auf Klar- oder Chiffretextdatei.");
+      e.printStackTrace();
+      System.exit(1);
+    }
   }
 
   /**
@@ -121,6 +145,7 @@ public final class Fingerprint extends HashFunction {
   public void writeParam(BufferedWriter param) {
     try {
       keys.writeKeys(param);
+      param.close();
     } catch (IOException e) {
       e.printStackTrace();
     }

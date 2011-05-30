@@ -10,11 +10,14 @@ import de.tubs.cs.iti.jcrypt.chiffre.BigIntegerUtil;
 
 public class ChaumKeys {
 
-  public BigInteger p;
-  public BigInteger g1;
-  public BigInteger g2;
+  private int bitLength;
+  private BigInteger p;
+  private BigInteger g1;
+  private BigInteger g2;
 
   public void createKeys(int bitLength) {
+    this.bitLength = bitLength;
+    
     Random rnd = new Random(System.currentTimeMillis());
     BigInteger q, p;
     do {
@@ -49,8 +52,33 @@ public class ChaumKeys {
 
   public void readKeys(BufferedReader param) throws IOException {
     p = new BigInteger(param.readLine(), 16);
+    bitLength = p.bitLength() - 1;
+    System.out.println("bits=" + bitLength + ", p=" + p);
     g1 = new BigInteger(param.readLine(), 16);
     g2 = new BigInteger(param.readLine(), 16);
+  }
+  
+  public BigInteger hash(byte data[]){
+    assert data.length == 2 * (bitLength / 8);
+    
+    byte x1_[] = new byte[data.length / 2];
+    System.arraycopy(data, 0, x1_, 0, data.length / 2);
+    BigInteger x1 = new BigInteger(1, x1_);
+    
+    byte x2_[] = new byte[data.length / 2];
+    System.arraycopy(data, data.length / 2, x2_, 0, data.length / 2);
+    BigInteger x2 = new BigInteger(1, x2_);
+    
+    return hash(x1, x2);
+  }
+  
+  public BigInteger hash(BigInteger x1, BigInteger x2){
+    assert x1.bitLength() <= bitLength && x2.bitLength() <= bitLength;
+    return g1.modPow(x1, p).multiply(g2.modPow(x2, p)).mod(p);
+  }
+
+  public int bitLength() {
+    return bitLength;
   }
 
 }
