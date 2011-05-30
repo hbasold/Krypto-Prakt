@@ -8,13 +8,7 @@ import java.util.Random;
 
 import de.tubs.cs.iti.jcrypt.chiffre.BigIntegerUtil;
 
-interface Hash {
-  int inputBitLength();
-  int outputBitLength();
-  BigInteger hash(BigInteger in);
-}
-
-public class ChaumKeys implements Hash {
+public class ChaumHash implements Hash {
 
   private int bitLength; // Bitlänge von q = Bitlänge von p - 1
   private BigInteger p;
@@ -23,37 +17,37 @@ public class ChaumKeys implements Hash {
 
   public void createKeys(int bitLength) {
     this.bitLength = bitLength;
-    
+
     Random rnd = new Random(System.currentTimeMillis());
     BigInteger q, p;
     do {
       q = BigInteger.probablePrime(bitLength, rnd);
       p = q.multiply(BigInteger.valueOf(2)).add(BigInteger.ONE);
     } while(!p.isProbablePrime(100));
-    
+
     this.p = p;
-    
+
     BigInteger g;
     final BigInteger minus1ModP = p.subtract(BigInteger.ONE); // BigInteger.valueOf(-1).mod(p);
     do {
       g = BigIntegerUtil.randomBetween(BigInteger.valueOf(2), p.subtract(BigInteger.ONE), rnd);
     } while(!g.modPow(q, p).equals(minus1ModP));
-    
+
     this.g1 = g;
-    
+
     do {
       g = BigIntegerUtil.randomBetween(BigInteger.valueOf(2), p.subtract(BigInteger.ONE), rnd);
     } while(!g.modPow(q, p).equals(minus1ModP));
-    
+
     this.g2 = g;
-    
+
     System.out.println("q=" + q + ", p= " + p + ", g1=" + g1 + ", g2=" + g2);
   }
 
   public void writeKeys(BufferedWriter param) throws IOException {
     param.write(p.toString(16)); param.newLine();
     param.write(g1.toString(16)); param.newLine();
-    param.write(g2.toString(16)); param.newLine();    
+    param.write(g2.toString(16)); param.newLine();
   }
 
   public void readKeys(BufferedReader param) throws IOException {
@@ -63,7 +57,7 @@ public class ChaumKeys implements Hash {
     g1 = new BigInteger(param.readLine(), 16);
     g2 = new BigInteger(param.readLine(), 16);
   }
-   
+
   private BigInteger hash(BigInteger x1, BigInteger x2){
     assert x1.bitLength() <= bitLength && x2.bitLength() <= bitLength;
     return g1.modPow(x1, p).multiply(g2.modPow(x2, p)).mod(p);
@@ -79,9 +73,9 @@ public class ChaumKeys implements Hash {
 
   public BigInteger hash(BigInteger in) {
     assert in.bitLength() <= inputBitLength();
-    
+
     BigInteger lowerMask = BigInteger.ONE.shiftLeft(bitLength - 1).subtract(BigInteger.ONE);
-    
+
     BigInteger x1 = in.and(lowerMask);
     BigInteger x2 = in.shiftRight(bitLength);
     return hash(x1, x2);

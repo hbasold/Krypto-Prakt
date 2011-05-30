@@ -2,7 +2,7 @@
  * jCrypt - Programmierumgebung für das Kryptologie-Praktikum
  * Studienarbeit am Institut für Theoretische Informatik der
  * Technischen Universität Braunschweig
- * 
+ *
  * Datei:        Fingerprint.java
  * Beschreibung: Dummy-Implementierung der Hash-Funktion von Chaum, van Heijst
  *               und Pfitzmann
@@ -17,10 +17,6 @@ import java.io.BufferedWriter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.math.BigInteger;
-import java.util.Random;
-
-import de.tubs.cs.iti.jcrypt.chiffre.BigIntegerUtil;
 import de.tubs.cs.iti.jcrypt.chiffre.HashFunction;
 
 /**
@@ -31,13 +27,13 @@ import de.tubs.cs.iti.jcrypt.chiffre.HashFunction;
  */
 public final class Fingerprint extends HashFunction {
 
-  private ChaumKeys keys = new ChaumKeys();
+  private ChaumHash keys = new ChaumHash();
 
   /**
    * Berechnet den Hash-Wert des durch den FileInputStream
    * <code>cleartext</code> gegebenen Klartextes und schreibt das Ergebnis in
    * den FileOutputStream <code>ciphertext</code>.
-   * 
+   *
    * @param cleartext
    * Der FileInputStream, der den Klartext liefert.
    * @param ciphertext
@@ -66,7 +62,7 @@ public final class Fingerprint extends HashFunction {
 
   /**
    * Erzeugt neue Parameter.
-   * 
+   *
    * @see #readParam readParam
    * @see #writeParam writeParam
    */
@@ -100,7 +96,7 @@ public final class Fingerprint extends HashFunction {
 
   /**
    * Liest die Parameter mit dem Reader <code>param</code>.
-   * 
+   *
    * @param param
    * Der Reader, der aus der Parameterdatei liest.
    * @see #makeParam makeParam
@@ -132,7 +128,7 @@ public final class Fingerprint extends HashFunction {
 
   /**
    * Schreibt die Parameter mit dem Writer <code>param</code>.
-   * 
+   *
    * @param param
    * Der Writer, der in die Parameterdatei schreibt.
    * @see #makeParam makeParam
