@@ -17,6 +17,8 @@ import java.io.BufferedWriter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.math.BigInteger;
+
 import de.tubs.cs.iti.jcrypt.chiffre.HashFunction;
 
 /**
@@ -123,7 +125,40 @@ public final class Fingerprint extends HashFunction {
    * werden soll.
    */
   public void verify(FileInputStream ciphertext, FileInputStream cleartext) {
-
+    HashExpansion hash = new HashExpansion(keys);
+    // Anzahl der Bytes pro Block
+    int blocksize = hash.inputBitLength() / 8; // Integer-Division macht Math.floor()
+    byte[] input = new byte[blocksize];
+    try {
+      int read = cleartext.read(input);
+      while (read != -1) { // solange Block vorhanden
+        hash.concat(input, read);
+        read = cleartext.read(input);
+      }
+      BigInteger h = hash.read();
+      
+      byte[] hashInput = new byte[hash.outputBitLength() / 8];
+      read = ciphertext.read(hashInput);
+      if(read != hash.outputBitLength() / 8){
+        System.err.println("Gelesener Hash ungültig: zu kurz.");
+      }
+      else{
+        BigInteger expected = new BigInteger(1, hashInput);
+        if(!expected.equals(h)){
+          System.err.println("Gelesener Hash ungültig: falscher Wert.");
+        }
+        else{
+          System.out.println("Hash in Ordnung.");
+        }
+      }
+      
+      cleartext.close();
+      ciphertext.close();
+    } catch (IOException e) {
+      System.err.println("Abbruch: Fehler beim Zugriff auf Klar- oder Chiffretextdatei.");
+      e.printStackTrace();
+      System.exit(1);
+    }
   }
 
   /**
