@@ -48,7 +48,8 @@ public class HashExpansion {
   }
   
   BigInteger read(){
-    return hash.hash(state, BigInteger.valueOf(paddedBytes * 8));
+    BigInteger in = BigInteger.valueOf(paddedBytes * 8);
+    return hash.hash(state.shiftLeft(inputBitLength()).or(in));
   }
   
 }

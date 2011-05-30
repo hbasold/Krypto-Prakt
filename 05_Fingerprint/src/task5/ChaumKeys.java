@@ -11,9 +11,7 @@ import de.tubs.cs.iti.jcrypt.chiffre.BigIntegerUtil;
 interface Hash {
   int inputBitLength();
   int outputBitLength();
-  BigInteger hash(byte data[]);
-  BigInteger hash(BigInteger x1, BigInteger x2);
-  BigInteger hash(BigInteger state);
+  BigInteger hash(BigInteger in);
 }
 
 public class ChaumKeys implements Hash {
@@ -65,22 +63,8 @@ public class ChaumKeys implements Hash {
     g1 = new BigInteger(param.readLine(), 16);
     g2 = new BigInteger(param.readLine(), 16);
   }
-  
-  public BigInteger hash(byte data[]){
-    assert data.length == inputBitLength() / 8;
-    
-    byte x1_[] = new byte[data.length / 2];
-    System.arraycopy(data, 0, x1_, 0, data.length / 2);
-    BigInteger x1 = new BigInteger(1, x1_);
-    
-    byte x2_[] = new byte[data.length / 2];
-    System.arraycopy(data, data.length / 2, x2_, 0, data.length / 2);
-    BigInteger x2 = new BigInteger(1, x2_);
-    
-    return hash(x1, x2);
-  }
-  
-  public BigInteger hash(BigInteger x1, BigInteger x2){
+   
+  private BigInteger hash(BigInteger x1, BigInteger x2){
     assert x1.bitLength() <= bitLength && x2.bitLength() <= bitLength;
     return g1.modPow(x1, p).multiply(g2.modPow(x2, p)).mod(p);
   }
