@@ -57,6 +57,14 @@ public class ChaumHash implements Hash {
     g1 = new BigInteger(param.readLine(), 16);
     g2 = new BigInteger(param.readLine(), 16);
   }
+  
+  public void readKeys(BufferedReader param, int base) throws IOException {
+    p = new BigInteger(param.readLine(), base);
+    bitLength = p.bitLength() - 1;
+    System.out.println("bits=" + bitLength + ", p=" + p);
+    g1 = new BigInteger(param.readLine(), base);
+    g2 = new BigInteger(param.readLine(), base);
+  }
 
   private BigInteger hash(BigInteger x1, BigInteger x2){
     assert x1.bitLength() <= bitLength && x2.bitLength() <= bitLength;
