@@ -52,7 +52,7 @@ public final class Fingerprint extends HashFunction {
         hash.concat(input, read);
         read = cleartext.read(input);
       }
-      ciphertext.write(hash.read().toByteArray());
+      ciphertext.write(hash.read().toString(16).getBytes());
       cleartext.close();
       ciphertext.close();
     } catch (IOException e) {
@@ -137,13 +137,13 @@ public final class Fingerprint extends HashFunction {
       }
       BigInteger h = hash.read();
       
-      byte[] hashInput = new byte[hash.outputBitLength() / 8];
+      byte[] hashInput = new byte[2 * (hash.outputBitLength() / 8)]; // zwei Hex-Zeichen pro Byte
       read = ciphertext.read(hashInput);
-      if(read != hash.outputBitLength() / 8){
+      if(read != 2 * (hash.outputBitLength() / 8)){
         System.err.println("Gelesener Hash ungültig: zu kurz.");
       }
       else{
-        BigInteger expected = new BigInteger(1, hashInput);
+        BigInteger expected = new BigInteger(new String(hashInput), 16);
         if(!expected.equals(h)){
           System.err.println("Gelesener Hash ungültig: falscher Wert.");
         }
