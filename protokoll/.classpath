@@ -10,5 +10,5 @@
 	<classpathentry kind="lib" path="/03_IDEA/bin/task3"/>
 	<classpathentry kind="lib" path="/04_ElGamal/bin/task4"/>
 	<classpathentry kind="lib" path="/05_Fingerprint/bin/task5"/>
-	<classpathentry kind="output" path="src"/>
+	<classpathentry kind="output" path="bin"/>
 </classpath>
