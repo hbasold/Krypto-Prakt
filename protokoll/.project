@@ -3,6 +3,9 @@
 	<name>Krypto Umgebung Protokoll</name>
 	<comment></comment>
 	<projects>
+		<project>03_IDEA</project>
+		<project>04_ElGamal</project>
+		<project>05_Fingerprint</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

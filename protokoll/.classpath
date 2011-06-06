@@ -7,8 +7,8 @@
 			<attribute name="javadoc_location" value="jar:platform:/resource/doc/javadoc.zip!/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="/03_IDEA/bin/task3"/>
-	<classpathentry kind="lib" path="/04_ElGamal/bin/task4"/>
-	<classpathentry kind="lib" path="/05_Fingerprint/bin/task5"/>
+	<classpathentry kind="lib" path="/05_Fingerprint/bin"/>
+	<classpathentry kind="lib" path="/04_ElGamal/bin"/>
+	<classpathentry kind="lib" path="/03_IDEA/bin"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
