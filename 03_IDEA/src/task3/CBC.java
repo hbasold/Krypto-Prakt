@@ -15,7 +15,7 @@ public class CBC {
   private byte[] state;
   private byte[] t;
 
-  CBC(BlockCipherPure cipher_, byte[] initial){
+  public CBC(BlockCipherPure cipher_, byte[] initial){
     assert initial.length >= cipher_.blockSize();
 
     cipher = cipher_;

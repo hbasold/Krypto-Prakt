@@ -43,15 +43,15 @@ public class HashExpansion {
     state = hash.hash(state);
   }
 
-  int inputBitLength(){
+  public int inputBitLength(){
     return hash.inputBitLength() - hash.outputBitLength() - 1;
   }
   
-  int outputBitLength(){
+  public int outputBitLength(){
     return hash.outputBitLength();
   }
 
-  BigInteger read(){
+  public BigInteger read(){
     BigInteger in = BigInteger.valueOf(paddedBytes * 8);
     return hash.hash(state.shiftLeft(inputBitLength()).or(in));
   }
