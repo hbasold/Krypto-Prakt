@@ -55,5 +55,10 @@ public class HashExpansion {
     BigInteger in = BigInteger.valueOf(paddedBytes * 8);
     return hash.hash(state.shiftLeft(inputBitLength()).or(in));
   }
+  
+  public void reset(){
+    paddedBytes = 0;
+    state = null;
+  }
 
 }

@@ -9,6 +9,6 @@
 	</classpathentry>
 	<classpathentry kind="lib" path="/05_Fingerprint/bin"/>
 	<classpathentry kind="lib" path="/04_ElGamal/bin"/>
-	<classpathentry kind="lib" path="/03_IDEA/bin"/>
+	<classpathentry kind="lib" path="/03_IDEA/bin" sourcepath="/03_IDEA/src"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
