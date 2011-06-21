@@ -66,7 +66,6 @@ public class S2SProtocol implements Protocol {
   @Override
   public void setCommunicator(Communicator Com) {
     c = Com;
-    System.out.println("myNumber = " + c.myNumber());
     other = 1 - c.myNumber();
   }
 
@@ -106,13 +105,20 @@ public class S2SProtocol implements Protocol {
     // (4)
     Certificate certB = receiveCertificate();
     BigInteger certSig = certB.getSignature().modPow(TrustedAuthority.getPublicExponent(), TrustedAuthority.getModulus());
+
+    byte[] certBData = eB.multiply(nB).add(nB).toByteArray();
+    if(!Arrays.equals(certBData, certB.getData())){
+      System.err.println("Zertifikat von B passt nicht zu übertragenem Schlüssel");
+    }
     md.reset();
     md.update(certB.getID().getBytes());
-    md.update(eB.multiply(nB).add(nB).toByteArray());
-    if(!Arrays.equals(certSig.toByteArray(), md.digest())){
+    md.update(certBData);
+    BigInteger certBExpectedSig = new BigInteger(md.digest());
+    if(!certSig.equals(certBExpectedSig)){
       System.err.println("Zertifikat von B ungültig");
       return;
     }
+
     BigInteger yB = receive();
     BigInteger initialB = receive();
     BigInteger sBEnc = receive();
