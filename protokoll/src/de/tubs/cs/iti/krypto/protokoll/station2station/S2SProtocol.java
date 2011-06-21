@@ -52,6 +52,9 @@ public class S2SProtocol implements Protocol {
     rsaPrivate = e.modInverse(phiN);
     rsaPublic = e;
 
+    assert rsaPrivate.multiply(rsaPublic).mod(phiN).equals(BigInteger.ONE);
+    assert BigInteger.valueOf(5).modPow(rsaPublic, rsaModule).modPow(rsaPrivate, rsaModule).equals(BigInteger.valueOf(5));
+
     BigInteger certData = e.multiply(N).add(N);
     cert = TrustedAuthority.newCertificate(toByteArray(certData));
 
