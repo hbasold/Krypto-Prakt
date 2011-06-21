@@ -53,7 +53,7 @@ public class S2SProtocol implements Protocol {
     rsaPublic = e;
 
     BigInteger certData = e.multiply(N).add(N);
-    cert = TrustedAuthority.newCertificate(certData.toByteArray());
+    cert = TrustedAuthority.newCertificate(toByteArray(certData));
 
     try {
       md = MessageDigest.getInstance("SHA");
@@ -120,11 +120,11 @@ public class S2SProtocol implements Protocol {
     }
 
     BigInteger yB = receive();
-    BigInteger initialB = receive();
+    byte[] initialB = receiveBytes();
     BigInteger sBEnc = receive();
 
     BigInteger k = yB.modPow(xA, p);
-    BigInteger sB = decrypt(sBEnc, k, nB.bitLength() / 8, initialB.toByteArray());
+    BigInteger sB = decrypt(sBEnc, k, nB.bitLength() / 8, initialB);
     System.out.println("sB = " + sB.toString(16));
     if(!verifySignature(sB, yB, yA, p, eB, nB)){
       System.err.println("Signatur von B ungültig");
@@ -144,14 +144,8 @@ public class S2SProtocol implements Protocol {
 
     sendCertificate(cert);
     // send(yA); unnötig?
-    send(new BigInteger(1, initial));
+    sendBytes(initial);
     send(sAEnc);
-  }
-
-  private boolean verifySignature(BigInteger sig, BigInteger yOther, BigInteger ySelf, BigInteger p, BigInteger eOther, BigInteger nOther) {
-    final BigInteger hashedKey = hashKey(p, yOther, ySelf);
-    System.out.println("sig verif hash = " + hashedKey.toString(16));
-    return sig.modPow(eOther, nOther).equals(hashedKey);
   }
 
   @Override
@@ -182,7 +176,7 @@ public class S2SProtocol implements Protocol {
 
     sendCertificate(cert);
     send(yB);
-    send(new BigInteger(1, initial));
+    sendBytes(initial);
     send(sBEnc);
 
     // (7)
@@ -206,6 +200,34 @@ public class S2SProtocol implements Protocol {
     }
   }
 
+  private void sendBytes(byte[] data) {
+    send(new BigInteger(1, data));
+  }
+
+  private byte[] receiveBytes() {
+    BigInteger initialB_ = receive();
+    return toByteArray(initialB_);
+  }
+
+  /**
+   * Returns /a/ as byte array eliminating the leading byte if its is 0.
+   *
+   * This is needed, as it contains the sign bit which is unused here.
+   *
+   * @param a
+   * @return
+   */
+  private byte[] toByteArray(BigInteger a) {
+    byte[] initialB = a.toByteArray();
+    // Führendes 0-Byte entfernen
+    if(initialB[0] == 0){
+      return Arrays.copyOfRange(initialB, 1, initialB.length);
+    }
+    else{
+      return initialB;
+    }
+  }
+
   private void send(BigInteger p) {
     System.out.println("Sending " + p.toString(16));
     c.sendTo(other, p.toString(16));
@@ -219,24 +241,33 @@ public class S2SProtocol implements Protocol {
 
   private void sendCertificate(Certificate cert) {
     c.sendTo(other, cert.getID());
-    send(new BigInteger(1, cert.getData()));
+    sendBytes(cert.getData());
     send(cert.getSignature());
   }
 
   private Certificate receiveCertificate(){
     String id = c.receive();
-    BigInteger data = receive();
+    byte[] data = receiveBytes();
     BigInteger signature = receive();
 
-    return new Certificate(id, data.toByteArray(), signature);
+    return new Certificate(id, data, signature);
   }
 
   private BigInteger signature(BigInteger p, BigInteger ySelf, BigInteger yOther) {
     final BigInteger hashedKey = hashKey(p, ySelf, yOther);
     System.out.println("sig create hash = " + hashedKey.toString(16));
     BigInteger sB = hashedKey.modPow(rsaPrivate, rsaModule);
+    assert sB.modPow(rsaPublic, rsaModule).equals(hashedKey);
     return sB;
   }
+
+  private boolean verifySignature(BigInteger sig, BigInteger yOther, BigInteger ySelf, BigInteger p, BigInteger eOther, BigInteger nOther) {
+    final BigInteger hashedKey = hashKey(p, yOther, ySelf);
+    System.out.println("sig verif hash = " + hashedKey.toString(16));
+    BigInteger expectedHash = sig.modPow(eOther, nOther);
+    return expectedHash.equals(hashedKey);
+  }
+
 
   private BigInteger hashKey(BigInteger p, BigInteger ySelf, BigInteger yOther) {
     hash.reset();
@@ -254,7 +285,7 @@ public class S2SProtocol implements Protocol {
   }
 
   private BigInteger encrypt(BigInteger s, BigInteger key, CoDecIDEA cipher, byte[] initial){
-    byte[] s_ = s.toByteArray();
+    byte[] s_ = toByteArray(s);
 
     CBC blockCipher = new CBC(cipher, initial);
 
@@ -283,7 +314,7 @@ public class S2SProtocol implements Protocol {
     BigInteger mask = BigInteger.ONE.shiftLeft(128).subtract(BigInteger.ONE);
     BigInteger key_ = key.and(mask);
 
-    byte[] s_ = sBEnc.toByteArray();
+    byte[] s_ = toByteArray(sBEnc);
 
     CoDecIDEA cipher = new CoDecIDEA(toUInt16s(key_.toByteArray()));
     CBC blockCipher = new CBC(cipher, initial);
