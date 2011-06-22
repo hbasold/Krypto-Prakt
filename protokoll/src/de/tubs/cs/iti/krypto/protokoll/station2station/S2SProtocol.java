@@ -132,11 +132,12 @@ public class S2SProtocol implements Protocol {
 
     // (5)
     BigInteger sA = signature(p, yA, yB);
+    System.out.println("sA = " + sA.toString(16));
 
     // (6)
     BigInteger mask = BigInteger.ONE.shiftLeft(128).subtract(BigInteger.ONE);
     BigInteger key_ = k.and(mask);
-    CoDecIDEA cipher = new CoDecIDEA(toUInt16s(key_.toByteArray()));
+    CoDecIDEA cipher = new CoDecIDEA(toUInt16s(toByteArray(key_)));
     byte[] initial = new byte[cipher.blockSize()];
     rnd.nextBytes(initial);
     BigInteger sAEnc = encrypt(sA, k, cipher, initial);
@@ -176,7 +177,7 @@ public class S2SProtocol implements Protocol {
 
     BigInteger mask = BigInteger.ONE.shiftLeft(128).subtract(BigInteger.ONE);
     BigInteger key_ = k.and(mask);
-    CoDecIDEA cipher = new CoDecIDEA(toUInt16s(key_.toByteArray()));
+    CoDecIDEA cipher = new CoDecIDEA(toUInt16s(toByteArray(key_)));
     byte[] initial = new byte[cipher.blockSize()];
     rnd.nextBytes(initial);
     BigInteger sBEnc = encrypt(sB, k, cipher, initial);
@@ -289,7 +290,7 @@ public class S2SProtocol implements Protocol {
   private BigInteger hashKey(BigInteger p, BigInteger ySelf, BigInteger yOther) {
     hash.reset();
     BigInteger m = yOther.multiply(p).add(ySelf);
-    byte[] m_ = m.toByteArray();
+    byte[] m_ = toByteArray(m);
     int hashBlockSize = hash.inputBitLength() / 8;
     byte[] block = new byte[hashBlockSize];
     for(int i = 0; i < m_.length; i += hashBlockSize){
@@ -333,7 +334,7 @@ public class S2SProtocol implements Protocol {
 
     byte[] s_ = toByteArray(sBEnc);
 
-    CoDecIDEA cipher = new CoDecIDEA(toUInt16s(key_.toByteArray()));
+    CoDecIDEA cipher = new CoDecIDEA(toUInt16s(toByteArray(key_)));
     CBC blockCipher = new CBC(cipher, initial);
 
     byte[] block = new byte[cipher.blockSize()];
