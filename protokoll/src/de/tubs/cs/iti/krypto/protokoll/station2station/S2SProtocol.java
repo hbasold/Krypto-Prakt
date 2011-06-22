@@ -31,7 +31,6 @@ public class S2SProtocol implements Protocol {
   private BigInteger rsaPrivate;
   private BigInteger rsaPublic;
   private Certificate cert;
-  private MessageDigest md;
 
   public S2SProtocol() throws IOException {
     rnd = new Random(System.currentTimeMillis());
@@ -57,13 +56,6 @@ public class S2SProtocol implements Protocol {
 
     BigInteger certData = e.multiply(N).add(N);
     cert = TrustedAuthority.newCertificate(toByteArray(certData));
-
-    try {
-      md = MessageDigest.getInstance("SHA");
-    } catch (NoSuchAlgorithmException e1) {
-      // TODO Auto-generated catch block
-      e1.printStackTrace();
-    }
   }
 
   @Override
@@ -109,14 +101,18 @@ public class S2SProtocol implements Protocol {
     Certificate certB = receiveCertificate();
     BigInteger certSig = certB.getSignature().modPow(TrustedAuthority.getPublicExponent(), TrustedAuthority.getModulus());
 
-    byte[] certBData = eB.multiply(nB).add(nB).toByteArray();
+    byte[] certBData = toByteArray(eB.multiply(nB).add(nB));
     if(!Arrays.equals(certBData, certB.getData())){
       System.err.println("Zertifikat von B passt nicht zu übertragenem Schlüssel");
     }
-    md.reset();
-    md.update(certB.getID().getBytes());
-    md.update(certBData);
-    BigInteger certBExpectedSig = new BigInteger(md.digest());
+    BigInteger certBExpectedSig;
+    try {
+      certBExpectedSig = hashForTA(certB.getID(), certBData);
+    } catch (NoSuchAlgorithmException e) {
+      System.out.println("Could not create message digest! Exception "
+          + e.toString());
+      return;
+    }
     if(!certSig.equals(certBExpectedSig)){
       System.err.println("Zertifikat von B ungültig");
       return;
@@ -127,7 +123,7 @@ public class S2SProtocol implements Protocol {
     BigInteger sBEnc = receive();
 
     BigInteger k = yB.modPow(xA, p);
-    BigInteger sB = decrypt(sBEnc, k, nB.bitLength() / 8, initialB);
+    BigInteger sB = decrypt(sBEnc, k, (nB.bitLength() + 7) / 8, initialB);
     System.out.println("sB = " + sB.toString(16));
     if(!verifySignature(sB, yB, yA, p, eB, nB)){
       System.err.println("Signatur von B ungültig");
@@ -149,6 +145,14 @@ public class S2SProtocol implements Protocol {
     // send(yA); unnötig?
     sendBytes(initial);
     send(sAEnc);
+  }
+
+  private BigInteger hashForTA(String id, byte[] certData) throws NoSuchAlgorithmException {
+    MessageDigest md = MessageDigest.getInstance("SHA");
+    md.update(id.getBytes());
+    md.update(certData);
+    BigInteger certBExpectedSig = new BigInteger(md.digest()).mod(TrustedAuthority.getModulus());
+    return certBExpectedSig;
   }
 
   @Override
@@ -185,20 +189,30 @@ public class S2SProtocol implements Protocol {
     // (7)
     Certificate certA = receiveCertificate();
     BigInteger certSig = certA.getSignature().modPow(TrustedAuthority.getPublicExponent(), TrustedAuthority.getModulus());
-    md.reset();
-    md.update(certA.getID().getBytes());
-    md.update(eA.multiply(nA).add(nA).toByteArray());
-    if(!Arrays.equals(certSig.toByteArray(), md.digest())){
+    byte[] certAData = toByteArray(eA.multiply(nA).add(nA));
+    if(!Arrays.equals(certAData, certA.getData())){
+      System.err.println("Zertifikat von A passt nicht zu übertragenem Schlüssel");
+    }
+    BigInteger certBExpectedSig;
+    try {
+      certBExpectedSig = hashForTA(certA.getID(), certAData);
+    } catch (NoSuchAlgorithmException e) {
+      System.out.println("Could not create message digest! Exception "
+          + e.toString());
+      return;
+    }
+    if(!certSig.equals(certBExpectedSig)){
       System.err.println("Zertifikat von A ungültig");
       return;
     }
     //BigInteger yA = receive();
-    BigInteger initialA = receive();
+    byte[] initialA = receiveBytes();
     BigInteger sAEnc = receive();
 
-    BigInteger sA = decrypt(sAEnc, k, nA.bitLength() / 8, initialA.toByteArray());
+    BigInteger sA = decrypt(sAEnc, k, (nA.bitLength() + 7) / 8, initialA);
+    System.out.println("sA = " + sA.toString(16));
     if(!verifySignature(sA, yA, yB, p, eA, nA)){
-      System.err.println("Signatur von A ungültig");
+      System.err.println("Signatur von A ungültig"); //*
       return;
     }
   }
