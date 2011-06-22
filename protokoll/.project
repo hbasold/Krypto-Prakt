@@ -3,9 +3,6 @@
 	<name>Krypto Umgebung Protokoll</name>
 	<comment></comment>
 	<projects>
-		<project>03_IDEA</project>
-		<project>04_ElGamal</project>
-		<project>05_Fingerprint</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
@@ -17,4 +14,21 @@
 	<natures>
 		<nature>org.eclipse.jdt.core.javanature</nature>
 	</natures>
+	<linkedResources>
+		<link>
+			<name>03_IDEA</name>
+			<type>2</type>
+			<locationURI>PARENT-1-PROJECT_LOC/03_IDEA/src</locationURI>
+		</link>
+		<link>
+			<name>04_ElGamal</name>
+			<type>2</type>
+			<locationURI>PARENT-1-PROJECT_LOC/04_ElGamal/src</locationURI>
+		</link>
+		<link>
+			<name>05_Fingerprint</name>
+			<type>2</type>
+			<locationURI>PARENT-1-PROJECT_LOC/05_Fingerprint/src</locationURI>
+		</link>
+	</linkedResources>
 </projectDescription>
