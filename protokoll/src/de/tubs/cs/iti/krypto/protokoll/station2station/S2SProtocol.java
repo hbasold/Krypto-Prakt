@@ -41,7 +41,7 @@ public class S2SProtocol implements Protocol {
     BigInteger p = BigInteger.probablePrime(512, rnd);
     BigInteger q = BigInteger.probablePrime(512, rnd);
     BigInteger N = p.multiply(q);
-    BigInteger phiN = p.subtract(BigInteger.ONE).multiply(q.multiply(BigInteger.ONE));
+    BigInteger phiN = p.subtract(BigInteger.ONE).multiply(q.subtract(BigInteger.ONE));
     BigInteger e;
     do {
       e = BigIntegerUtil.randomBetween(BigInteger.valueOf(2), phiN, rnd);
