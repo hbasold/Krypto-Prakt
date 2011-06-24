@@ -125,7 +125,7 @@ public class S2SProtocol implements Protocol {
 
     BigInteger k = yB.modPow(xA, p);
     BigInteger sB = decrypt(sBEnc, k, (nB.bitLength() + 7) / 8, initialB);
-    System.out.println("sB = " + sB.toString(16));
+    //System.out.println("sB = " + sB.toString(16));
     if(!verifySignature(sB, yB, yA, p, eB, nB)){
       System.err.println("Signatur von B ungültig");
       return;
@@ -151,6 +151,7 @@ public class S2SProtocol implements Protocol {
     BufferedReader standardInput = new BufferedReader(new InputStreamReader(System.in));
     String message;
     try {
+      System.out.print(">");
       message = standardInput.readLine();
       while(!message.equals("quit")){
         rnd.nextBytes(initial);
@@ -198,7 +199,7 @@ public class S2SProtocol implements Protocol {
     BigInteger k = yA.modPow(xB, p);
 
     BigInteger sB = signature(p, yB, yA);
-    System.out.println("sB = " + sB.toString(16));
+    //System.out.println("sB = " + sB.toString(16));
 
     BigInteger mask = BigInteger.ONE.shiftLeft(128).subtract(BigInteger.ONE);
     BigInteger key_ = k.and(mask);
@@ -236,7 +237,7 @@ public class S2SProtocol implements Protocol {
     BigInteger sAEnc = receive();
 
     BigInteger sA = decrypt(sAEnc, k, (nA.bitLength() + 7) / 8, initialA);
-    System.out.println("sA = " + sA.toString(16));
+    //System.out.println("sA = " + sA.toString(16));
     if(!verifySignature(sA, yA, yB, p, eA, nA)){
       System.err.println("Signatur von A ungültig"); //*
       return;
@@ -298,13 +299,13 @@ public class S2SProtocol implements Protocol {
   }
 
   private void send(BigInteger p) {
-    System.out.println("Sending " + p.toString(16));
+    //System.out.println("Sending " + p.toString(16));
     c.sendTo(other, p.toString(16));
   }
 
   private BigInteger receive() {
     BigInteger p = new BigInteger(c.receive(), 16);
-    System.out.println("Received " + p.toString(16));
+    //System.out.println("Received " + p.toString(16));
     return p;
   }
 
@@ -323,16 +324,22 @@ public class S2SProtocol implements Protocol {
   }
 
   private BigInteger signature(BigInteger p, BigInteger ySelf, BigInteger yOther) {
+    BigInteger sB = signature(p, ySelf, yOther, rsaModule, rsaPrivate);
+    //assert sB.modPow(rsaPublic, rsaModule).equals(hashedKey);
+    return sB;
+  }
+
+  private BigInteger signature(BigInteger p, BigInteger ySelf, BigInteger yOther,
+      BigInteger N, BigInteger d) {
     final BigInteger hashedKey = hashKey(p, ySelf, yOther);
-    System.out.println("sig create hash = " + hashedKey.toString(16));
-    BigInteger sB = hashedKey.modPow(rsaPrivate, rsaModule);
-    assert sB.modPow(rsaPublic, rsaModule).equals(hashedKey);
+    //System.out.println("sig create hash = " + hashedKey.toString(16));
+    BigInteger sB = hashedKey.modPow(d, N);
     return sB;
   }
 
   private boolean verifySignature(BigInteger sig, BigInteger yOther, BigInteger ySelf, BigInteger p, BigInteger eOther, BigInteger nOther) {
     final BigInteger hashedKey = hashKey(p, yOther, ySelf);
-    System.out.println("sig verif hash = " + hashedKey.toString(16));
+    //System.out.println("sig verif hash = " + hashedKey.toString(16));
     BigInteger expectedHash = sig.modPow(eOther, nOther);
     return expectedHash.equals(hashedKey);
   }
