@@ -161,6 +161,10 @@ public class S2SProtocol implements Protocol {
         sendBytes(encMessage);
 
         int length = Integer.parseInt(c.receive(), 16);
+        if(length <= 0){
+          System.err.println("Ungültige Textlänge");
+          break;
+        }
         initialB = receiveBytes();
         encMessage = receiveBytes();
         byte[] m = decrypt(k, length, initialB, encMessage);
@@ -249,6 +253,10 @@ public class S2SProtocol implements Protocol {
 
       while(true){
         int length = Integer.parseInt(c.receive(), 16);
+        if(length <= 0){
+          System.err.println("Ungültige Textlänge");
+          break;
+        }
         initialA = receiveBytes();
         byte[] encMessage = receiveBytes();
         byte[] m = decrypt(k, length, initialA, encMessage);
