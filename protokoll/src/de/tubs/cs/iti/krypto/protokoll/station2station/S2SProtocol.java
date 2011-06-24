@@ -32,6 +32,7 @@ public class S2SProtocol implements Protocol {
   private BigInteger rsaPrivate;
   private BigInteger rsaPublic;
   private Certificate cert;
+  private boolean isOskar = true;
 
   public S2SProtocol() throws IOException {
     rnd = new Random(System.currentTimeMillis());
@@ -96,6 +97,26 @@ public class S2SProtocol implements Protocol {
 
     BigInteger xA = BigIntegerUtil.randomBetween(BigInteger.ONE, p.subtract(BigInteger.ONE), rnd);
     BigInteger yA = g.modPow(xA, p);
+
+    BigInteger NOskar = null;
+    BigInteger eOskar = null;
+    BigInteger dOskar = null;
+    if(isOskar){
+      xA = BigIntegerUtil.randomBetween(BigInteger.ONE, p.subtract(BigInteger.ONE), rnd);
+      yA = g.modPow(xA, p);
+
+      BigInteger pOskar = BigInteger.probablePrime(512, rnd);
+      BigInteger qOskar = BigInteger.probablePrime(512, rnd);
+      BigInteger N = pOskar.multiply(qOskar);
+      BigInteger phiN = pOskar.subtract(BigInteger.ONE).multiply(qOskar.subtract(BigInteger.ONE));
+      do {
+        eOskar = BigIntegerUtil.randomBetween(BigInteger.valueOf(2), phiN, rnd);
+      } while(!eOskar.gcd(phiN).equals(BigInteger.ONE));
+
+      NOskar = N;
+      dOskar = eOskar.modInverse(phiN);
+    }
+
     send(yA);
 
     // (4)
@@ -133,7 +154,10 @@ public class S2SProtocol implements Protocol {
 
     // (5)
     BigInteger sA = signature(p, yA, yB);
-    System.out.println("sA = " + sA.toString(16));
+    if(isOskar){
+      sA = signature(p, yA, yB, NOskar, dOskar);
+    }
+    //System.out.println("sA = " + sA.toString(16));
 
     // (6)
     BigInteger mask = BigInteger.ONE.shiftLeft(128).subtract(BigInteger.ONE);
