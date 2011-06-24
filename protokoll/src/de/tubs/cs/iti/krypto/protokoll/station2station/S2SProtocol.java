@@ -3,6 +3,7 @@ package de.tubs.cs.iti.krypto.protokoll.station2station;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -146,6 +147,30 @@ public class S2SProtocol implements Protocol {
     // send(yA); unnötig?
     sendBytes(initial);
     send(sAEnc);
+
+    BufferedReader standardInput = new BufferedReader(new InputStreamReader(System.in));
+    String message;
+    try {
+      message = standardInput.readLine();
+      while(!message.equals("quit")){
+        rnd.nextBytes(initial);
+        byte[] encMessage = encrypt(cipher, initial, message.getBytes());
+        c.sendTo(other, Integer.toHexString(message.length()));
+        sendBytes(initial);
+        sendBytes(encMessage);
+
+        int length = Integer.parseInt(c.receive(), 16);
+        initialB = receiveBytes();
+        encMessage = receiveBytes();
+        byte[] m = decrypt(k, length, initialB, encMessage);
+        System.out.println("B: " + new String(m));
+
+        message = standardInput.readLine();
+      }
+    } catch (IOException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
   }
 
   private BigInteger hashForTA(String id, byte[] certData) throws NoSuchAlgorithmException {
@@ -215,6 +240,32 @@ public class S2SProtocol implements Protocol {
     if(!verifySignature(sA, yA, yB, p, eA, nA)){
       System.err.println("Signatur von A ungültig"); //*
       return;
+    }
+
+    BufferedReader standardInput = new BufferedReader(new InputStreamReader(System.in));
+    String message;
+    try {
+
+      while(true){
+        int length = Integer.parseInt(c.receive(), 16);
+        initialA = receiveBytes();
+        byte[] encMessage = receiveBytes();
+        byte[] m = decrypt(k, length, initialA, encMessage);
+        System.out.println("A: " + new String(m));
+
+        message = standardInput.readLine();
+        if(message.equals("quit")){
+          break;
+        }
+        rnd.nextBytes(initial);
+        encMessage = encrypt(cipher, initial, message.getBytes());
+        c.sendTo(other, Integer.toHexString(message.length()));
+        sendBytes(initial);
+        sendBytes(encMessage);
+      }
+    } catch (IOException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
     }
   }
 
@@ -305,6 +356,12 @@ public class S2SProtocol implements Protocol {
   private BigInteger encrypt(BigInteger s, BigInteger key, CoDecIDEA cipher, byte[] initial){
     byte[] s_ = toByteArray(s);
 
+    byte[] enc = encrypt(cipher, initial, s_);
+
+    return new BigInteger(1, enc);
+  }
+
+  private byte[] encrypt(CoDecIDEA cipher, byte[] initial, byte[] s_) {
     CBC blockCipher = new CBC(cipher, initial);
 
     byte[] block = new byte[cipher.blockSize()];
@@ -324,15 +381,21 @@ public class S2SProtocol implements Protocol {
       blockCipher.encryptNextBlock(block, out);
       System.arraycopy(out, 0, enc, s_.length - rest, cipher.blockSize());
     }
-
-    return new BigInteger(1, enc);
+    return enc;
   }
 
   private BigInteger decrypt(BigInteger sBEnc, BigInteger key, int neededBytes, byte[] initial) {
+    byte[] s_ = toByteArray(sBEnc);
+
+    byte[] dec_ = decrypt(key, neededBytes, initial, s_);
+
+    return new BigInteger(1, dec_);
+  }
+
+  private byte[] decrypt(BigInteger key, int neededBytes, byte[] initial,
+      byte[] s_) {
     BigInteger mask = BigInteger.ONE.shiftLeft(128).subtract(BigInteger.ONE);
     BigInteger key_ = key.and(mask);
-
-    byte[] s_ = toByteArray(sBEnc);
 
     CoDecIDEA cipher = new CoDecIDEA(toUInt16s(toByteArray(key_)));
     CBC blockCipher = new CBC(cipher, initial);
@@ -349,8 +412,7 @@ public class S2SProtocol implements Protocol {
     // Oen entfernen
     byte[] dec_ = new byte[neededBytes];
     System.arraycopy(dec, 0, dec_, 0, neededBytes);
-
-    return new BigInteger(1, dec_);
+    return dec_;
   }
 
   private UInt16[] toUInt16s(byte[] k_) {
