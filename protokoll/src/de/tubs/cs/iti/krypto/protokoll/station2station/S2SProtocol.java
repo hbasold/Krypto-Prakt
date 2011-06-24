@@ -202,14 +202,6 @@ public class S2SProtocol implements Protocol {
     }
   }
 
-  private BigInteger hashForTA(String id, byte[] certData) throws NoSuchAlgorithmException {
-    MessageDigest md = MessageDigest.getInstance("SHA");
-    md.update(id.getBytes());
-    md.update(certData);
-    BigInteger certBExpectedSig = new BigInteger(md.digest()).mod(TrustedAuthority.getModulus());
-    return certBExpectedSig;
-  }
-
   @Override
   public void receiveFirst() {
     BigInteger p = receive();
@@ -353,6 +345,14 @@ public class S2SProtocol implements Protocol {
     BigInteger signature = receive();
 
     return new Certificate(id, data, signature);
+  }
+  
+  private BigInteger hashForTA(String id, byte[] certData) throws NoSuchAlgorithmException {
+    MessageDigest md = MessageDigest.getInstance("SHA");
+    md.update(id.getBytes());
+    md.update(certData);
+    BigInteger certBExpectedSig = new BigInteger(md.digest()).mod(TrustedAuthority.getModulus());
+    return certBExpectedSig;
   }
 
   private BigInteger signature(BigInteger p, BigInteger ySelf, BigInteger yOther) {
