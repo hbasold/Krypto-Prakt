@@ -17,9 +17,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.util.Random;
-
-import de.tubs.cs.iti.jcrypt.chiffre.BigIntegerUtil;
 import de.tubs.cs.iti.jcrypt.chiffre.BlockCipher;
 
 /**
@@ -49,14 +46,10 @@ public final class ElGamalCipher extends BlockCipher {
    */
   public void decipher(FileInputStream ciphertext, FileOutputStream cleartext) {
     try {
-      BigInteger pMinus1MinusX = keys.p.subtract(BigInteger.ONE).subtract(keys.x); // p-1-x
       // Die Blocklänge wird durch die ersten 8 Zeichen erkannt (interpretiert als Hex-Zahl).
       BigInteger c = readCipher(ciphertext); // Block einlesen
       while (c != null) { // solange Block vorhanden
-        BigInteger a = c.mod(keys.p);                   // a = C' mod p
-        BigInteger b = c.divide(keys.p);                // b = C' div p
-        BigInteger z = a.modPow(pMinus1MinusX, keys.p); // z = a^(p-1-x) mod p
-        BigInteger m = z.multiply(b).mod(keys.p);       // M = z*b mod p
+        BigInteger m = keys.decrypt(c);
         writeClear(cleartext, m); // entschlüsselten Block schreiben
         c = readCipher(ciphertext); // nächsten verschlüsselten Block einlesen
       }
@@ -83,17 +76,12 @@ public final class ElGamalCipher extends BlockCipher {
    * Der FileOutputStream, in den der Chiffretext geschrieben werden soll.
    */
   public void encipher(FileInputStream cleartext, FileOutputStream ciphertext) {
-    Random rnd = new Random(System.currentTimeMillis());
-    BigInteger upperBoundK = keys.p.subtract(BigInteger.ONE);
     // Anzahl der Bytes pro Block
     int blocksize = (keys.p.bitLength()-1) / 8; // Integer-Division macht Math.floor()
     try {
       BigInteger m = readClear(cleartext, blocksize); // Block einlesen
       while (m != null) { // solange Block vorhanden
-        BigInteger k = BigIntegerUtil.randomBetween(BigInteger.ONE, upperBoundK, rnd);
-        BigInteger a = keys.g.modPow(k, keys.p);                    // a =   g^k mod p
-        BigInteger b = m.multiply(keys.y.modPow(k, keys.p)).mod(keys.p); // b = M*y^k mod p
-        BigInteger c = a.add(b.multiply(keys.p));              // C'= a+b*p
+        BigInteger c = keys.encrypt(m);
         writeCipher(ciphertext, c);          // verschlüsselten Block schreiben
         m = readClear(cleartext, blocksize); // nächsten Klartext-Block einlesen
       }
