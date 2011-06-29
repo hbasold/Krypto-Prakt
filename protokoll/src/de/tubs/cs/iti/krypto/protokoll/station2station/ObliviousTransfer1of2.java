@@ -76,14 +76,18 @@ public class ObliviousTransfer1of2 implements Protocol {
       send(m[0]);
       send(m[1]);
 
-      // (4)
+      // (2)
       BigInteger q = receive();
       BigInteger k_[] = new BigInteger[2];
+      BigInteger k_Sig[] = new BigInteger[2];
+
+      // (3)
       for(int i = 0; i < 2; ++i){
         k_[i] = elGamal.decrypt(q.subtract(m[i]).mod(pSquare));
+        k_Sig[i] = elGamal.sign(k_[i]);
+        send(k_Sig[i]);
       }
 
-      // (5)
       int s = rnd.nextInt(2);
       BigInteger M_[] = new BigInteger[2];
       for (int i = 0; i < 2; i++) {
@@ -103,10 +107,11 @@ public class ObliviousTransfer1of2 implements Protocol {
     BigInteger p = receive();
     BigInteger g = receive();
     BigInteger yA = receive();
-    ElGamalKeys elGamal = new ElGamalKeys(p, g, yA);
+    ElGamalKeys elGamalA = new ElGamalKeys(p, g, yA);
 
     final BigInteger pSquare = p.multiply(p);
 
+    // (1)
     BigInteger[] m = {
       receive(),
       receive()
@@ -116,16 +121,31 @@ public class ObliviousTransfer1of2 implements Protocol {
     int r = rnd.nextInt(2);
     BigInteger k = BigIntegerUtil.randomBetween(BigInteger.ZERO, p);
 
-    // (3)
-    BigInteger q = elGamal.encrypt(k).add(m[r]).mod(pSquare);
+    BigInteger q = elGamalA.encrypt(k).add(m[r]).mod(pSquare);
     send(q);
 
-    // (6)
+    // (3)
+    BigInteger k_Sig[] = {
+        receive(),
+        receive()
+    };
+
     BigInteger M_[] = {
         receive(),
         receive()
     };
     int s = receive().intValue();
+
+    // (4)
+    BigInteger Mrs = M_[r ^ s].subtract(k).mod(p);
+    assert elGamalA.verify(M_[r ^ s].subtract(Mrs).mod(p), k_Sig[r^s]);
+
+    if(elGamalA.verify(M_[r ^ s ^ 1].subtract(Mrs).mod(p), k_Sig[r^s])){
+      System.err.println("Betrug!");
+    }
+    else{
+      System.out.println("Nachricht: " + new String(toByteArray(Mrs)));
+    }
   }
 
   private void sendBytes(byte[] data) {
