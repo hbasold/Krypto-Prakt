@@ -62,11 +62,16 @@ public class ObliviousTransfer1of2 implements Protocol {
         M[0] = new BigInteger(1, message.getBytes());
       } while(M[0].compareTo(elGamal.p) >= 0);
 
-      do{
-        System.out.print("Nachricht 2:");
-        message = standardInput.readLine();
+      if(isOskar){
         M[1] = new BigInteger(1, message.getBytes());
-      } while(M[1].compareTo(elGamal.p) >= 0);
+      }
+      else{
+        do{
+          System.out.print("Nachricht 2:");
+          message = standardInput.readLine();
+          M[1] = new BigInteger(1, message.getBytes());
+        } while(M[1].compareTo(elGamal.p) >= 0);
+      }
 
       // (1) -- Hilfsnachrichten
       BigInteger[] m = {
@@ -129,6 +134,11 @@ public class ObliviousTransfer1of2 implements Protocol {
         receive(),
         receive()
     };
+    
+    if(k_Sig[0].equals(k_Sig[1])){
+      System.err.println("Betrug! Gleiche Signaturen.");
+      return;
+    }
 
     BigInteger M_[] = {
         receive(),
@@ -138,10 +148,10 @@ public class ObliviousTransfer1of2 implements Protocol {
 
     // (4)
     BigInteger Mrs = M_[r ^ s].subtract(k).mod(p);
-    assert elGamalA.verify(M_[r ^ s].subtract(Mrs).mod(p), k_Sig[r^s]);
+    //assert elGamalA.verify(M_[r ^ s].subtract(Mrs).mod(p), k_Sig[r^s]);
 
-    if(elGamalA.verify(M_[r ^ s ^ 1].subtract(Mrs).mod(p), k_Sig[r^s])){
-      System.err.println("Betrug!");
+    if(elGamalA.verify(M_[r ^ 1].subtract(Mrs).mod(p), k_Sig[r^1])){
+      System.err.println("Betrug! Nachricht dupliziert.");
     }
     else{
       System.out.println("Nachricht: " + new String(toByteArray(Mrs)));
