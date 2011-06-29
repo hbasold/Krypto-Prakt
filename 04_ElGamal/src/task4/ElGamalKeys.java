@@ -98,4 +98,39 @@ public class ElGamalKeys {
     BigInteger m = z.multiply(b).mod(p);       // M = z*b mod p
     return m;
   }
+  
+  public BigInteger sign(BigInteger m){
+    final BigInteger pMinus1 = p.subtract(BigInteger.ONE);
+    BigInteger upperBoundK = pMinus1;
+    
+    BigInteger k;
+    do {
+      k = BigIntegerUtil.randomBetween(BigInteger.ONE, upperBoundK, rnd);
+    } while(!k.gcd(pMinus1).equals(BigInteger.ONE));
+    
+    BigInteger r = g.modPow(k, p);     // r =   g^k mod p
+    BigInteger kInv = k.modInverse(pMinus1);
+    BigInteger s = m.subtract(x.multiply(r)).multiply(kInv).mod(pMinus1);
+    BigInteger c = r.add(s.multiply(p));              // C'= a+b*p
+    
+    return c;
+  }
+  
+  public boolean verify(BigInteger m, BigInteger c){
+    final BigInteger pMinus1 = p.subtract(BigInteger.ONE);
+    
+    BigInteger r = c.mod(p);                   // a = C' mod p
+    BigInteger s = c.divide(p);                // b = C' div p
+    if(r.compareTo(BigInteger.ONE) < 0 || r.compareTo(pMinus1) > 0){
+      return false;
+    }
+    else{
+      BigInteger v1 = y.modPow(r, p).multiply(r.modPow(s, p)).mod(p);
+      BigInteger v2 = g.modPow(m, p);
+      if(!v1.equals(v2)){
+        return false;
+      }
+    }
+    return true;
+  }
 }

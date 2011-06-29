@@ -125,23 +125,12 @@ public final class ElGamalSignature extends Signature {
    * Der FileOutputStream, in den die Signatur geschrieben werden soll.
    */
   public void sign(FileInputStream cleartext, FileOutputStream ciphertext) {
-    Random rnd = new Random(System.currentTimeMillis());
-    final BigInteger pMinus1 = keys.p.subtract(BigInteger.ONE);
-    BigInteger upperBoundK = pMinus1;
     // Anzahl der Bytes pro Block
     int blocksize = (keys.p.bitLength()-1) / 8; // Integer-Division macht Math.floor()
     try {
       BigInteger m = readClear(cleartext, blocksize); // Block einlesen
       while (m != null) { // solange Block vorhanden
-        BigInteger k;
-        do {
-          k = BigIntegerUtil.randomBetween(BigInteger.ONE, upperBoundK, rnd);
-        } while(!k.gcd(pMinus1).equals(BigInteger.ONE));
-        
-        BigInteger r = keys.g.modPow(k, keys.p);     // r =   g^k mod p
-        BigInteger kInv = k.modInverse(pMinus1);
-        BigInteger s = m.subtract(keys.x.multiply(r)).multiply(kInv).mod(pMinus1);
-        BigInteger c = r.add(s.multiply(keys.p));              // C'= a+b*p
+        BigInteger c = keys.sign(m);
         writeCipher(ciphertext, c);          // verschlüsselten Block schreiben
         m = readClear(cleartext, blocksize); // nächsten Klartext-Block einlesen
       }
@@ -170,23 +159,13 @@ public final class ElGamalSignature extends Signature {
    */
   public void verify(FileInputStream ciphertext, FileInputStream cleartext) {
     try {
-      final BigInteger pMinus1 = keys.p.subtract(BigInteger.ONE);
       // Die Blocklänge wird durch die ersten 8 Zeichen erkannt (interpretiert als Hex-Zahl).
       BigInteger c = readCipher(ciphertext); // Block einlesen
       int blocksize = (keys.p.bitLength()-1) / 8; // Integer-Division macht Math.floor()
       while (c != null) { // solange Block vorhanden
         BigInteger m = readClear(cleartext, blocksize); // Block einlesen
-        BigInteger r = c.mod(keys.p);                   // a = C' mod p
-        BigInteger s = c.divide(keys.p);                // b = C' div p
-        if(r.compareTo(BigInteger.ONE) < 0 || r.compareTo(pMinus1) > 0){
+        if(!keys.verify(m, c)){
           System.err.println("Signatur für Block " + m + " nicht in Ordnung.");
-        }
-        else{
-          BigInteger v1 = keys.y.modPow(r, keys.p).multiply(r.modPow(s, keys.p)).mod(keys.p);
-          BigInteger v2 = keys.g.modPow(m, keys.p);
-          if(!v1.equals(v2)){
-            System.err.println("Signatur für Block " + m + " nicht in Ordnung.");
-          }
         }
         c = readCipher(ciphertext); // nächsten verschlüsselten Block einlesen
       }
