@@ -1,6 +1,7 @@
 package de.tubs.cs.iti.krypto.protokoll.station2station;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.math.BigInteger;
@@ -22,7 +23,7 @@ public class ObliviousTransfer1of2 implements Protocol {
   private Communicator c;
   private int other;
 
-  private boolean isOskar = true;
+  private boolean isOskar = false;
 
   public ObliviousTransfer1of2() throws IOException {
     rnd = new Random(System.currentTimeMillis());
@@ -45,7 +46,15 @@ public class ObliviousTransfer1of2 implements Protocol {
 
     // (0) -- ElGamal initialisieren und verteilen
     ElGamalKeys elGamal = new ElGamalKeys();
-    elGamal.createKeys(512);
+    try {
+      elGamal.readKeys("../protokolle/ElGamal/schluessel/key.secr", "../protokolle/ElGamal/schluessel/key.secr.public");
+    } catch (FileNotFoundException e1) {
+      // TODO Auto-generated catch block
+      e1.printStackTrace();
+    } catch (IOException e1) {
+      // TODO Auto-generated catch block
+      e1.printStackTrace();
+    }
     send(elGamal.p);
     send(elGamal.g);
     send(elGamal.y);
@@ -93,6 +102,10 @@ public class ObliviousTransfer1of2 implements Protocol {
         send(k_Sig[i]);
       }
 
+      if(isOskar){
+        k_Sig[1] = k_Sig[1].add(BigInteger.ONE);
+      }
+
       int s = rnd.nextInt(2);
       BigInteger M_[] = new BigInteger[2];
       for (int i = 0; i < 2; i++) {
@@ -134,7 +147,7 @@ public class ObliviousTransfer1of2 implements Protocol {
         receive(),
         receive()
     };
-    
+
     if(k_Sig[0].equals(k_Sig[1])){
       System.err.println("Betrug! Gleiche Signaturen.");
       return;
@@ -148,7 +161,10 @@ public class ObliviousTransfer1of2 implements Protocol {
 
     // (4)
     BigInteger Mrs = M_[r ^ s].subtract(k).mod(p);
-    //assert elGamalA.verify(M_[r ^ s].subtract(Mrs).mod(p), k_Sig[r^s]);
+    if(!( elGamalA.verify(M_[r ^ s].subtract(Mrs).mod(p), k_Sig[0])
+      || elGamalA.verify(M_[r ^ s].subtract(Mrs).mod(p), k_Sig[1]))){
+      System.err.println("Betrug! Gefälschte Signaturen.");
+    }
 
     if(elGamalA.verify(M_[r ^ 1].subtract(Mrs).mod(p), k_Sig[r^1])){
       System.err.println("Betrug! Nachricht dupliziert.");
