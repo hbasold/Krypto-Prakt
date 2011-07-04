@@ -1,4 +1,4 @@
-package de.tubs.cs.iti.krypto.protokoll.station2station;
+package de.tubs.cs.iti.krypto.protokoll.oblivious;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;

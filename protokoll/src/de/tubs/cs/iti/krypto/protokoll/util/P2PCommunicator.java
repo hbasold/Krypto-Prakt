@@ -1,4 +1,4 @@
-package de.tubs.cs.iti.krypto.protokoll.station2station;
+package de.tubs.cs.iti.krypto.protokoll.util;
 
 import java.math.BigInteger;
 import java.util.Arrays;
