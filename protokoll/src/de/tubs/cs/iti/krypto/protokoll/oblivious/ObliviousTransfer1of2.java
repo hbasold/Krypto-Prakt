@@ -5,19 +5,15 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.math.BigInteger;
-import java.util.Random;
-
 import task4.ElGamalKeys;
 import de.tubs.cs.iti.krypto.protokoll.Communicator;
 import de.tubs.cs.iti.krypto.protokoll.Protocol;
 
 public class ObliviousTransfer1of2 implements Protocol {
 
-  private ObliviousTransfer1of2Data data = new ObliviousTransfer1of2Data(true);
+  private ObliviousTransfer1of2Protocol data = new ObliviousTransfer1of2Protocol(true);
 
   public ObliviousTransfer1of2() throws IOException {
-    data.rnd = new Random(System.currentTimeMillis());
-
   }
 
   @Override
@@ -76,7 +72,7 @@ public class ObliviousTransfer1of2 implements Protocol {
 
   @Override
   public void receiveFirst() {
-    BigInteger MA = data.obliviousTransferReceive();
+    data.obliviousTransferReceive();
   }
 
   @Override

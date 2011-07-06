@@ -9,18 +9,19 @@ import de.tubs.cs.iti.jcrypt.chiffre.BigIntegerUtil;
 import de.tubs.cs.iti.krypto.protokoll.Communicator;
 import de.tubs.cs.iti.krypto.protokoll.util.P2PCommunicator;
 
-public class ObliviousTransfer1of2Data {
-  public Random rnd;
-  public P2PCommunicator comm;
+public class ObliviousTransfer1of2Protocol {
+  private Random rnd;
+  private P2PCommunicator comm;
+  public boolean isOskar;
 
   public void setComm(Communicator com) {
     this.comm = new P2PCommunicator(com);
   }
 
-  public boolean isOskar;
 
-  public ObliviousTransfer1of2Data(boolean isOskar) {
+  public ObliviousTransfer1of2Protocol(boolean isOskar) {
     this.isOskar = isOskar;
+    rnd = new Random(System.currentTimeMillis());
   }
 
   public void obliviousTransferSend(ElGamalKeys elGamal, BigInteger[] M) {
