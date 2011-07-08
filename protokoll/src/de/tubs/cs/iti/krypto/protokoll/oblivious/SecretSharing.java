@@ -13,22 +13,25 @@ import task4.ElGamalKeys;
 import de.tubs.cs.iti.jcrypt.chiffre.BigIntegerUtil;
 import de.tubs.cs.iti.krypto.protokoll.Communicator;
 import de.tubs.cs.iti.krypto.protokoll.Protocol;
+import de.tubs.cs.iti.krypto.protokoll.util.P2PCommunicator;
 
 public class SecretSharing implements Protocol {
 
   private int n = 2; // max. 10 ; Anzahl Wörter
   private int k = 3; // max. 7  : Vorteil 2^k+1 zu 2^k
-  
+
   private Random rnd = new Random(System.currentTimeMillis());
 
   private ObliviousTransfer1of2Protocol oblivious = new ObliviousTransfer1of2Protocol(true);
+  private P2PCommunicator comm;
 
   public SecretSharing() throws IOException {
   }
 
   @Override
-  public void setCommunicator(Communicator Com) {
-    oblivious.setComm(Com);
+  public void setCommunicator(Communicator com) {
+    this.comm = new P2PCommunicator(com);
+    oblivious.setComm(comm);
   }
 
   @Override

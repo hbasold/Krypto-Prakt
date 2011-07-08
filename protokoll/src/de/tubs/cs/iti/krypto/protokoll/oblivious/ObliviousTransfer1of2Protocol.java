@@ -14,8 +14,8 @@ public class ObliviousTransfer1of2Protocol {
   private P2PCommunicator comm;
   public boolean isOskar;
 
-  public void setComm(Communicator com) {
-    this.comm = new P2PCommunicator(com);
+  public void setComm(P2PCommunicator comm) {
+    this.comm = comm;
   }
 
 

@@ -8,17 +8,20 @@ import java.math.BigInteger;
 import task4.ElGamalKeys;
 import de.tubs.cs.iti.krypto.protokoll.Communicator;
 import de.tubs.cs.iti.krypto.protokoll.Protocol;
+import de.tubs.cs.iti.krypto.protokoll.util.P2PCommunicator;
 
 public class ObliviousTransfer1of2 implements Protocol {
 
   private ObliviousTransfer1of2Protocol data = new ObliviousTransfer1of2Protocol(true);
+  private P2PCommunicator comm;
 
   public ObliviousTransfer1of2() throws IOException {
   }
 
   @Override
-  public void setCommunicator(Communicator Com) {
-    data.setComm(Com);
+  public void setCommunicator(Communicator com) {
+    this.comm = new P2PCommunicator(com);
+    data.setComm(this.comm);
   }
 
   @Override
