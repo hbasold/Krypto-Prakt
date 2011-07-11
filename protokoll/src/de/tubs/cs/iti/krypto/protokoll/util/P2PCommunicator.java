@@ -55,4 +55,12 @@ public class P2PCommunicator {
     //System.out.println("Received " + p.toString(16));
     return p;
   }
+
+  public void send(Integer val) {
+    send(BigInteger.valueOf(val.longValue()));    
+  }
+  
+  public Integer receiveInt() {
+    return Integer.valueOf(receive().intValue());
+  }
 }

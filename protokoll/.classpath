@@ -10,5 +10,6 @@
 			<attribute name="javadoc_location" value="jar:platform:/resource/doc/javadoc.zip!/"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="src" path="/02_RunningKey"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

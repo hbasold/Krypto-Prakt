@@ -3,16 +3,25 @@ package de.tubs.cs.iti.krypto.protokoll.oblivious;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.ListIterator;
 import java.util.Random;
 import java.util.Vector;
 
+import task2.Pair;
 import task4.ElGamalKeys;
 import de.tubs.cs.iti.jcrypt.chiffre.BigIntegerUtil;
 import de.tubs.cs.iti.krypto.protokoll.Communicator;
 import de.tubs.cs.iti.krypto.protokoll.Protocol;
 import de.tubs.cs.iti.krypto.protokoll.util.P2PCommunicator;
+
+@SuppressWarnings("serial")
+class PairList<FIRST, SECOND> extends LinkedList<Pair<FIRST, SECOND>> {}
+
+@SuppressWarnings("serial")
+class MessagePrefixes extends PairList<Integer, BigInteger> {}
 
 public class SecretSharing implements Protocol {
 
@@ -69,124 +78,64 @@ public class SecretSharing implements Protocol {
     BigInteger MB[] = new BigInteger[n];
     for (int i = 0; i < MB.length; i++) {
       MB[i] = oblivious.obliviousTransferReceive();
+      System.out.println("Message " + i + " = " + MB[i].toString(36));
     }
 
-    Vector<Vector<LinkedList<BigInteger>>> notSendPrefixes = generate(M, k);
+    Pair<Integer, Vector<Vector<MessagePrefixes>>> generateRes = generate(M, k);
+    int secretIndex = generateRes.first;
+    Vector<Vector<MessagePrefixes>> notSendPrefixes = generateRes.second;
     notSendPrefixes = mix(notSendPrefixes);
+    
+    Vector<Vector<LinkedList<BigInteger>>> validPrefixesB = generate(n, k);
 
-    int m = 51 - k;
-    while (m >= 0) {
-
+    int m = k + 1;
+    while (m <= 52) {
+      System.out.println("A: prefixes of length " + m + "\n" + notSendPrefixes);
+      System.out.println("A: valid prefixes of length " + m + "\n" + validPrefixesB);
       int messageIndex = 0;
-      for(Vector<LinkedList<BigInteger>> mPair : notSendPrefixes){
-        for(LinkedList<BigInteger> mPref : mPair){
-          ListIterator<BigInteger> prefix = mPref.listIterator();
+      for(Vector<MessagePrefixes> mPair : notSendPrefixes){
+        int messagePairIndex = 0;
+        for(MessagePrefixes mPref : mPair){
+          ListIterator<Pair<Integer, BigInteger>> prefix = mPref.listIterator();
           for (int i = 0; i < 1<<k ; i++) {
             assert prefix.hasNext();
-            comm.send(prefix.next());
+            Pair<Integer, BigInteger> p = prefix.next();
+            if(p.first == secretIndex){
+              p = prefix.next();
+            }
+            System.out.println("A: send prefix " + i);
+            comm.send(p.first);
             prefix.remove();
 
-            BigInteger notPrefB = comm.receive();
+            System.out.println("A: recv prefix " + i);
+            Integer notPrefBIndex = comm.receiveInt();
+            validPrefixesB.get(messageIndex).get(messagePairIndex).remove(notPrefBIndex);
+            /*
             if(isPrefix(notPrefB, MB[messageIndex])){
               System.err.println("Betrug!");
             }
             else{
               // TODO: insert
             }
+            */
           }
+          ++messagePairIndex;
         }
         ++messageIndex;
       }
 
-      notSendPrefixes = extend(notSendPrefixes);
-      notSendPrefixes = mix(notSendPrefixes);
-      --m;
-    }
-  }
-
-
-
-  private boolean isPrefix(BigInteger notPrefB, BigInteger bigInteger) {
-    // TODO Auto-generated method stub
-    return false;
-  }
-
-  private Vector<Vector<LinkedList<BigInteger>>> extend(
-      Vector<Vector<LinkedList<BigInteger>>> prefixes) {
-
-    for(Vector<LinkedList<BigInteger>> mPair : prefixes){
-      for(LinkedList<BigInteger> mPref : mPair){
-        ListIterator<BigInteger> prefix = mPref.listIterator(mPref.size() - 1);
-        while(prefix.hasPrevious()){
-          BigInteger current = prefix.previous();
-          mPref.add(current.shiftLeft(1));
-          mPref.add(current.shiftLeft(1).setBit(0));
-          prefix.remove();
-        }
+      ++m;
+      if(m <= 52){
+        generateRes = extend(M, m, notSendPrefixes);
+        secretIndex = generateRes.first;
+        notSendPrefixes = generateRes.second;
+        notSendPrefixes = mix(notSendPrefixes);
+        
+        validPrefixesB = extendValid(validPrefixesB);
       }
     }
-
-    return prefixes;
   }
-
-  private Vector<Vector<LinkedList<BigInteger>>> mix(
-      Vector<Vector<LinkedList<BigInteger>>> prefixes) {
-
-    for(Vector<LinkedList<BigInteger>> mPair : prefixes){
-      for(LinkedList<BigInteger> mPref : mPair){
-        ListIterator<BigInteger> prefix = mPref.listIterator();
-        while(prefix.hasNext()){
-          BigInteger current = prefix.next();
-          int destIndex = rnd.nextInt(mPref.size());
-          ListIterator<BigInteger> dest = mPref.listIterator(destIndex);
-          assert dest.hasNext();
-          BigInteger target = dest.next();
-          dest.set(current);
-          prefix.set(target);
-        }
-      }
-    }
-
-    return prefixes;
-
-  }
-
-  private Vector<Vector<LinkedList<BigInteger>>> generate(BigInteger[][] ms, int k) {
-    Vector<Vector<LinkedList<BigInteger>>> validPrefixes = new Vector<Vector<LinkedList<BigInteger>>>();
-
-    for(BigInteger mPair[] : ms){
-      Vector<LinkedList<BigInteger>> mPairPref = new Vector<LinkedList<BigInteger>>();
-      validPrefixes.add(mPairPref);
-      for(BigInteger m : mPair){
-        LinkedList<BigInteger> mPref = new LinkedList<BigInteger>();
-        mPairPref.add(mPref);
-        BigInteger b = subRange(m, 51, 51 - k - 1);
-        BigInteger current = BigInteger.ZERO;
-        BigInteger end = BigInteger.ONE.shiftLeft(k + 1); // generiere aus [0, 2^(k+1)[
-        while(current.compareTo(end) < 0){
-          if(!current.equals(b)){
-            mPref.add(current);
-          }
-          current = current.add(BigInteger.ONE);
-        }
-      }
-    }
-
-      return validPrefixes;
-  }
-
-  /**
-   *
-   * @param b
-   * @param begin left / high bit position
-   * @param end   right / low bit position
-   * @return
-   */
-  private BigInteger subRange(BigInteger b, int begin, int end) {
-    assert begin>=end;
-    return b.shiftRight(end).and(BigInteger.ONE.shiftLeft(begin-end).subtract(BigInteger.ONE));
-  }
-
+  
   @Override
   public void receiveFirst() {
 
@@ -212,12 +161,206 @@ public class SecretSharing implements Protocol {
     BigInteger MA[] = new BigInteger[n];
     for (int i = 0; i < MA.length; i++) {
       MA[i] = oblivious.obliviousTransferReceive();
+      System.out.println("Message " + i + " = " + MA[i].toString(36));
     }
 
     for (BigInteger[] message : M) {
       oblivious.obliviousTransferSend(elGamal, message);
     }
+    
+    Pair<Integer, Vector<Vector<MessagePrefixes>>> generateRes = generate(M, k);
+    int secretIndex = generateRes.first;
+    Vector<Vector<MessagePrefixes>> notSendPrefixes = generateRes.second;
+    notSendPrefixes = mix(notSendPrefixes);
+    
+    Vector<Vector<LinkedList<BigInteger>>> validPrefixesA = generate(n, k);
 
+    int m = k + 1;
+    while (m <= 52) {
+      System.out.println("B: prefixes of length " + m + "\n" + notSendPrefixes);
+      System.out.println("B: valid prefixes of length " + m + "\n" + validPrefixesA);
+      
+      int messageIndex = 0;
+      for(Vector<MessagePrefixes> mPair : notSendPrefixes){
+        int messagePairIndex = 0;
+        for(MessagePrefixes mPref : mPair){
+          ListIterator<Pair<Integer, BigInteger>> prefix = mPref.listIterator();
+          for (int i = 0; i < 1<<k ; i++) {
+            System.out.println("B: recv prefix " + i);
+            Integer notPrefBIndex = comm.receiveInt();
+            validPrefixesA.get(messageIndex).get(messagePairIndex).remove(notPrefBIndex);
+            
+            assert prefix.hasNext();
+            Pair<Integer, BigInteger> p = prefix.next();
+            if(p.first == secretIndex){
+              p = prefix.next();
+            }
+            System.out.println("B: sending prefix " + i);
+            comm.send(p.first);
+            prefix.remove();
+            
+            /*
+            if(isPrefix(notPrefB, MB[messageIndex])){
+              System.err.println("Betrug!");
+            }
+            else{
+              // TODO: insert
+            }
+            */
+          }
+          ++messagePairIndex;
+        }
+        ++messageIndex;
+      }
+
+      ++m;
+      if(m <= 52){
+        generateRes = extend(M, m, notSendPrefixes);
+        secretIndex = generateRes.first;
+        notSendPrefixes = generateRes.second;
+        notSendPrefixes = mix(notSendPrefixes);
+        
+        validPrefixesA = extendValid(validPrefixesA);
+      }
+      
+    }
+
+  }
+
+
+  private Vector<Vector<LinkedList<BigInteger>>> extendValid(
+      Vector<Vector<LinkedList<BigInteger>>> validPrefixesOther) {
+    
+    for(Vector<LinkedList<BigInteger>> mPair : validPrefixesOther){
+      for(LinkedList<BigInteger> mPref : mPair){
+        LinkedList<BigInteger> mPrefNew = new LinkedList<BigInteger>();
+        for(BigInteger prefix : mPref){
+          assert prefix.bitLength() <= 52;
+          mPrefNew.add(prefix.shiftLeft(1));
+          mPrefNew.add(prefix.shiftLeft(1).setBit(0));
+        }
+        mPref.clear();
+        mPref.addAll(mPrefNew);
+      }
+    }
+
+    return validPrefixesOther;
+  }
+
+  private boolean isPrefix(BigInteger notPrefB, BigInteger bigInteger) {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  private Pair<Integer, Vector<Vector<MessagePrefixes>>> extend(
+      BigInteger[][] ms, int m, Vector<Vector<MessagePrefixes>> notSendPrefixes) {
+    
+    int secretIndex = 0;
+
+    int messageIndex = 0;
+    for(Vector<MessagePrefixes> mPair : notSendPrefixes){
+      int messagePairIndex = 0;
+      for(MessagePrefixes mPref : mPair){
+        Collections.sort(mPref); // Pair hat lexikographische Ordung, Indizes sind aber immer unterschiedlich.
+        
+        ListIterator<Pair<Integer, BigInteger>> prefix = mPref.listIterator();
+        MessagePrefixes mPrefNew = new MessagePrefixes();
+        int index = 0;
+        while(prefix.hasNext()){
+          BigInteger b = subRange(ms[messageIndex][messagePairIndex], 51, 51 - m - 1);
+          Pair<Integer, BigInteger> currentNew = Pair.of(index, prefix.next().second.shiftLeft(1).setBit(0)); // Beware: tricky bit hacks!
+          for(int j = 0; j < 2; ++j){
+            currentNew = Pair.of(index, currentNew.second.flipBit(0));
+            if(currentNew.equals(b)){
+              secretIndex = index;
+            }
+            mPrefNew.add(currentNew);
+            ++index;
+          }          
+        }
+        mPref.clear();
+        mPref.addAll(mPrefNew);
+        
+        assert mPref.size() == (1 << (k + 1));
+        
+        ++messagePairIndex;
+      }
+      ++messageIndex;
+    }
+
+    return Pair.of(secretIndex, notSendPrefixes);
+  }
+
+  private Vector<Vector<MessagePrefixes>> mix(
+      Vector<Vector<MessagePrefixes>> notSendPrefixes) {
+
+    for(Vector<MessagePrefixes> mPair : notSendPrefixes){
+      for(MessagePrefixes mPref : mPair){
+        Collections.shuffle(mPref, rnd);
+      }
+    }
+
+    return notSendPrefixes;
+  }
+
+  private Pair<Integer, Vector<Vector<MessagePrefixes>>> generate(BigInteger[][] ms, int k) {
+    Vector<Vector<MessagePrefixes>> validPrefixes = new Vector<Vector<MessagePrefixes>>();
+    int secretIndex = 0;
+    
+    for(BigInteger mPair[] : ms){
+      Vector<MessagePrefixes> mPairPref = new Vector<MessagePrefixes>();
+      validPrefixes.add(mPairPref);
+      for(BigInteger m : mPair){
+        MessagePrefixes mPref = new MessagePrefixes();
+        mPairPref.add(mPref);
+        BigInteger b = subRange(m, 51, 51 - k - 1);
+        BigInteger current = BigInteger.ZERO;
+        BigInteger end = BigInteger.ONE.shiftLeft(k + 1); // generiere aus [0, 2^(k+1)[
+        int index = 0;
+        while(current.compareTo(end) < 0){
+          if(current.equals(b)){
+            secretIndex = index;
+          }
+          mPref.add(Pair.of(Integer.valueOf(index), current));
+          current = current.add(BigInteger.ONE);
+          ++index;
+        }
+        
+        assert mPref.size() == (1 << (k + 1));
+      }
+    }
+    
+    return Pair.of(secretIndex, validPrefixes);
+  }
+  
+  private Vector<Vector<LinkedList<BigInteger>>> generate(int n, int k) {
+    Vector<Vector<LinkedList<BigInteger>>> validPrefixes = new Vector<Vector<LinkedList<BigInteger>>>();
+    
+    LinkedList<BigInteger> prefixes = new LinkedList<BigInteger>();
+    for(int i = 0; i < (1 << (k+1)); ++i){
+      prefixes.add(BigInteger.valueOf(i));
+    }
+    
+    for(int i = 0; i < n; ++i){
+      Vector<LinkedList<BigInteger>> messagePair = new Vector<LinkedList<BigInteger>>();
+      validPrefixes.add(messagePair);
+      for(int j = 0; j < 2; ++j){
+        messagePair.add(new LinkedList<BigInteger>(prefixes));
+      }
+    }
+    return validPrefixes;
+  }
+
+  /**
+   *
+   * @param b
+   * @param begin left / high bit position
+   * @param end   right / low bit position
+   * @return
+   */
+  private BigInteger subRange(BigInteger b, int begin, int end) {
+    assert begin>=end;
+    return b.shiftRight(end).and(BigInteger.ONE.shiftLeft(begin-end).subtract(BigInteger.ONE));
   }
 
   @Override
