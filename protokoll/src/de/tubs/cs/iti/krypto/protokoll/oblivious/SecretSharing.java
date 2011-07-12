@@ -25,19 +25,19 @@ class MessagePrefixes extends PairList<Integer, BigInteger> {}
 
 public class SecretSharing implements Protocol {
 
-  // 36; Basis, als Anzahl verschiedener Buchstaben
+  // Basis = Anzahl der Buchstaben im Alphabet; 36 default
   private final static int BASE = 36;
   
-  // max. 10; Anzahl der Buchstaben aus dem Alphabet (0,1,...,9,a,...,z) pro Wort (Wortlänge)
+  // Anzahl der Buchstaben pro Wort (Wortlänge) über Alphabet mit BASE Zeichen; max. 10
   private final static int LETTERS = 10;
 
-  // max. 36^10; maximale Anzahl verschiedener Nachrichten
+  // maximale Anzahl verschiedener Nachrichten; max. 36^10
   private final static BigInteger MAX_MESSAGE_NUMBER = BigInteger.valueOf(BASE).pow(LETTERS);
 
-  // Anzahl der Bits pro Wort in Abhängigkeit von letters; letters=10 => bits=52
+  // Anzahl der Bits pro Wort in Abhängigkeit von letters; LETTERS=10 => BITS=52
   private final static int BITS = (int) Math.floor(LETTERS * Math.log(BASE) / Math.log(2));
 
-  // max. 7; Vorteil 2^k+1 zu 2^k
+  // Vorteil 2^k+1 zu 2^k; max. 7
   private final static int k = 3;
 
   // max. 10 ; Anzahl Geheimnispaare (Paare von Wörtern)
