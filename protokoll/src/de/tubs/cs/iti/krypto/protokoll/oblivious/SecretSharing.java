@@ -25,8 +25,23 @@ class MessagePrefixes extends PairList<Integer, BigInteger> {}
 
 public class SecretSharing implements Protocol {
 
-  private int n = 2; // max. 10 ; Anzahl Wörter
-  private int k = 3; // max. 7  : Vorteil 2^k+1 zu 2^k
+  // 36; Basis, als Anzahl verschiedener Buchstaben
+  private final static int BASE = 36;
+  
+  // max. 10; Anzahl der Buchstaben aus dem Alphabet (0,1,...,9,a,...,z) pro Wort (Wortlänge)
+  private final static int LETTERS = 10;
+
+  // max. 36^10; maximale Anzahl verschiedener Nachrichten
+  private final static BigInteger MAX_MESSAGE_NUMBER = BigInteger.valueOf(BASE).pow(LETTERS);
+
+  // Anzahl der Bits pro Wort in Abhängigkeit von letters; letters=10 => bits=52
+  private final static int BITS = (int) Math.floor(LETTERS * Math.log(BASE) / Math.log(2));
+
+  // max. 7; Vorteil 2^k+1 zu 2^k
+  private final static int k = 3;
+
+  // max. 10 ; Anzahl Geheimnispaare (Paare von Wörtern)
+  private final int n = 2;
 
   private Random rnd = new Random(System.currentTimeMillis());
 
@@ -53,7 +68,6 @@ public class SecretSharing implements Protocol {
 //    BufferedReader standardInput = new BufferedReader(new InputStreamReader(System.in));
 
     BigInteger M[][] = new BigInteger[n][2];
-    BigInteger MAX_MESSAGE_NUMBER = new BigInteger("zzzzzzzzzz", 36);
     for (int i=0; i<n; i++) {
       M[i][0] = BigIntegerUtil.randomSmallerThan(MAX_MESSAGE_NUMBER, rnd);
       M[i][1] = BigIntegerUtil.randomSmallerThan(MAX_MESSAGE_NUMBER, rnd);
@@ -78,7 +92,7 @@ public class SecretSharing implements Protocol {
     BigInteger MB[] = new BigInteger[n];
     for (int i = 0; i < MB.length; i++) {
       MB[i] = oblivious.obliviousTransferReceive();
-      System.out.println("Message " + i + " = " + MB[i].toString(36));
+      System.out.println("Message " + i + " = " + MB[i].toString(BASE));
     }
 
     Pair<Integer, Vector<Vector<MessagePrefixes>>> generateRes = generate(M, k);
@@ -89,7 +103,7 @@ public class SecretSharing implements Protocol {
     Vector<Vector<LinkedList<BigInteger>>> validPrefixesB = generate(n, k);
 
     int m = k + 1;
-    while (m <= 52) {
+    while (m <= BITS) {
       System.out.println("A: prefixes of length " + m + "\n" + notSendPrefixes);
       System.out.println("A: valid prefixes of length " + m + "\n" + validPrefixesB);
       int messageIndex = 0;
@@ -125,7 +139,7 @@ public class SecretSharing implements Protocol {
       }
 
       ++m;
-      if(m <= 52){
+      if(m <= BITS){
         generateRes = extend(M, m, notSendPrefixes);
         secretIndex = generateRes.first;
         notSendPrefixes = generateRes.second;
@@ -140,7 +154,6 @@ public class SecretSharing implements Protocol {
   public void receiveFirst() {
 
     BigInteger M[][] = new BigInteger[n][2];
-    BigInteger MAX_MESSAGE_NUMBER = new BigInteger("zzzzzzzzzz", 36);
     for (int i=0; i<n; i++) {
       M[i][0] = BigIntegerUtil.randomSmallerThan(MAX_MESSAGE_NUMBER, rnd);
       M[i][1] = BigIntegerUtil.randomSmallerThan(MAX_MESSAGE_NUMBER, rnd);
@@ -161,7 +174,7 @@ public class SecretSharing implements Protocol {
     BigInteger MA[] = new BigInteger[n];
     for (int i = 0; i < MA.length; i++) {
       MA[i] = oblivious.obliviousTransferReceive();
-      System.out.println("Message " + i + " = " + MA[i].toString(36));
+      System.out.println("Message " + i + " = " + MA[i].toString(BASE));
     }
 
     for (BigInteger[] message : M) {
@@ -176,7 +189,7 @@ public class SecretSharing implements Protocol {
     Vector<Vector<LinkedList<BigInteger>>> validPrefixesA = generate(n, k);
 
     int m = k + 1;
-    while (m <= 52) {
+    while (m <= BITS) {
       System.out.println("B: prefixes of length " + m + "\n" + notSendPrefixes);
       System.out.println("B: valid prefixes of length " + m + "\n" + validPrefixesA);
       
@@ -214,7 +227,7 @@ public class SecretSharing implements Protocol {
       }
 
       ++m;
-      if(m <= 52){
+      if(m <= BITS){
         generateRes = extend(M, m, notSendPrefixes);
         secretIndex = generateRes.first;
         notSendPrefixes = generateRes.second;
@@ -235,7 +248,7 @@ public class SecretSharing implements Protocol {
       for(LinkedList<BigInteger> mPref : mPair){
         LinkedList<BigInteger> mPrefNew = new LinkedList<BigInteger>();
         for(BigInteger prefix : mPref){
-          assert prefix.bitLength() <= 52;
+          assert prefix.bitLength() <= BITS;
           mPrefNew.add(prefix.shiftLeft(1));
           mPrefNew.add(prefix.shiftLeft(1).setBit(0));
         }
@@ -267,7 +280,7 @@ public class SecretSharing implements Protocol {
         MessagePrefixes mPrefNew = new MessagePrefixes();
         int index = 0;
         while(prefix.hasNext()){
-          BigInteger b = subRange(ms[messageIndex][messagePairIndex], 51, 51 - m - 1);
+          BigInteger b = subRange(ms[messageIndex][messagePairIndex], BITS-1, (BITS-1) - m - 1);
           Pair<Integer, BigInteger> currentNew = Pair.of(index, prefix.next().second.shiftLeft(1).setBit(0)); // Beware: tricky bit hacks!
           for(int j = 0; j < 2; ++j){
             currentNew = Pair.of(index, currentNew.second.flipBit(0));
@@ -313,7 +326,7 @@ public class SecretSharing implements Protocol {
       for(BigInteger m : mPair){
         MessagePrefixes mPref = new MessagePrefixes();
         mPairPref.add(mPref);
-        BigInteger b = subRange(m, 51, 51 - k - 1);
+        BigInteger b = subRange(m, BITS-1, (BITS-1) - k - 1);
         BigInteger current = BigInteger.ZERO;
         BigInteger end = BigInteger.ONE.shiftLeft(k + 1); // generiere aus [0, 2^(k+1)[
         int index = 0;
