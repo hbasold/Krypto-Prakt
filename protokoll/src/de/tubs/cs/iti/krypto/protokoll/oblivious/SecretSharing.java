@@ -143,6 +143,9 @@ public class SecretSharing implements Protocol {
             prefix.remove();
 
             Integer notPrefBIndex = comm.receiveInt();
+            if(!validPrefixesB.get(messageIndex).get(messagePairIndex).containsKey(notPrefBIndex)){
+              System.err.println("Betrug: Index mehrfach erhalten!");
+            }
             validPrefixesB.get(messageIndex).get(messagePairIndex).remove(notPrefBIndex);
           }
           assert (m == BITS+1) ? true : prefixExists(subRange(M[messageIndex][messagePairIndex], BITS-1, (BITS-1) - m + 1), mPref);
@@ -228,6 +231,9 @@ public class SecretSharing implements Protocol {
           int upperBound = (m == BITS+1) ? ((1<<k)-1) : (1<<k);
           for (int i = 0; i < upperBound; i++) {
             Integer notPrefBIndex = comm.receiveInt();
+            if(!validPrefixesA.get(messageIndex).get(messagePairIndex).containsKey(notPrefBIndex)){
+              System.err.println("Betrug: Index mehrfach erhalten!");
+            }
             validPrefixesA.get(messageIndex).get(messagePairIndex).remove(notPrefBIndex);
 
             assert prefix.hasNext();
