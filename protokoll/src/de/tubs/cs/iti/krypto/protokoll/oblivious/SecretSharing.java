@@ -4,7 +4,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.ListIterator;
 import java.util.Random;
@@ -26,10 +25,10 @@ class MessagePrefixes extends PairList<Integer, BigInteger> {}
 public class SecretSharing implements Protocol {
 
   // Basis = Anzahl der Buchstaben im Alphabet; 36 default
-  private final static int BASE = 36;
+  private final static int BASE = 16; // 36
   
   // Anzahl der Buchstaben pro Wort (Wortlänge) über Alphabet mit BASE Zeichen; max. 10
-  private final static int LETTERS = 10;
+  private final static int LETTERS = 4; // 10
 
   // maximale Anzahl verschiedener Nachrichten; max. 36^10
   private final static BigInteger MAX_MESSAGE_NUMBER = BigInteger.valueOf(BASE).pow(LETTERS);
@@ -38,7 +37,7 @@ public class SecretSharing implements Protocol {
   private final static int BITS = (int) Math.floor(LETTERS * Math.log(BASE) / Math.log(2));
 
   // Vorteil 2^k+1 zu 2^k; max. 7
-  private final static int k = 3;
+  private final static int k = 3; // 7
 
   // max. 10 ; Anzahl Geheimnispaare (Paare von Wörtern)
   private final int n = 2;
@@ -71,6 +70,8 @@ public class SecretSharing implements Protocol {
     for (int i=0; i<n; i++) {
       M[i][0] = BigIntegerUtil.randomSmallerThan(MAX_MESSAGE_NUMBER, rnd);
       M[i][1] = BigIntegerUtil.randomSmallerThan(MAX_MESSAGE_NUMBER, rnd);
+      System.out.println("A: Message " + i + " [0] = " + M[i][0].toString(BASE));
+      System.out.println("A: Message " + i + " [1] = " + M[i][1].toString(BASE));
     }
 
     // (0) -- ElGamal initialisieren
@@ -92,20 +93,22 @@ public class SecretSharing implements Protocol {
     BigInteger MB[] = new BigInteger[n];
     for (int i = 0; i < MB.length; i++) {
       MB[i] = oblivious.obliviousTransferReceive();
-      System.out.println("Message " + i + " = " + MB[i].toString(BASE));
+      System.out.println("A: Recv Message " + i + " = " + MB[i].toString(BASE));
     }
 
     Pair<Integer, Vector<Vector<MessagePrefixes>>> generateRes = generate(M, k);
     int secretIndex = generateRes.first;
     Vector<Vector<MessagePrefixes>> notSendPrefixes = generateRes.second;
+    System.out.println("A: notSendPrefixes (generated)" + "\n" + notSendPrefixes);
     notSendPrefixes = mix(notSendPrefixes);
+    System.out.println("A: notSendPrefixes (mixed)" + "\n" + notSendPrefixes);
     
     Vector<Vector<LinkedList<BigInteger>>> validPrefixesB = generate(n, k);
 
     int m = k + 1;
     while (m <= BITS) {
       System.out.println("A: prefixes of length " + m + "\n" + notSendPrefixes);
-      System.out.println("A: valid prefixes of length " + m + "\n" + validPrefixesB);
+      System.out.println("A: valid prefixes B of length " + m + "\n" + validPrefixesB);
       int messageIndex = 0;
       for(Vector<MessagePrefixes> mPair : notSendPrefixes){
         int messagePairIndex = 0;
@@ -117,12 +120,12 @@ public class SecretSharing implements Protocol {
             if(p.first == secretIndex){
               p = prefix.next();
             }
-            System.out.println("A: send prefix " + i);
+            System.out.println("A: send prefix " + i + ": " + p.first);
             comm.send(p.first);
             prefix.remove();
 
-            System.out.println("A: recv prefix " + i);
             Integer notPrefBIndex = comm.receiveInt();
+            System.out.println("A: recv prefix " + i + ": " + notPrefBIndex);
             validPrefixesB.get(messageIndex).get(messagePairIndex).remove(notPrefBIndex);
             /*
             if(isPrefix(notPrefB, MB[messageIndex])){
@@ -157,6 +160,8 @@ public class SecretSharing implements Protocol {
     for (int i=0; i<n; i++) {
       M[i][0] = BigIntegerUtil.randomSmallerThan(MAX_MESSAGE_NUMBER, rnd);
       M[i][1] = BigIntegerUtil.randomSmallerThan(MAX_MESSAGE_NUMBER, rnd);
+      System.out.println("B: Message " + i + " [0] = " + M[i][0].toString(BASE));
+      System.out.println("B: Message " + i + " [1] = " + M[i][1].toString(BASE));
     }
 
     // (0) -- ElGamal initialisieren
@@ -174,7 +179,7 @@ public class SecretSharing implements Protocol {
     BigInteger MA[] = new BigInteger[n];
     for (int i = 0; i < MA.length; i++) {
       MA[i] = oblivious.obliviousTransferReceive();
-      System.out.println("Message " + i + " = " + MA[i].toString(BASE));
+      System.out.println("B: Recv Message " + i + " = " + MA[i].toString(BASE));
     }
 
     for (BigInteger[] message : M) {
@@ -184,14 +189,16 @@ public class SecretSharing implements Protocol {
     Pair<Integer, Vector<Vector<MessagePrefixes>>> generateRes = generate(M, k);
     int secretIndex = generateRes.first;
     Vector<Vector<MessagePrefixes>> notSendPrefixes = generateRes.second;
+    System.out.println("B: notSendPrefixes (generated)" + "\n" + notSendPrefixes);
     notSendPrefixes = mix(notSendPrefixes);
+    System.out.println("B: notSendPrefixes (mixed)" + "\n" + notSendPrefixes);
     
     Vector<Vector<LinkedList<BigInteger>>> validPrefixesA = generate(n, k);
 
     int m = k + 1;
     while (m <= BITS) {
-      System.out.println("B: prefixes of length " + m + "\n" + notSendPrefixes);
-      System.out.println("B: valid prefixes of length " + m + "\n" + validPrefixesA);
+      System.out.println("B: notSendPrefixes of length " + m + "\n" + notSendPrefixes);
+      System.out.println("B: valid prefixes A of length " + m + "\n" + validPrefixesA);
       
       int messageIndex = 0;
       for(Vector<MessagePrefixes> mPair : notSendPrefixes){
@@ -199,8 +206,8 @@ public class SecretSharing implements Protocol {
         for(MessagePrefixes mPref : mPair){
           ListIterator<Pair<Integer, BigInteger>> prefix = mPref.listIterator();
           for (int i = 0; i < 1<<k ; i++) {
-            System.out.println("B: recv prefix " + i);
             Integer notPrefBIndex = comm.receiveInt();
+            System.out.println("B: recv prefix " + i + ": " + notPrefBIndex);
             validPrefixesA.get(messageIndex).get(messagePairIndex).remove(notPrefBIndex);
             
             assert prefix.hasNext();
@@ -208,7 +215,7 @@ public class SecretSharing implements Protocol {
             if(p.first == secretIndex){
               p = prefix.next();
             }
-            System.out.println("B: sending prefix " + i);
+            System.out.println("B: sending prefix " + i + ": " + p.first);
             comm.send(p.first);
             prefix.remove();
             
