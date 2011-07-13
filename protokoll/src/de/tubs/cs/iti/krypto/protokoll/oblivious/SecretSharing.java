@@ -124,9 +124,9 @@ public class SecretSharing implements Protocol {
             comm.send(p.first);
             prefix.remove();
 
-            Integer notPrefBIndex = comm.receiveInt();
-            System.out.println("A: recv prefix " + i + ": " + notPrefBIndex);
+            BigInteger notPrefBIndex = BigInteger.valueOf(comm.receiveInt());
             validPrefixesB.get(messageIndex).get(messagePairIndex).remove(notPrefBIndex);
+
             /*
             if(isPrefix(notPrefB, MB[messageIndex])){
               System.err.println("Betrug!");
@@ -206,7 +206,7 @@ public class SecretSharing implements Protocol {
         for(MessagePrefixes mPref : mPair){
           ListIterator<Pair<Integer, BigInteger>> prefix = mPref.listIterator();
           for (int i = 0; i < 1<<k ; i++) {
-            Integer notPrefBIndex = comm.receiveInt();
+            BigInteger notPrefBIndex = BigInteger.valueOf(comm.receiveInt());
             System.out.println("B: recv prefix " + i + ": " + notPrefBIndex);
             validPrefixesA.get(messageIndex).get(messagePairIndex).remove(notPrefBIndex);
             
