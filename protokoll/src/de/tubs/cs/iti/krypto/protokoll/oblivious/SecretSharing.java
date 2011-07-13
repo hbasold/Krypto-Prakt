@@ -4,6 +4,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Collections;
+import java.util.TreeMap;
 import java.util.LinkedList;
 import java.util.ListIterator;
 import java.util.Random;
@@ -103,7 +104,7 @@ public class SecretSharing implements Protocol {
     notSendPrefixes = mix(notSendPrefixes);
     System.out.println("A: notSendPrefixes (mixed)" + "\n" + notSendPrefixes);
     
-    Vector<Vector<LinkedList<BigInteger>>> validPrefixesB = generate(n, k);
+    Vector<Vector<TreeMap<Integer, BigInteger>>> validPrefixesB = generate(n, k);
 
     int m = k + 1;
     while (m <= BITS) {
@@ -124,7 +125,7 @@ public class SecretSharing implements Protocol {
             comm.send(p.first);
             prefix.remove();
 
-            BigInteger notPrefBIndex = BigInteger.valueOf(comm.receiveInt());
+            Integer notPrefBIndex = comm.receiveInt();
             validPrefixesB.get(messageIndex).get(messagePairIndex).remove(notPrefBIndex);
 
             /*
@@ -193,7 +194,7 @@ public class SecretSharing implements Protocol {
     notSendPrefixes = mix(notSendPrefixes);
     System.out.println("B: notSendPrefixes (mixed)" + "\n" + notSendPrefixes);
     
-    Vector<Vector<LinkedList<BigInteger>>> validPrefixesA = generate(n, k);
+    Vector<Vector<TreeMap<Integer, BigInteger>>> validPrefixesA = generate(n, k);
 
     int m = k + 1;
     while (m <= BITS) {
@@ -206,7 +207,7 @@ public class SecretSharing implements Protocol {
         for(MessagePrefixes mPref : mPair){
           ListIterator<Pair<Integer, BigInteger>> prefix = mPref.listIterator();
           for (int i = 0; i < 1<<k ; i++) {
-            BigInteger notPrefBIndex = BigInteger.valueOf(comm.receiveInt());
+            Integer notPrefBIndex = comm.receiveInt();
             System.out.println("B: recv prefix " + i + ": " + notPrefBIndex);
             validPrefixesA.get(messageIndex).get(messagePairIndex).remove(notPrefBIndex);
             
@@ -248,23 +249,26 @@ public class SecretSharing implements Protocol {
   }
 
 
-  private Vector<Vector<LinkedList<BigInteger>>> extendValid(
-      Vector<Vector<LinkedList<BigInteger>>> validPrefixesOther) {
+  private Vector<Vector<TreeMap<Integer, BigInteger>>> extendValid(
+      Vector<Vector<TreeMap<Integer, BigInteger>>> validPrefixesB) {
     
-    for(Vector<LinkedList<BigInteger>> mPair : validPrefixesOther){
-      for(LinkedList<BigInteger> mPref : mPair){
-        LinkedList<BigInteger> mPrefNew = new LinkedList<BigInteger>();
-        for(BigInteger prefix : mPref){
+    for(Vector<TreeMap<Integer, BigInteger>> mPair : validPrefixesB){
+      for(TreeMap<Integer, BigInteger> mPref : mPair){
+        TreeMap<Integer, BigInteger> mPrefNew = new TreeMap<Integer, BigInteger>();
+        int index = 0;
+        for(BigInteger prefix : mPref.values()){
           assert prefix.bitLength() <= BITS;
-          mPrefNew.add(prefix.shiftLeft(1));
-          mPrefNew.add(prefix.shiftLeft(1).setBit(0));
+          mPrefNew.put(index, prefix.shiftLeft(1));
+          index++;
+          mPrefNew.put(index, prefix.shiftLeft(1).setBit(0));
+          index++;
         }
         mPref.clear();
-        mPref.addAll(mPrefNew);
+        mPref.putAll(mPrefNew);
       }
     }
 
-    return validPrefixesOther;
+    return validPrefixesB;
   }
 
   private boolean isPrefix(BigInteger notPrefB, BigInteger bigInteger) {
@@ -353,19 +357,19 @@ public class SecretSharing implements Protocol {
     return Pair.of(secretIndex, validPrefixes);
   }
   
-  private Vector<Vector<LinkedList<BigInteger>>> generate(int n, int k) {
-    Vector<Vector<LinkedList<BigInteger>>> validPrefixes = new Vector<Vector<LinkedList<BigInteger>>>();
+  private Vector<Vector<TreeMap<Integer, BigInteger>>> generate(int n, int k) {
+    Vector<Vector<TreeMap<Integer, BigInteger>>> validPrefixes = new Vector<Vector<TreeMap<Integer,BigInteger>>>();
     
-    LinkedList<BigInteger> prefixes = new LinkedList<BigInteger>();
+    TreeMap<Integer, BigInteger> prefixes = new TreeMap<Integer, BigInteger>();
     for(int i = 0; i < (1 << (k+1)); ++i){
-      prefixes.add(BigInteger.valueOf(i));
+      prefixes.put(i, BigInteger.valueOf(i));
     }
     
     for(int i = 0; i < n; ++i){
-      Vector<LinkedList<BigInteger>> messagePair = new Vector<LinkedList<BigInteger>>();
+      Vector<TreeMap<Integer, BigInteger>> messagePair = new Vector<TreeMap<Integer,BigInteger>>();
       validPrefixes.add(messagePair);
       for(int j = 0; j < 2; ++j){
-        messagePair.add(new LinkedList<BigInteger>(prefixes));
+        messagePair.add(new TreeMap<Integer, BigInteger>(prefixes));
       }
     }
     return validPrefixes;
