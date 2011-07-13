@@ -6,7 +6,6 @@ import java.util.Random;
 import task4.ElGamalKeys;
 
 import de.tubs.cs.iti.jcrypt.chiffre.BigIntegerUtil;
-import de.tubs.cs.iti.krypto.protokoll.Communicator;
 import de.tubs.cs.iti.krypto.protokoll.util.P2PCommunicator;
 
 public class ObliviousTransfer1of2Protocol {
