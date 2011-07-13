@@ -42,14 +42,18 @@ public class SecretSharing implements Protocol {
   private final static int k = 3; // 7
 
   // max. 10 ; Anzahl Geheimnispaare (Paare von Wörtern)
-  private final int n = 2;
+  private final int n = 4;
 
   private Random rnd = new Random(System.currentTimeMillis());
 
-  private ObliviousTransfer1of2Protocol oblivious = new ObliviousTransfer1of2Protocol(true);
+  private ObliviousTransfer1of2Protocol oblivious;
   private P2PCommunicator comm;
 
+  private boolean duplicateMessage = false;
+  private boolean replaceOneSecret = true;
+
   public SecretSharing() throws IOException {
+    oblivious = new ObliviousTransfer1of2Protocol(duplicateMessage);
   }
 
   @Override
@@ -71,7 +75,13 @@ public class SecretSharing implements Protocol {
     BigInteger M[][] = new BigInteger[n][2];
     for (int i=0; i<n; i++) {
       M[i][0] = BigIntegerUtil.randomSmallerThan(MAX_MESSAGE_NUMBER, rnd);
-      M[i][1] = BigIntegerUtil.randomSmallerThan(MAX_MESSAGE_NUMBER, rnd);
+      if(duplicateMessage ){
+        M[i][1] = M[i][0];
+      }
+      else{
+        M[i][1] = BigIntegerUtil.randomSmallerThan(MAX_MESSAGE_NUMBER, rnd);
+      }
+
       System.out.println("A: Message " + i + " [0] = " + M[i][0].toString(BASE));
       System.out.println("A: Message " + i + " [1] = " + M[i][1].toString(BASE));
     }
@@ -96,6 +106,13 @@ public class SecretSharing implements Protocol {
     for (int i = 0; i < MB.length; i++) {
       MB[i] = oblivious.obliviousTransferReceive();
       System.out.println("A: Recv Message " + i + " = " + MB[i].toString(BASE));
+    }
+
+    if(replaceOneSecret){
+      for (BigInteger[] message : M) {
+        // "geratener" Index der erhaltenen Nachricht = 0
+        message[1] = BigIntegerUtil.randomSmallerThan(MAX_MESSAGE_NUMBER, rnd);
+      }
     }
 
     Pair<Vector<Vector<Integer>>, Vector<Vector<MessagePrefixes>>> generateRes = generate(M, k);
@@ -127,15 +144,6 @@ public class SecretSharing implements Protocol {
 
             Integer notPrefBIndex = comm.receiveInt();
             validPrefixesB.get(messageIndex).get(messagePairIndex).remove(notPrefBIndex);
-
-            /*
-            if(isPrefix(notPrefB, MB[messageIndex])){
-              System.err.println("Betrug!");
-            }
-            else{
-              // TODO: insert
-            }
-            */
           }
           assert (m == BITS+1) ? true : prefixExists(subRange(M[messageIndex][messagePairIndex], BITS-1, (BITS-1) - m + 1), mPref);
           ++messagePairIndex;
@@ -229,15 +237,6 @@ public class SecretSharing implements Protocol {
             }
             comm.send(p.first);
             prefix.remove();
-
-            /*
-            if(isPrefix(notPrefB, MB[messageIndex])){
-              System.err.println("Betrug!");
-            }
-            else{
-              // TODO: insert
-            }
-            */
           }
           assert (m == BITS+1) ? true : prefixExists(subRange(M[messageIndex][messagePairIndex], BITS-1, (BITS-1) - m + 1), mPref);
           ++messagePairIndex;
@@ -273,7 +272,7 @@ public class SecretSharing implements Protocol {
     int messageIndex = 0;
     for( Vector<TreeMap<Integer, BigInteger>> mPair  : validPrefixesB){
       if(!messageExists(MB[messageIndex], mPair)){
-        System.err.println("Betrug: nur unbekannte Nachrichten erhalten!");
+        System.err.println("Betrug: ein Geheimnis wurde gefälscht!");
       }
       for( TreeMap<Integer, BigInteger> message : mPair){
         assert message.size() == 1;
@@ -328,11 +327,6 @@ public class SecretSharing implements Protocol {
     }
 
     return validPrefixesB;
-  }
-
-  private boolean isPrefix(BigInteger notPrefB, BigInteger bigInteger) {
-    // TODO Auto-generated method stub
-    return false;
   }
 
   private class PairAscComp<FIRST, SECOND> implements Comparator<Pair<FIRST, SECOND>>{
