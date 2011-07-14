@@ -54,7 +54,7 @@ public class ObliviousTransfer1of2 implements Protocol {
         M[0] = new BigInteger(1, message.getBytes());
       } while(M[0].compareTo(elGamal.p) >= 0);
 
-      if(data.isOskar){
+      if(data.manipulateSignature){
         M[1] = new BigInteger(1, message.getBytes());
       }
       else{

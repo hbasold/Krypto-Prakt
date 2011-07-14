@@ -11,15 +11,15 @@ import de.tubs.cs.iti.krypto.protokoll.util.P2PCommunicator;
 public class ObliviousTransfer1of2Protocol {
   private Random rnd;
   private P2PCommunicator comm;
-  public boolean isOskar;
+  public boolean manipulateSignature;
 
   public void setComm(P2PCommunicator comm) {
     this.comm = comm;
   }
 
 
-  public ObliviousTransfer1of2Protocol(boolean isOskar) {
-    this.isOskar = isOskar;
+  public ObliviousTransfer1of2Protocol(boolean manipulateSignature) {
+    this.manipulateSignature = manipulateSignature;
     rnd = new Random(System.currentTimeMillis());
   }
 
@@ -52,7 +52,7 @@ public class ObliviousTransfer1of2Protocol {
       comm.send(k_Sig[i]);
     }
 
-    if(isOskar){
+    if(manipulateSignature){
       k_Sig[1] = k_Sig[1].add(BigInteger.ONE);
     }
 
