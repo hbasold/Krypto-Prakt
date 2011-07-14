@@ -7,6 +7,7 @@ import java.util.Arrays;
 import de.tubs.cs.iti.krypto.protokoll.Communicator;
 import de.tubs.cs.iti.krypto.protokoll.Protocol;
 import de.tubs.cs.iti.krypto.protokoll.oblivious.SecretSharingProtocol;
+import de.tubs.cs.iti.krypto.protokoll.util.P2PCommunicator;
 
 public class SecretSharing implements Protocol {
 
@@ -27,7 +28,7 @@ public class SecretSharing implements Protocol {
 
   @Override
   public void setCommunicator(Communicator com) {
-    secretSharingProtocal.setCommunicator(com);
+    secretSharingProtocal.setCommunicator(new P2PCommunicator(com));
   }
 
   @Override

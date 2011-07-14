@@ -57,8 +57,8 @@ public class SecretSharingProtocol {
     n = M.length;
   }
 
-  public void setCommunicator(Communicator com) {
-    this.comm = new P2PCommunicator(com);
+  public void setCommunicator(P2PCommunicator comm) {
+    this.comm = comm;
     oblivious.setComm(comm);
   }
 

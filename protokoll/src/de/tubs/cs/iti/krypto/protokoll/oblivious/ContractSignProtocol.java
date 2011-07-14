@@ -144,6 +144,7 @@ public class ContractSignProtocol implements Protocol {
           new ObliviousTransfer1of2Protocol(false),
           A,
           false);
+      secretSharing.setCommunicator(comm);
       BigInteger[][] AB = secretSharing.sendFirst();
       if(!checkPuzzles(pA, puzzleS, AB, CB)){
         System.err.println("Betrug: Schlüssel passen nicht zu Puzzeln.");
@@ -228,6 +229,7 @@ public class ContractSignProtocol implements Protocol {
           new ObliviousTransfer1of2Protocol(false),
           A,
           false);
+      secretSharing.setCommunicator(comm);
       BigInteger[][] AA = secretSharing.receiveFirst();
 
       if(!checkPuzzles(pA, puzzleS, AA, CA)){
