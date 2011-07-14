@@ -10,14 +10,14 @@ import java.util.*;
 
 /**
  * This class provides a trusted authority for key exchange protocols.
- * 
+ *
  * Its methods allow the user to obtain a new certificate based on his system
  * login information. The issued certificates are objects of the
  * <cite>Certificate</cite>-class. <br>
  * There are also methods to access the public part of the trusted authority's
  * RSA key.
- * 
- * 
+ *
+ *
  * @author <a href="mailto:milius@iti.cs.tu-bs.de">Stefan Milius</a>
  * @version 1.00, 13-Feb-2004
  * @see de.tubs.cs.iti.krypto.protokoll.Certificate
@@ -50,7 +50,7 @@ public class TrustedAuthority {
    * <strong>Important:</strong> When checking a certificate notice that because
    * of the usage of RSA the two values to be compared are only equal modulo the
    * trusted authorities modulus <cite>getModulus</cite>.
-   * 
+   *
    * @param data
    *          contains the data to be included in the certificate (e.g. a public
    *          RSA key).
@@ -98,7 +98,7 @@ public class TrustedAuthority {
 
   /**
    * Access method for the modulus of the RSA key of the trusted authority.
-   * 
+   *
    * @return the modulus n of the public key as BigInteger.
    */
   public static BigInteger getModulus() {
@@ -108,7 +108,7 @@ public class TrustedAuthority {
   /**
    * Access method for the exponent part of the public RSA key of the trusted
    * authority.
-   * 
+   *
    * @return the exponent e of the public key as BigInteger.
    */
   public static BigInteger getPublicExponent() {

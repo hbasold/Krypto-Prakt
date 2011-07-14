@@ -11,7 +11,7 @@ import java.util.*;
  * Protokollen und dem Server. Im Communicator werden Methoden realisiert, die
  * den Datenaustauch zwischen den Parteien des Netzwerks ueber den Server
  * ermoeglichen.
- * 
+ *
  * @author Wolfgang Schmiesing
  * @version 1.0
  */
@@ -36,7 +36,7 @@ public class Communicator {
    * Spielname Minimal/Maximalspielerzahl initialisiert. Danach werden diese
    * Daten an den Server uebermittelt, der dann die entsprechende Spielernummer
    * generiert und zurueckliefert.
-   * 
+   *
    * @exception IOException
    * @exception UnknownHostException
    * @param host
@@ -84,7 +84,7 @@ public class Communicator {
 
   /**
    * Diese Methode gibt die Spielernummer des Spielers zurueck.
-   * 
+   *
    * @return <code>int</code> Spielernummer
    */
   public int myNumber() {
@@ -94,7 +94,7 @@ public class Communicator {
   /**
    * Diese Methode stellt die Anzahl der Parteien fest, die mit dem Server
    * verbunden sind.
-   * 
+   *
    * @return <code>int</code> Anzahl der Spieler
    */
   public int playerNumber() {
@@ -105,7 +105,7 @@ public class Communicator {
    * Diese Methode realisiert den Empfang von Daten von anderen Spielern. Im
    * Fehlerfall (Nachricht undefiniert) wird die Verbindung getrennt und das
    * Programm mit Ausgabe einer Fehlermeldung abgebrochen.
-   * 
+   *
    * @exception IOException
    * @exception InterruptedIOException
    * @return <code>String</code> empfangene Daten
@@ -135,7 +135,7 @@ public class Communicator {
       /*
        * while (s.equals("")) { while (in.ready()) { // read one line
        * result.print(in.readLine());
-       * 
+       *
        * // if there is more make a newline if (in.ready()) result.println(); }
        * // get the read string result.flush(); w.flush(); s = w.toString(); }
        */
@@ -194,7 +194,7 @@ public class Communicator {
    * Die Methode sendTo sendet einen String zum Spieler mit der Spielernummer
    * player. Die Nachricht wird mit der Zieladresse und dem Spielnamen
    * verknuepft.
-   * 
+   *
    * @param player
    *          Empfaenger der Nachricht
    * @param data
@@ -214,7 +214,7 @@ public class Communicator {
    * Falls der Client sich vor Beginn des Spiels abmeldet, liefert die Methode
    * den Wert "false". Bei erfolgreicher Anmeldung und Start des Spiels liefert
    * sie "true" zurueck.
-   * 
+   *
    * @exception IOException
    * @exception NoSuchElementException
    * @return <code>boolean</code> Nachricht, ob Client das Spiel verlassen hat

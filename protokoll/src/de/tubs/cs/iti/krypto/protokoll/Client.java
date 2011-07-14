@@ -11,7 +11,7 @@ import java.util.*;
  * Methoden realisiert, die fuer den Benutzer wichtig sind, wie z.B. der
  * Konstruktor Client, sowie die Methoden zum Anmelden/Abmelden am/vom Server
  * und zum Starten des Spiels.
- * 
+ *
  * @author Marcus Lagemann
  * @version 1b
  */
@@ -43,7 +43,7 @@ public class Client implements IClient {
   /**
    * Der Konstruktor von Client erzeugt ein neues ClientGUI-Objekt und ueber
    * gibt sich selbst dem ClientGUI-Objekt. Zudem erzeugt er eine Log Datei.
-   * 
+   *
    * @param userPort
    *          Der Anfangswert fuer den Port
    * @param userHost
@@ -90,7 +90,7 @@ public class Client implements IClient {
 
   /**
    * gibt den Communicator zurueck
-   * 
+   *
    * @return <code>int</code> Portnummer
    */
   public Communicator getCommunicator() {
@@ -102,7 +102,7 @@ public class Client implements IClient {
 
   /**
    * gibt den Namen des Protokolls zurueck
-   * 
+   *
    * @return <code>String</code> Protokollname
    */
   public void setProtocolName(String newProtocolName) {
@@ -113,7 +113,7 @@ public class Client implements IClient {
 
   /**
    * gibt den Namen des Protokolls zurueck
-   * 
+   *
    * @return <code>String</code> Protokollname
    */
   public String getProtocolName() {
@@ -122,7 +122,7 @@ public class Client implements IClient {
 
   /**
    * gibt den Hostnamen zurueck
-   * 
+   *
    * @return <code>String</code> Hostname
    */
   public String getHost() {
@@ -131,7 +131,7 @@ public class Client implements IClient {
 
   /**
    * setzt den Hostnamen
-   * 
+   *
    * @param newHost
    *          zu setztender Hostname
    */
@@ -144,7 +144,7 @@ public class Client implements IClient {
 
   /**
    * gibt den Portnamen zurueck
-   * 
+   *
    * @return <code>int</code> Portnummer
    */
   public int getPort() {
@@ -153,7 +153,7 @@ public class Client implements IClient {
 
   /**
    * Setzt die Port Nummer auf den angegebenen Wert, wenn dieser korrekt ist.
-   * 
+   *
    * @param newPort
    *          zu setzende Portnummer
    */
@@ -171,7 +171,7 @@ public class Client implements IClient {
   /**
    * Versucht das Spielprotocol zu laden zu laden und gibt zurueck ob das
    * erfolgreich war.
-   * 
+   *
    * @param protocolName
    *          Das zu ladende Spielprotokoll.
    * @return <code>boolean</code> Spiel geldaden?
@@ -214,7 +214,7 @@ public class Client implements IClient {
   /**
    * Prueft, ob die Spieleranzahl die Mindestanzahl an Spielern erreicht hat und
    * aktiviert den Button "Spiel Starten".
-   * 
+   *
    * @param newPlayerNumber
    *          Die neue Spieleranzahl
    */
@@ -239,7 +239,7 @@ public class Client implements IClient {
    * Als letztes ruft der Client noch die Methode setCommunicator() des
    * Spielprotokolls auf, um die neue Verbindung mit dem Spielprotokoll zu
    * verknuepfen.
-   * 
+   *
    * @todo Java.lang.InstantiationException abfangen bei EIngabe von z.B. Client
    */
   public void connect() {
@@ -342,7 +342,7 @@ public class Client implements IClient {
    * einen anderen Spieler und Schliesst den Client danach. Die Methode wird vom
    * Communicator aufgerufen, wenn ein anderer Spieler das laufende Spiel
    * abbricht.
-   * 
+   *
    * @param message
    *          Nachricht, die ausgegeben werden soll
    **/
@@ -356,7 +356,7 @@ public class Client implements IClient {
   /**
    * Diese Methode speichert die Nachrichten, die der Server ausgibt in einer
    * Log-Datei ab.
-   * 
+   *
    * @param message
    *          Nachricht, die gespeichert werden soll
    */
@@ -373,7 +373,7 @@ public class Client implements IClient {
   /**
    * Hauptprogramm: Hier werden die Eingabeparameter untersucht und verarbeitet
    * und der Client erzeugt.
-   * 
+   *
    * @param args
    *          Array von Eingabe parametern
    */

@@ -16,21 +16,21 @@ package de.tubs.cs.iti.krypto.protokoll;
  * Bitte folgendes durchf�hren, um entsprechendes Protokoll zu testen
  * <ol>
  * <li>Server starten mit
- * 
+ *
  * <pre>
  * java de.tubs.cs.iti.krypto.protokoll.Server
  * </pre>
- * 
+ *
  * <li>dann beide clients starten mit jeweils
- * 
+ *
  * <pre>
  * java de.tubs.cs.iti.krypto.protokoll.CmdLineClient PROTOCOL HOST PORT
  * </pre>
- * 
+ *
  * </ol>
- * 
+ *
  * @author <a href="l.girndt�@tu-bs.de">Lars Girndt</a>
- * 
+ *
  */
 public class CmdLineClient implements IClient {
 
@@ -43,7 +43,7 @@ public class CmdLineClient implements IClient {
   Communicator com = null;
 
   /**
-	 * 
+	 *
 	 */
   public CmdLineClient(String protocolName, String host, int port) {
     super();
@@ -54,7 +54,7 @@ public class CmdLineClient implements IClient {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see de.tubs.cs.iti.krypto.protokoll.IClient#end(java.lang.String)
    */
   public void end(String message) {
@@ -64,7 +64,7 @@ public class CmdLineClient implements IClient {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see de.tubs.cs.iti.krypto.protokoll.IClient#playerNumberChanged(int)
    */
   public void playerNumberChanged(int newPlayerNumber) {

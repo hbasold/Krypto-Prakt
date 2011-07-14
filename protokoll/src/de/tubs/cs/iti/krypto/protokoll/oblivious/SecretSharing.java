@@ -2,16 +2,18 @@ package de.tubs.cs.iti.krypto.protokoll.oblivious;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.Arrays;
 
 import de.tubs.cs.iti.krypto.protokoll.Communicator;
 import de.tubs.cs.iti.krypto.protokoll.Protocol;
+import de.tubs.cs.iti.krypto.protokoll.oblivious.SecretSharingProtocol;
 
 public class SecretSharing implements Protocol {
 
   private boolean manipulateObliviousSignature = false;
   private boolean duplicateFirstMessage = false;
   private boolean replaceOneSecret = false;
-  
+
   private SecretSharingProtocol secretSharingProtocal;
 
   public SecretSharing() throws IOException {
@@ -36,13 +38,13 @@ public class SecretSharing implements Protocol {
   @Override
   public void sendFirst() {
     BigInteger[][] messages = secretSharingProtocal.sendFirst();
-    System.out.println("A: received messages:\n" + messages);
+    System.out.println("A: received messages:\n" + Arrays.deepToString(messages));
   }
 
   @Override
   public void receiveFirst() {
     BigInteger[][] messages = secretSharingProtocal.receiveFirst();
-    System.out.println("B: received messages:\n" + messages);
+    System.out.println("B: received messages:\n" + Arrays.deepToString(messages));
   }
 
   @Override

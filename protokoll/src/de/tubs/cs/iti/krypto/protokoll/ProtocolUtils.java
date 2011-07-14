@@ -13,7 +13,7 @@ import de.tubs.cs.iti.jcrypt.chiffre.BigIntegerUtil;
 /**
  * This class provides some special methods for BigInteger arithmetic that are
  * useful for certain cryptographic algorithms.
- * 
+ *
  * @author <a href="mailto:M.Willers@tu-bs.de">Martin Willers</a>
  * @author <a href="mailto:M.Seemann@tu-bs.de">Markus Seemann</a>
  * @version 1.00, 17-Oct-1998
@@ -28,7 +28,7 @@ public class ProtocolUtils extends BigIntegerUtil {
    * Hashes an identification string I and an integer j to a BigInteger of [0,
    * max - 1], i.e. [0, 2^(max.bitLength () - 1) - 1] where max / 2 <
    * 2^(max.bitLength () - 1) = 2^( [lb(max)] ) <= max
-   * 
+   *
    * @param I
    *          an identification string
    * @param j
@@ -42,14 +42,14 @@ public class ProtocolUtils extends BigIntegerUtil {
   // where max / 2 < 2^(max.bitLength () - 1) = 2^( [lb(max)] ) <= max
   {
     return (new BigInteger(max.bitLength(), new Random(
-        (long) (I + String.valueOf(j)).hashCode()))).remainder(max);
+        (I + String.valueOf(j)).hashCode()))).remainder(max);
   }
 
   /**
    * This routine yields a solution to the Chinese Remainder Theorem (CRT), as
    * described in Algorithmus 3.4. This special case describes the application
    * with t=2.
-   * 
+   *
    * @param d1
    *          a BigInteger
    * @param d2
@@ -75,7 +75,7 @@ public class ProtocolUtils extends BigIntegerUtil {
    * <code>val</code> a quadratic remainder. Then, an x out of [1, ...,
    * modulus-1] is calculated with x**2 mod <code>modulus</code> = a mod
    * <code>modulus</code>.
-   * 
+   *
    * @param val
    *          a BigInteger that is to be square rooted.
    * @param modulus

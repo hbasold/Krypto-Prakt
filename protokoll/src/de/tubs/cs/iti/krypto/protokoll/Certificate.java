@@ -10,7 +10,7 @@ import java.math.BigInteger;
  * This is a data class modelling a certificate to be issued by the
  * <cite>TrustedAuthority</cite>-class. <br>
  * Its methods allow access to ID, data and signature of a certificate.
- * 
+ *
  * @author <a href="mailto:milius@iti.cs.tu-bs.de">Stefan Milius</a>
  * @version 1.00, 13-Feb-2004
  * @see de.tubs.cs.iti.krypto.protokoll.TrustedAuthority
@@ -26,7 +26,7 @@ public class Certificate {
    * Instantiates a new Certificate object with the given parameters. This
    * constructor is called by <cite>TrustedAuthority</cite> to generate
    * certificates.
-   * 
+   *
    * @param ID
    *          the ID-String of the certificate
    * @param data
@@ -44,7 +44,7 @@ public class Certificate {
 
   /**
    * Access method for the ID-String of the certificate.
-   * 
+   *
    * @returns the ID-String.
    */
   public String getID() {
@@ -53,7 +53,7 @@ public class Certificate {
 
   /**
    * Access method for the data of the certificate.
-   * 
+   *
    * @returns the data as a byte array.
    */
   public byte[] getData() {
@@ -62,7 +62,7 @@ public class Certificate {
 
   /**
    * Access method for the signature of the certificate.
-   * 
+   *
    * @returns the signature as one BigInteger.
    */
   public BigInteger getSignature() {

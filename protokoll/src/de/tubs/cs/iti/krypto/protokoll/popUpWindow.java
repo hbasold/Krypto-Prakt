@@ -7,7 +7,7 @@ import java.awt.event.*;
  * PopWindow zur Ausgabe von Fehlermeldungen. Diese Klasse erzeugt ein Fenster
  * mit entweder einem "Ja" und einem "Nein" Button, oder nur einem "OK" Button.
  * Das Fenster schliesst sich nach dem einer der Button gedrueckt wurde.
- * 
+ *
  * @author Marcus Lagemann
  * @version 0.1
  */
@@ -18,7 +18,7 @@ public class popUpWindow extends Dialog {
   /**
    * Der Konstruktor erzeugt ein Fenster mit dem String text als Text, einem und
    * einem "Ok" Button.
-   * 
+   *
    * @param owner
    *          "Besitzer" des PopUpFensters
    * @param text
@@ -62,7 +62,7 @@ public class popUpWindow extends Dialog {
   /**
    * Der Konstruktor erzeugt ein Fenster mit dem String text als Text, einem
    * "Ja" Button und einem "Nein" Button.
-   * 
+   *
    * @param owner
    *          "Besitzer" des PopUpFensters
    * @param text

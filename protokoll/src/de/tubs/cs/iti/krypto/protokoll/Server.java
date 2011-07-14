@@ -11,7 +11,7 @@ import java.util.*;
  * Rechner gestartet wird, dessen Adresse den Spielern bekannt ist. Es soll bis
  * zu 50 Verbindungen mit Clients annehmen und die auf diesen laufenden
  * Spielprotokolle verwalten koennen.
- * 
+ *
  * @author Wolfgang Schmiesing
  * @version 1.0
  */
@@ -34,7 +34,7 @@ public class Server {
    * Konstruktor, initialisiert die Variable servSocket durch Erzeugen eines
    * ServerSocket-Objekts auf dem angegebenen Port. Desweiteren wird der Vektor
    * "games" initialisiert, der die Spiele vom Typ Game enthalten wird.
-   * 
+   *
    * @param port
    *          Portnummer
    */
@@ -57,7 +57,7 @@ public class Server {
    * Objekt vom Typ "Game" erzeugt werden muss. Dann wird ein eigener Thread
    * fuer den neuen Spieler erzeugt, der in der "players" Liste des jew.
    * Game-Objekts abgespeichert wird.
-   * 
+   *
    * @param data
    *          Daten des neuen Spielers
    * @exception NoSuchElementException
@@ -99,7 +99,7 @@ public class Server {
         ServerThread thread = new ServerThread(this.connection, this, 0, count,
             name);
         thread.start();
-        games.addElement((Object) new Game(thread, min, max, name));
+        games.addElement(new Game(thread, min, max, name));
         log = "server: started new game: " + name + " min" + min + " max" + max
             + "\n";
         System.out.print(log);
@@ -116,7 +116,7 @@ public class Server {
    * Diese Methode loescht einen Spieler aus einem Spiel, wenn dieser z.B.
    * seinen Client vor Beginn des Spiels beendet hat. Dazu wird die
    * delete-Methode des entsprechenden Game-Objekts aufgerufen.
-   * 
+   *
    * @param data
    *          zu loeschender Spieler
    * @exception NoSuchElementException
@@ -165,7 +165,7 @@ public class Server {
    * ("Spiel starten" und "Client beendet"). Diese Meldungen erkennt die Methode
    * daran, dass die Zieladresse im String "data" (normalerweise die
    * Spielernummer des Empfaengers) negativ ist.
-   * 
+   *
    * @param gameID
    *          Spiel-ID
    * @param data
@@ -215,7 +215,7 @@ public class Server {
 
   /**
    * Diese Methode liefert die Portnummer des Servers zurueck.
-   * 
+   *
    * @return <code>int</code> Portnummer
    */
   public int getPort() {
@@ -225,7 +225,7 @@ public class Server {
   /**
    * Diese Methode speichert die Nachrichten, die der Server ausgibt in einer
    * Log-Datei ab.
-   * 
+   *
    * @param message
    *          Nachricht, die gespeichert werden soll
    * @param portnr
@@ -247,7 +247,7 @@ public class Server {
    * werden innerhalb einer Endlosschleife Verbindungen angenommen, denen von
    * der Methode addPlayer ein eigener Thread zugewiesen wird und die in der
    * Liste "games" verwaltet werden.
-   * 
+   *
    * @param args
    *          Kommandozeilenparameter
    * @exception IOException
@@ -313,7 +313,7 @@ public class Server {
   /**
    * Diese Methode empfaengt die Spieldaten, die der Client bei der Anmeldung an
    * den Server sendet.
-   * 
+   *
    * @return <code>String</code> empfangene Nachricht
    */
   public String receive() throws InterruptedIOException, IOException {
@@ -336,7 +336,7 @@ public class Server {
    * wird vom ServerThread des Spielers aufgerufen, dessen Client die Verbindung
    * als erster unterbrochen hat. Nach Aufruf der Methode shutdown() in Klasse
    * Game wird dann das Spiel ggf. aus der Liste geloescht.
-   * 
+   *
    * @param data
    *          Datenstring mit GameID, Spielname und Spielernummer
    * @param errmsg

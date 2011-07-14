@@ -12,7 +12,7 @@ import java.util.*;
  * wieder zur Verfuegung steht. Sie leitet Nachrichten an den Server weiter, der
  * diese dann (ueber einen weiteren ServerThread) an den entsprechenden
  * Ziel-Client sendet.
- * 
+ *
  * @author Wolfgang Schmiesing
  * @version 1.0
  */
@@ -33,7 +33,7 @@ public class ServerThread extends Thread {
    * die Ein-und Ausgabestreams des Sockets und speichert seine Spielernummer,
    * die er vom Server zugewiesen bekommt. Diese wird dann zuletzt an den
    * Communicator gesendet.
-   * 
+   *
    * @param connection
    *          Socketverbindung
    * @param server
@@ -83,7 +83,7 @@ public class ServerThread extends Thread {
 
   /**
    * trennt die Socketverbindung zum entsprechenden Client
-   * 
+   *
    * @exception IOException
    */
   public void closeConnection() {
@@ -98,7 +98,7 @@ public class ServerThread extends Thread {
 
   /**
    * liefert die SpielID des zum ServerThread geh�rigen Spiels zurueck
-   * 
+   *
    * @return <code>int</code> Spiel-ID
    */
   public int getGameID() {
@@ -109,7 +109,7 @@ public class ServerThread extends Thread {
    * Empfaengt einen String (blockiert solange, bis der eingestellte TimeOut
    * ueberschritten wurde) ueber die Socket-Verbindung vom Communicator-Objekt
    * des Clients.
-   * 
+   *
    * @return <code>String</code> empfangene Daten
    */
   public String receive() throws InterruptedIOException, IOException {
@@ -147,7 +147,7 @@ public class ServerThread extends Thread {
    * ueberprueft, um dann die Nachricht an die entsprechende Server-Methode
    * weiterzugeben. Im Fehlerfall wird hier die Verbindung getrennt und die
    * Methode shutdown() auf dem Server aufgerufen, um das Spiel zu entfernen.
-   * 
+   *
    * @exception IOException
    * @exception InterruptedIOException
    */
@@ -208,7 +208,7 @@ public class ServerThread extends Thread {
   /**
    * Sendet den String "message" ueber die Socket-Verbindung an das
    * Communicator- Objekt des Clients.
-   * 
+   *
    * @param message
    *          zu sendende Nachricht
    */

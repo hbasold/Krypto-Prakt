@@ -39,7 +39,7 @@ public class SecretSharingProtocolData {
     MAX_MESSAGE_NUMBER = BigInteger.valueOf(BASE).pow(LETTERS);
     BITS = (int) Math.floor(LETTERS * Math.log(BASE) / Math.log(2));
   }
-  
+
   /**
    * @return BASE=36, LETTERS=10, k=7.
    */

@@ -57,10 +57,18 @@ public class P2PCommunicator {
   }
 
   public void send(Integer val) {
-    send(BigInteger.valueOf(val.longValue()));    
+    send(BigInteger.valueOf(val.longValue()));
   }
-  
+
   public Integer receiveInt() {
     return Integer.valueOf(receive().intValue());
+  }
+
+  public void send(String data) {
+    c.sendTo(other, data);
+  }
+
+  public String receiveString() {
+    return c.receive();
   }
 }

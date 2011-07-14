@@ -15,7 +15,7 @@ import java.io.*;
  * auch das Recht, das Spiel zu starten. Sonst muss er auf den Spielstart durch
  * einen anderen Mitspieler warten. Ausserdem wird jedem Button ein eigener
  * Event-Listener zugeteilt.
- * 
+ *
  * @author Marcus Lagemann
  * @version 1b
  */
@@ -33,7 +33,7 @@ public class ClientGUI extends Frame implements Runnable {
 
   /**
    * Die Methode setzt ein neues Client-Objekt
-   * 
+   *
    * @param newClient
    *          zu setztender Client
    */
@@ -48,7 +48,7 @@ public class ClientGUI extends Frame implements Runnable {
 
   /**
    * Konstruktor der die GUI anzeigt und steuert.
-   * 
+   *
    * @param initialPort
    *          Anfangswert des Ports
    * @param initialHost
@@ -308,7 +308,7 @@ public class ClientGUI extends Frame implements Runnable {
   /**
    * Ruft beim Druecken einer Taste im Textfeld "serverName" die Methode
    * "serverNameChanged()" auf.
-   * 
+   *
    * @param KeyEvent
    *          e KeyEvent
    */
@@ -319,7 +319,7 @@ public class ClientGUI extends Frame implements Runnable {
   /**
    * Setzt den Ausgewaehlten Namen in das Textfeld und ruft die Methode
    * "serverNameChanged()".
-   * 
+   *
    * @param ItemEvent
    *          e ItemEvent
    */
@@ -359,7 +359,7 @@ public class ClientGUI extends Frame implements Runnable {
   /**
    * Ruft beim Druecken einer Taste im Textfeld "theGameClass" die Methode
    * "gameNameChanged()" auf.
-   * 
+   *
    * @param KeyEvent
    *          e KeyEvent
    */
@@ -370,7 +370,7 @@ public class ClientGUI extends Frame implements Runnable {
   /**
    * Setzt den Ausgewaehlten Namen in das Textfeld und ruft "gameNameChanged()"
    * auf.
-   * 
+   *
    * @param ItemEvent
    *          e ItemEvent
    */
@@ -435,7 +435,7 @@ public class ClientGUI extends Frame implements Runnable {
 
   /**
    * Die Methode aktiviert bzw. deaktiviert den Button "startGame"
-   * 
+   *
    * @param starting
    *          Status auf den der Button gesetzt werden soll
    */
@@ -445,7 +445,7 @@ public class ClientGUI extends Frame implements Runnable {
 
   /**
    * Die Methode aktiviert bzw. deaktiviert den Button "connectToServer"
-   * 
+   *
    * @param starting
    *          Status auf den der Button gesetzt werden soll
    */
@@ -456,7 +456,7 @@ public class ClientGUI extends Frame implements Runnable {
   /**
    * Versucht eine Datei mit dem Namen "historyFile" zu lesen und fuegt die
    * Namen aus dieser Datei dem Choice Objekt hinzu.
-   * 
+   *
    * @param choiceHistory
    *          Choice-Objekt, dem die History-Eintraege zugewiesen werden sollen.
    * @param historyFile
@@ -496,7 +496,7 @@ public class ClientGUI extends Frame implements Runnable {
    * Liest eine Datei mit dem Namen "historyFile" zu lesen, fuegt den Namen
    * "newItem" des neuen History-Eintrags der Datei zu, sofern noch nicht
    * vorhanden und fuegt ihn ausserdem dem Choice Objekt hinzu.
-   * 
+   *
    * @param choiceHistory
    *          Choice-Objekt, dem die History-Eintraegezugewiesen werden sollen.
    * @param historyFile
@@ -546,7 +546,7 @@ public class ClientGUI extends Frame implements Runnable {
    * Wenn der Client bereits am Server angemeldet ist wird die Spielernummer vor
    * dem Text mitausgegeben. Wenn ein leerer String uebergeben wird, wird nur
    * die Spielernummer erneuert.
-   * 
+   *
    * @param text
    *          Text, der ausgegeben werden soll
    */

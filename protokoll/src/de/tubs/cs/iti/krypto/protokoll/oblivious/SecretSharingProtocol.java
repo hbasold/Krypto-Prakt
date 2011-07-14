@@ -26,7 +26,7 @@ public class SecretSharingProtocol {
   private final BigInteger[][] M;
   private final boolean replaceOneSecret;
   private final int n;
-  
+
   private P2PCommunicator comm;
 
   private class PairList<FIRST, SECOND> extends LinkedList<Pair<FIRST, SECOND>> {
@@ -85,7 +85,7 @@ public class SecretSharingProtocol {
     }
     return M;
   }
-  
+
   private static ElGamalKeys getElGamalKeys() {
     ElGamalKeys elGamal = new ElGamalKeys();
     try {
@@ -176,7 +176,7 @@ public class SecretSharingProtocol {
       int j = 0;
       for( TreeMap<Integer, BigInteger> message : mPair){
         assert message.size() == 1;
-        otherMessages[i][j] = message.firstEntry().getValue(); 
+        otherMessages[i][j] = message.firstEntry().getValue();
         System.out.println("A: Nachricht von B:" + otherMessages[i][j].toString(data.BASE));
         j++;
       }
@@ -260,7 +260,7 @@ public class SecretSharingProtocol {
       int j = 0;
       for( TreeMap<Integer, BigInteger> message : mPair){
         assert message.size() == 1;
-        otherMessages[i][j] = message.firstEntry().getValue(); 
+        otherMessages[i][j] = message.firstEntry().getValue();
         System.out.println("B: Nachricht von A:" + otherMessages[i][j].toString(data.BASE));
         j++;
       }
@@ -268,10 +268,10 @@ public class SecretSharingProtocol {
     }
 
     checkMessages(MA, validPrefixesA);
-    
+
     return otherMessages;
   }
-  
+
   private void checkMessages(BigInteger[] MB,
       Vector<Vector<TreeMap<Integer, BigInteger>>> validPrefixesB) {
     int messageIndex = 0;

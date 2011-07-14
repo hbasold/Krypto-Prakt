@@ -346,7 +346,7 @@ public class S2SProtocol implements Protocol {
 
     return new Certificate(id, data, signature);
   }
-  
+
   private BigInteger hashForTA(String id, byte[] certData) throws NoSuchAlgorithmException {
     MessageDigest md = MessageDigest.getInstance("SHA");
     md.update(id.getBytes());

@@ -21,7 +21,7 @@ public interface Protocol {
   /**
    * Diese Methode weist dem Protokoll das Communicator-objekt com f?r die
    * Spielekommunikation zu.
-   * 
+   *
    * @param com
    *          Objekt vom Typ Communicator
    */
@@ -29,7 +29,7 @@ public interface Protocol {
 
   /**
    * Diese Methode gibt den Namen des Spieles zurueck.
-   * 
+   *
    * @return<code>String</code> Name des Spieles
    */
   public String nameOfTheGame();
@@ -48,14 +48,14 @@ public interface Protocol {
 
   /**
    * Diese Methode gibt die minimale Anzahl an Spielern zurueck
-   * 
+   *
    * @return<code>int</code> minimale Anzahl der Spieler
    * */
   public int minPlayer();
 
   /**
    * Diese Methode gibt die maximale Anzahl an Spielern zurueck
-   * 
+   *
    * @return<code>int</code> maximale Anzahl der Spieler
    */
   public int maxPlayer();

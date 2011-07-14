@@ -11,7 +11,7 @@ import java.util.Vector;
  * (Name, maximale/minimale Spielerzahl etc.) gespeichert. Desweiteren werden
  * diverse Methoden zur Verwaltung eines Spiels zur Verfuegung gestellt, z.B.
  * Spieler loeschen/hinzufuegen, Verbindung unterbrechen etc.
- * 
+ *
  * @author Wolfgang Schmiesing
  * @version 1.0
  */
@@ -35,7 +35,7 @@ public class Game {
    * Liste gespeichert wird. Der ServerThread wird im Vector "players" und die
    * weiteren Parameter in entsprechenden Variablen gespeichert. Als letztes
    * wird die Spielerzahl ("1") dem Communicator geschickt.
-   * 
+   *
    * @param serverThread
    *          ServerThread des Spielers
    * @param min
@@ -48,7 +48,7 @@ public class Game {
   public Game(ServerThread serverThread, int min, int max, String name) {
     currentPlayers = 1;
     players = new Vector();
-    players.addElement((Object) serverThread);
+    players.addElement(serverThread);
     nameOfTheGame = name;
     minPlayer = min;
     maxPlayer = max;
@@ -60,12 +60,12 @@ public class Game {
    * Fuegt den ServerThread eines neuen Mitspielers zur bestehenden Spielerliste
    * hinzu und erhoeht die Spieleranzahl ("currentPlayers") um 1. Danach wird
    * die neue Spieleranzahl an alle Mitspieler im Vector "players" gesendet.
-   * 
+   *
    * @param thread
    *          Thread des neuen Spielers
    */
   public void add(ServerThread thread) {
-    players.addElement((Object) thread);
+    players.addElement(thread);
     currentPlayers++;
 
     for (int i = 0; i < players.size(); i++) {
@@ -77,7 +77,7 @@ public class Game {
   /**
    * Loescht einen Spieler (also seinen ServerThread) aus dem "players" Vector
    * und sendet die um eins verminderte Zahl an alle uebrigen Spieler.
-   * 
+   *
    * @param number
    *          Nummer des zu loeschenden Spielers
    */
@@ -94,7 +94,7 @@ public class Game {
 
   /**
    * Diese Methode liefert die aktuelle Spieleranzahl zurueck.
-   * 
+   *
    * @return <code>int</code> Spieleranzahl
    */
   public int getCurrentPlayers() {
@@ -103,7 +103,7 @@ public class Game {
 
   /**
    * Diese Methode liefert die Spiel-ID des Spiels zurueck
-   * 
+   *
    * @return <code>int</code> Spiel-ID
    */
   public int getGameID() {
@@ -112,7 +112,7 @@ public class Game {
 
   /**
    * Diese Methode liefert den Namen des Spiels zurueck
-   * 
+   *
    * @return <code>String</code> Name des Spiels
    */
   public String getNameOfTheGame() {
@@ -121,7 +121,7 @@ public class Game {
 
   /**
    * Diese Methode liefert den Vektor mit den ServerThreads zurueck
-   * 
+   *
    * @return <code>Vector</code> ServerThread-Vektor
    */
   public Vector getPlayers() {
@@ -130,7 +130,7 @@ public class Game {
 
   /**
    * Diese Methode liefert zur�ck, ob das Spiel voll ist oder nicht
-   * 
+   *
    * @return <code>boolean</code> boolean
    */
   public boolean isFull() {
@@ -142,7 +142,7 @@ public class Game {
    * eines Spiels, wenn das Spiel bereits gestartet ist. Ist das Spiel ncoh
    * nicht gestartet, so wird nur der Spieler, der den Fehler gemeldet hat aus
    * dem Spiel entfernt.
-   * 
+   *
    * @param errorPlayer
    *          Spieler mit Fehlermeldung
    * @param message
